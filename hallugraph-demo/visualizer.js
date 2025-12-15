@@ -2,6 +2,7 @@
  * HalluGraph Visualizer - Knowledge Graph Rendering
  * 
  * Renders source and response knowledge graphs with alignment edges
+ * Supports D3 drag behavior for interactive node movement
  */
 
 class HalluGraphVisualizer {
@@ -10,6 +11,8 @@ class HalluGraphVisualizer {
         this.svg = d3.select('#graphSvg');
         this.width = 0;
         this.height = 0;
+        this.allNodes = [];
+        this.allLinks = [];
     }
 
     initialize() {
@@ -47,7 +50,6 @@ class HalluGraphVisualizer {
         ungroundedGrad.append('stop').attr('offset', '100%').attr('stop-color', '#f87171');
 
         // Add groups for layering
-        this.svg.append('g').attr('class', 'edges-layer');
         this.svg.append('g').attr('class', 'alignments-layer');
         this.svg.append('g').attr('class', 'nodes-layer');
         this.svg.append('g').attr('class', 'labels-layer');
@@ -74,7 +76,6 @@ class HalluGraphVisualizer {
         const { grounded, ungrounded } = result.egResult;
 
         // Clear previous content
-        this.svg.select('.edges-layer').selectAll('*').remove();
         this.svg.select('.alignments-layer').selectAll('*').remove();
         this.svg.select('.nodes-layer').selectAll('*').remove();
         this.svg.select('.labels-layer').selectAll('*').remove();
@@ -89,15 +90,28 @@ class HalluGraphVisualizer {
             node.grounded = !ungroundedTexts.has(node.entity.text);
         }
 
-        // Draw alignment edges for grounded entities
-        this.drawAlignments(sourceNodes, responseNodes, grounded);
+        // Store all nodes
+        this.allNodes = [...sourceNodes, ...responseNodes];
 
-        // Draw entity nodes
-        this.drawNodes(sourceNodes, 'source');
-        this.drawNodes(responseNodes, 'response');
+        // Create links for grounded matches
+        this.allLinks = [];
+        for (const match of grounded) {
+            const sourceNode = sourceNodes.find(n =>
+                n.entity.text === match.source.text ||
+                n.entity.normalized === match.source.normalized
+            );
+            const responseNode = responseNodes.find(n =>
+                n.entity.text === match.response.text
+            );
+            if (sourceNode && responseNode) {
+                this.allLinks.push({ source: sourceNode, target: responseNode });
+            }
+        }
 
-        // Draw labels
-        this.drawLabels([...sourceNodes, ...responseNodes]);
+        // Draw everything
+        this.drawAlignments();
+        this.drawNodes();
+        this.drawLabels();
     }
 
     positionNodes(entities, side, xFraction) {
@@ -132,79 +146,100 @@ class HalluGraphVisualizer {
         return nodes;
     }
 
-    drawAlignments(sourceNodes, responseNodes, grounded) {
+    drawAlignments() {
         const alignmentsLayer = this.svg.select('.alignments-layer');
 
-        for (const match of grounded) {
-            const sourceNode = sourceNodes.find(n =>
-                n.entity.text === match.source.text ||
-                n.entity.normalized === match.source.normalized
-            );
-            const responseNode = responseNodes.find(n =>
-                n.entity.text === match.response.text
-            );
-
-            if (sourceNode && responseNode) {
-                alignmentsLayer.append('line')
-                    .attr('x1', sourceNode.x)
-                    .attr('y1', sourceNode.y)
-                    .attr('x2', responseNode.x)
-                    .attr('y2', responseNode.y)
-                    .attr('stroke', '#22c55e')
-                    .attr('stroke-width', 2)
-                    .attr('stroke-opacity', 0.4)
-                    .attr('stroke-dasharray', '5,5');
-            }
-        }
+        this.linkElements = alignmentsLayer.selectAll('line')
+            .data(this.allLinks)
+            .enter()
+            .append('line')
+            .attr('x1', d => d.source.x)
+            .attr('y1', d => d.source.y)
+            .attr('x2', d => d.target.x)
+            .attr('y2', d => d.target.y)
+            .attr('stroke', '#22c55e')
+            .attr('stroke-width', 2)
+            .attr('stroke-opacity', 0.4)
+            .attr('stroke-dasharray', '5,5');
     }
 
-    drawNodes(nodes, side) {
+    drawNodes() {
         const nodesLayer = this.svg.select('.nodes-layer');
+        const self = this;
 
-        for (const node of nodes) {
-            let fill;
-            if (side === 'source') {
-                fill = 'url(#sourceGradient)';
-            } else {
-                fill = node.grounded ? 'url(#responseGradient)' : 'url(#ungroundedGradient)';
-            }
+        // Create drag behavior
+        const drag = d3.drag()
+            .on('start', function (event, d) {
+                d3.select(this).raise().attr('stroke-width', 3);
+            })
+            .on('drag', function (event, d) {
+                d.x = event.x;
+                d.y = event.y;
+                d3.select(this)
+                    .attr('cx', d.x)
+                    .attr('cy', d.y);
+                self.updatePositions(d);
+            })
+            .on('end', function (event, d) {
+                d3.select(this).attr('stroke-width', 2);
+            });
 
-            nodesLayer.append('circle')
-                .attr('cx', node.x)
-                .attr('cy', node.y)
-                .attr('r', 20)
-                .attr('fill', fill)
-                .attr('stroke', side === 'source' ? '#059669' : (node.grounded ? '#d4af37' : '#ef4444'))
-                .attr('stroke-width', 2)
-                .attr('opacity', 0.9)
-                .style('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))');
-        }
+        this.nodeElements = nodesLayer.selectAll('circle')
+            .data(this.allNodes)
+            .enter()
+            .append('circle')
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('r', 20)
+            .attr('fill', d => {
+                if (d.side === 'source') {
+                    return 'url(#sourceGradient)';
+                }
+                return d.grounded ? 'url(#responseGradient)' : 'url(#ungroundedGradient)';
+            })
+            .attr('stroke', d => {
+                if (d.side === 'source') return '#059669';
+                return d.grounded ? '#d4af37' : '#ef4444';
+            })
+            .attr('stroke-width', 2)
+            .attr('opacity', 0.9)
+            .style('cursor', 'grab')
+            .style('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))')
+            .call(drag);
     }
 
-    drawLabels(nodes) {
+    drawLabels() {
         const labelsLayer = this.svg.select('.labels-layer');
 
-        for (const node of nodes) {
-            // Truncate long labels
-            const label = node.entity.text.length > 15
-                ? node.entity.text.substring(0, 12) + '...'
-                : node.entity.text;
+        this.labelElements = labelsLayer.selectAll('text')
+            .data(this.allNodes)
+            .enter()
+            .append('text')
+            .attr('x', d => d.side === 'source' ? d.x - 28 : d.x + 28)
+            .attr('y', d => d.y)
+            .attr('dy', '0.35em')
+            .attr('text-anchor', d => d.side === 'source' ? 'end' : 'start')
+            .attr('fill', '#a0a0b0')
+            .attr('font-size', '10px')
+            .attr('font-family', 'JetBrains Mono, monospace')
+            .text(d => d.entity.text.length > 15 ? d.entity.text.substring(0, 12) + '...' : d.entity.text);
+    }
 
-            // Position label to the side
-            const labelX = node.side === 'source'
-                ? node.x - 28
-                : node.x + 28;
-            const anchor = node.side === 'source' ? 'end' : 'start';
+    updatePositions(draggedNode) {
+        // Update links
+        if (this.linkElements) {
+            this.linkElements
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+        }
 
-            labelsLayer.append('text')
-                .attr('x', labelX)
-                .attr('y', node.y)
-                .attr('dy', '0.35em')
-                .attr('text-anchor', anchor)
-                .attr('fill', '#a0a0b0')
-                .attr('font-size', '10px')
-                .attr('font-family', 'JetBrains Mono, monospace')
-                .text(label);
+        // Update labels
+        if (this.labelElements) {
+            this.labelElements
+                .attr('x', d => d.side === 'source' ? d.x - 28 : d.x + 28)
+                .attr('y', d => d.y);
         }
     }
 

@@ -684,6 +684,89 @@ footer {
     text-decoration: underline;
 }
 
+/* Timing Grid */
+.timing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.timing-item {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.timing-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.timing-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-secondary);
+}
+
+/* Cost Comparison */
+.cost-comparison {
+    margin-top: 1rem;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.cost-header {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.cost-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+}
+
+.cost-item {
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.cost-item.ours {
+    background: rgba(5, 150, 105, 0.15);
+}
+
+.cost-item.theirs {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.cost-name {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.cost-value {
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.cost-item.ours .cost-value {
+    color: var(--success);
+}
+
+.cost-item.theirs .cost-value {
+    color: var(--danger);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     nav {

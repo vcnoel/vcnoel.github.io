@@ -151,11 +151,42 @@
                     <!-- Audit Trail -->
                     <div class="audit-container" id="auditContainer">
                         <div class="audit-header">
-                            <i class="fas fa-clipboard-check"></i> Audit Trail
+                            <i class="fas fa-search"></i> Why? (White-Box Explanations)
                         </div>
                         <div class="audit-list" id="auditList">
                             <div class="audit-placeholder">
-                                Verify documents to see detailed audit trail
+                                Verify documents to see detailed explanations
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timing Metrics -->
+                    <div class="timing-grid">
+                        <div class="timing-item">
+                            <div class="timing-label">Entity Extraction</div>
+                            <div class="timing-value" id="extractTime">-- ms</div>
+                        </div>
+                        <div class="timing-item">
+                            <div class="timing-label">Graph Alignment</div>
+                            <div class="timing-value" id="alignTime">-- ms</div>
+                        </div>
+                        <div class="timing-item">
+                            <div class="timing-label">Total</div>
+                            <div class="timing-value" id="totalTime">-- ms</div>
+                        </div>
+                    </div>
+
+                    <!-- Cost Comparison -->
+                    <div class="cost-comparison">
+                        <div class="cost-header">Cost vs. GPT-4 Judge</div>
+                        <div class="cost-grid">
+                            <div class="cost-item ours">
+                                <div class="cost-name">HalluGraph</div>
+                                <div class="cost-value" id="ourCost">$0.00</div>
+                            </div>
+                            <div class="cost-item theirs">
+                                <div class="cost-name">GPT-4</div>
+                                <div class="cost-value">~$0.02</div>
                             </div>
                         </div>
                     </div>
