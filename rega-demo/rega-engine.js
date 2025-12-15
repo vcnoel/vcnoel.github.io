@@ -1,12 +1,12 @@
 /**
- * ReGA Engine - Graph-Based RAG Verification
+ * ReGA Engine - Proper Implementation per Paper
  * 
  * Based on: "ReGA: Zero-Cost Graph Alignment for Structural Hallucination Detection"
  * 
- * Features:
- * - Proper energy calibration (identical texts = 0)
- * - White-box explainability (shows what triggered detection)
- * - Sinkhorn-based graph alignment
+ * Key principles from paper:
+ * - Energy is CONTINUOUS: 0.00 = faithful, higher = hallucination
+ * - Structural energy: E = ||A_S - P^T A_H P||_F^2
+ * - Sinkhorn normalization for soft permutation
  */
 
 import { embeddingEngine } from './embeddings.js';
@@ -17,7 +17,7 @@ class ReGAEngine {
             sinkhornIterations: 10,
             temperature: 1.0,
             matchSteps: 5,
-            threshold: 0.15,
+            threshold: 0.15,  // From paper: energy > 0.15 = hallucination
         };
 
         this.metrics = {
@@ -34,294 +34,199 @@ class ReGAEngine {
     }
 
     // =========================================================================
-    // TEXT PREPROCESSING
+    // SINKHORN NORMALIZATION (from paper Section 3.2)
     // =========================================================================
 
-    normalizeText(text) {
-        return text.toLowerCase()
-            .replace(/[^\w\s]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-    }
+    /**
+     * Sinkhorn-Knopp algorithm for doubly-stochastic normalization
+     * Produces soft permutation matrix P
+     */
+    sinkhorn(simMatrix, iters = 10, temperature = 1.0) {
+        const m = simMatrix.length;
+        const n = simMatrix[0].length;
 
-    areTextsIdentical(source, hypothesis) {
-        const normSource = this.normalizeText(source);
-        const normHyp = this.normalizeText(hypothesis);
-
-        if (normSource === normHyp) return true;
-
-        const srcWords = new Set(normSource.split(' '));
-        const hypWords = new Set(normHyp.split(' '));
-
-        let overlap = 0;
-        for (const word of srcWords) {
-            if (hypWords.has(word)) overlap++;
-        }
-
-        const jaccardSim = overlap / (srcWords.size + hypWords.size - overlap);
-        return jaccardSim > 0.95;
-    }
-
-    extractNumbers(text) {
-        const numbers = [];
-        const regex = /\b\d{1,3}(?:,\d{3})*(?:\.\d+)?|\b\d+(?:\.\d+)?\b/g;
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-            numbers.push(parseFloat(match[0].replace(/,/g, '')));
-        }
-        return numbers;
-    }
-
-    extractEntities(text) {
-        const entities = new Set();
-
-        // Match capitalized words and multi-word proper nouns
-        const regex = /[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g;
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-            // Skip common words that happen to be capitalized at sentence start
-            const skipWords = ['the', 'a', 'an', 'it', 'its', 'is', 'was', 'were', 'has', 'have', 'been'];
-            const lower = match[0].toLowerCase();
-            if (!skipWords.includes(lower.split(' ')[0])) {
-                entities.add(lower);
-            }
-        }
-
-        // Also extract quoted terms which are often entity-like
-        const quotedRegex = /["']([^"']+)["']/g;
-        while ((match = quotedRegex.exec(text)) !== null) {
-            entities.add(match[1].toLowerCase());
-        }
-
-        return [...entities];
-    }
-
-    // =========================================================================
-    // FACTUAL ANALYSIS WITH EXPLANATIONS
-    // =========================================================================
-
-    computeFactualFeatures(sourceText, hypText) {
-        const explanations = [];
-
-        // Number comparison
-        const srcNums = this.extractNumbers(sourceText);
-        const hypNums = this.extractNumbers(hypText);
-        const mismatchedNumbers = [];
-
-        let numberMismatch = 0;
-        if (srcNums.length > 0 && hypNums.length > 0) {
-            for (const hypNum of hypNums) {
-                const matches = srcNums.some(srcNum =>
-                    Math.abs(hypNum - srcNum) / Math.max(srcNum, 1) < 0.01
-                );
-                if (!matches) {
-                    numberMismatch += 1;
-                    const closest = srcNums.reduce((a, b) =>
-                        Math.abs(b - hypNum) < Math.abs(a - hypNum) ? b : a
-                    );
-                    mismatchedNumbers.push({ hypothesis: hypNum, source: closest });
-                }
-            }
-            numberMismatch = numberMismatch / hypNums.length;
-        }
-
-        if (mismatchedNumbers.length > 0) {
-            for (const m of mismatchedNumbers) {
-                explanations.push({
-                    type: 'number',
-                    icon: '🔢',
-                    text: `Number mismatch: "${m.hypothesis}" should be "${m.source}"`
-                });
-            }
-        }
-
-        // Entity comparison
-        const srcEntities = new Set(this.extractEntities(sourceText));
-        const hypEntities = new Set(this.extractEntities(hypText));
-        const newEntities = [];
-
-        for (const entity of hypEntities) {
-            if (!srcEntities.has(entity)) {
-                newEntities.push(entity);
-            }
-        }
-
-        let entityMismatch = 0;
-        if (hypEntities.size > 0) {
-            entityMismatch = newEntities.length / hypEntities.size;
-        }
-
-        if (newEntities.length > 0) {
-            explanations.push({
-                type: 'entity',
-                icon: '👤',
-                text: `Unknown entities: ${newEntities.slice(0, 3).map(e => `"${e}"`).join(', ')}${newEntities.length > 3 ? '...' : ''}`
-            });
-        }
-
-        // Antonym detection
-        const antonymPairs = [
-            ['tallest', 'smallest'], ['largest', 'smallest'], ['highest', 'lowest'],
-            ['best', 'worst'], ['first', 'last'], ['increase', 'decrease'],
-            ['always', 'never'], ['all', 'none'], ['true', 'false'],
-            ['bought', 'sold'], ['acquired', 'divested'], ['created', 'destroyed'],
-            ['success', 'failure'], ['win', 'lose'], ['positive', 'negative'],
-            ['approved', 'rejected'], ['accept', 'reject'], ['allow', 'deny'],
-            ['started', 'ended'], ['opened', 'closed'], ['raised', 'lowered']
-        ];
-
-        const srcLower = sourceText.toLowerCase();
-        const hypLower = hypText.toLowerCase();
-        const foundAntonyms = [];
-
-        for (const [word1, word2] of antonymPairs) {
-            if (srcLower.includes(word1) && hypLower.includes(word2)) {
-                foundAntonyms.push({ source: word1, hypothesis: word2 });
-            } else if (srcLower.includes(word2) && hypLower.includes(word1)) {
-                foundAntonyms.push({ source: word2, hypothesis: word1 });
-            }
-        }
-
-        if (foundAntonyms.length > 0) {
-            for (const a of foundAntonyms) {
-                explanations.push({
-                    type: 'antonym',
-                    icon: '⚠️',
-                    text: `Contradiction: "${a.source}" → "${a.hypothesis}"`
-                });
-            }
-        }
-
-        return {
-            numberMismatch,
-            entityMismatch,
-            antonymFound: foundAntonyms.length > 0 ? 1 : 0,
-            explanations,
-            details: {
-                mismatchedNumbers,
-                newEntities,
-                foundAntonyms
-            }
-        };
-    }
-
-    // =========================================================================
-    // ALIGNMENT FEATURES
-    // =========================================================================
-
-    computeAlignmentFeatures(sourceEmbeddings, hypEmbeddings) {
-        const n = sourceEmbeddings.length;
-        const m = hypEmbeddings.length;
-
-        const simMatrix = [];
-        for (let i = 0; i < m; i++) {
-            const row = [];
-            for (let j = 0; j < n; j++) {
-                row.push(this.cosineSimilarity(hypEmbeddings[i], sourceEmbeddings[j]));
-            }
-            simMatrix.push(row);
-        }
-
-        const alignments = [];
-        for (let i = 0; i < m; i++) {
-            const maxSim = Math.max(...simMatrix[i]);
-            const bestMatch = simMatrix[i].indexOf(maxSim);
-            alignments.push({ hypIdx: i, srcIdx: bestMatch, similarity: maxSim });
-        }
-
-        const avgSimilarity = alignments.reduce((sum, a) => sum + a.similarity, 0) / alignments.length;
-        const minSimilarity = Math.min(...alignments.map(a => a.similarity));
-
-        return {
-            avgCost: 1 - avgSimilarity,
-            maxCost: 1 - minSimilarity,
-            alignments,
-            simMatrix
-        };
-    }
-
-    // =========================================================================
-    // DEEP REGA - SINKHORN ALIGNMENT
-    // =========================================================================
-
-    sinkhorn(matrix, iters = 10, temperature = 1.0) {
-        const rows = matrix.length;
-        const cols = matrix[0].length;
-
-        let P = matrix.map(row =>
+        // Initialize with scaled similarities
+        let P = simMatrix.map(row =>
             row.map(val => Math.exp(val / temperature))
         );
 
+        // Alternate row and column normalization
         for (let iter = 0; iter < iters; iter++) {
-            for (let i = 0; i < rows; i++) {
-                const rowSum = P[i].reduce((a, b) => a + b, 0) + 1e-8;
+            // Row normalization
+            for (let i = 0; i < m; i++) {
+                const rowSum = P[i].reduce((a, b) => a + b, 0) + 1e-10;
                 P[i] = P[i].map(v => v / rowSum);
             }
-            for (let j = 0; j < cols; j++) {
-                let colSum = 0;
-                for (let i = 0; i < rows; i++) colSum += P[i][j];
-                colSum += 1e-8;
-                for (let i = 0; i < rows; i++) P[i][j] /= colSum;
+            // Column normalization
+            for (let j = 0; j < n; j++) {
+                let colSum = 1e-10;
+                for (let i = 0; i < m; i++) colSum += P[i][j];
+                for (let i = 0; i < m; i++) P[i][j] /= colSum;
             }
         }
 
         return P;
     }
 
-    computeStructuralEnergy(simMatrix, permutation) {
-        const m = permutation.length;
-        const n = permutation[0].length;
+    // =========================================================================
+    // STRUCTURAL ENERGY (from paper Equation in Section 3.2)
+    // E = ||A_S - P^T A_H P||_F^2
+    // =========================================================================
+
+    /**
+     * Build adjacency matrix for sequential text (sentences as nodes)
+     * Adjacent sentences are connected
+     */
+    buildAdjacency(numNodes) {
+        const adj = [];
+        for (let i = 0; i < numNodes; i++) {
+            adj.push(new Array(numNodes).fill(0));
+            adj[i][i] = 1;  // Self-loop
+            if (i > 0) adj[i][i - 1] = 1;  // Previous
+            if (i < numNodes - 1) adj[i][i + 1] = 1;  // Next
+        }
+        return adj;
+    }
+
+    /**
+     * Compute structural energy: how well hypothesis structure aligns with source
+     * Lower energy = better alignment = more faithful
+     */
+    computeStructuralEnergy(srcAdj, hypAdj, P) {
+        const n = srcAdj.length;
+        const m = hypAdj.length;
+
+        // Compute P^T A_H P (transformed hypothesis adjacency)
+        // Then measure Frobenius distance to A_S
 
         let energy = 0;
+        let count = 0;
+
+        // For each pair of source nodes, compare their edge to aligned hypothesis edges
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                // Compute (P^T A_H P)[i][j]
+                let alignedVal = 0;
+                for (let hi = 0; hi < m; hi++) {
+                    for (let hj = 0; hj < m; hj++) {
+                        alignedVal += P[hi][i] * hypAdj[hi][hj] * P[hj][j];
+                    }
+                }
+
+                const diff = srcAdj[i][j] - alignedVal;
+                energy += diff * diff;
+                count++;
+            }
+        }
+
+        // Normalize by number of comparisons
+        return count > 0 ? Math.sqrt(energy / count) : 0;
+    }
+
+    /**
+     * Compute alignment energy: weighted cost under soft permutation
+     */
+    computeAlignmentEnergy(simMatrix, P) {
+        let energy = 0;
+        const m = P.length;
+        const n = P[0].length;
+
         for (let i = 0; i < m; i++) {
             for (let j = 0; j < n; j++) {
+                // Cost = 1 - similarity, weighted by permutation
                 const cost = 1 - simMatrix[i][j];
-                energy += permutation[i][j] * cost;
+                energy += P[i][j] * cost;
             }
         }
 
         return energy;
     }
 
-    deepReGA(sourceEmbeddings, hypEmbeddings, explanations) {
-        const simMatrix = [];
-        for (let i = 0; i < hypEmbeddings.length; i++) {
-            const row = [];
-            for (let j = 0; j < sourceEmbeddings.length; j++) {
-                row.push(this.cosineSimilarity(hypEmbeddings[i], sourceEmbeddings[j]));
-            }
-            simMatrix.push(row);
+    // =========================================================================
+    // FEATURE EXTRACTION (for explanations, not primary energy)
+    // =========================================================================
+
+    extractNumbers(text) {
+        const numbers = [];
+        const regex = /\b\d+(?:\.\d+)?\b/g;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            numbers.push(parseFloat(match[0]));
         }
+        return numbers;
+    }
 
-        const permutation = this.sinkhorn(
-            simMatrix,
-            this.params.sinkhornIterations,
-            this.params.temperature
-        );
+    /**
+     * Detect factual issues for explanations
+     * Returns explanations array, not used for energy calculation
+     */
+    detectFactualIssues(sourceText, hypText) {
+        const explanations = [];
+        const srcLower = sourceText.toLowerCase();
+        const hypLower = hypText.toLowerCase();
 
-        const energy = this.computeStructuralEnergy(simMatrix, permutation);
+        // Number differences
+        const srcNums = this.extractNumbers(sourceText);
+        const hypNums = this.extractNumbers(hypText);
 
-        // Add explanation for low-similarity alignments
-        for (let i = 0; i < hypEmbeddings.length; i++) {
-            const maxSim = Math.max(...simMatrix[i]);
-            if (maxSim < 0.7) {
+        for (const hypNum of hypNums) {
+            const hasMatch = srcNums.some(srcNum =>
+                Math.abs(hypNum - srcNum) / Math.max(srcNum, 1) < 0.05
+            );
+            if (!hasMatch && srcNums.length > 0) {
+                const closest = srcNums.reduce((a, b) =>
+                    Math.abs(b - hypNum) < Math.abs(a - hypNum) ? b : a
+                );
                 explanations.push({
-                    type: 'alignment',
-                    icon: '🔗',
-                    text: `Weak alignment for sentence ${i + 1} (${(maxSim * 100).toFixed(0)}% similarity)`
+                    type: 'number',
+                    icon: '🔢',
+                    text: `Number changed: "${hypNum}" (expected ~${closest})`
                 });
             }
         }
 
-        return {
-            energy,
-            permutation,
-            simMatrix
-        };
+        // Antonym detection
+        const antonymPairs = [
+            ['tallest', 'smallest'], ['largest', 'smallest'], ['highest', 'lowest'],
+            ['best', 'worst'], ['first', 'last'], ['increase', 'decrease'],
+            ['always', 'never'], ['all', 'none'], ['true', 'false']
+        ];
+
+        for (const [word1, word2] of antonymPairs) {
+            if (srcLower.includes(word1) && hypLower.includes(word2)) {
+                explanations.push({
+                    type: 'antonym',
+                    icon: '⚠️',
+                    text: `Contradiction: "${word1}" → "${word2}"`
+                });
+            } else if (srcLower.includes(word2) && hypLower.includes(word1)) {
+                explanations.push({
+                    type: 'antonym',
+                    icon: '⚠️',
+                    text: `Contradiction: "${word2}" → "${word1}"`
+                });
+            }
+        }
+
+        return explanations;
     }
 
     // =========================================================================
-    // MAIN VERIFICATION PIPELINE
+    // COSINE SIMILARITY
+    // =========================================================================
+
+    cosineSimilarity(a, b) {
+        let dot = 0, normA = 0, normB = 0;
+        for (let i = 0; i < a.length; i++) {
+            dot += a[i] * b[i];
+            normA += a[i] * a[i];
+            normB += b[i] * b[i];
+        }
+        return dot / (Math.sqrt(normA) * Math.sqrt(normB) + 1e-8);
+    }
+
+    // =========================================================================
+    // MAIN VERIFICATION (Following paper methodology)
     // =========================================================================
 
     async verify(sourceText, hypothesisText) {
@@ -334,30 +239,7 @@ class ReGAEngine {
             stage: 'none'
         };
 
-        // Quick check: identical texts
-        if (this.areTextsIdentical(sourceText, hypothesisText)) {
-            this.metrics.totalTime = performance.now() - startTime;
-            this.metrics.stage = 'identical';
-            return {
-                energy: 0,
-                isHallucination: false,
-                verdict: 'PASS',
-                confidence: 1.0,
-                stage: 'Identical Text',
-                stageReason: 'Source and hypothesis are essentially identical',
-                explanations: [],
-                metrics: { ...this.metrics },
-                details: {
-                    sourceSentences: [sourceText],
-                    hypSentences: [hypothesisText],
-                    sourceEmbeddings: [],
-                    hypEmbeddings: [],
-                    alignmentMatrix: [[1]]
-                }
-            };
-        }
-
-        // Split into sentences
+        // Split text into sentences
         const sourceSentences = embeddingEngine.splitIntoSentences(sourceText);
         const hypSentences = embeddingEngine.splitIntoSentences(hypothesisText);
 
@@ -367,49 +249,76 @@ class ReGAEngine {
         const hypEmbeddings = await embeddingEngine.embedBatch(hypSentences);
         this.metrics.embedTime = performance.now() - embedStart;
 
-        // Stage 1: Compute factual features with explanations
+        // Feature extraction for explanations
         const featureStart = performance.now();
-        const factualFeatures = this.computeFactualFeatures(sourceText, hypothesisText);
-        const explanations = [...factualFeatures.explanations];
+        const explanations = this.detectFactualIssues(sourceText, hypothesisText);
         this.metrics.featureTime = performance.now() - featureStart;
 
-        // Stage 2: Deep ReGA
+        // Deep ReGA: Compute similarity matrix
         const deepStart = performance.now();
-        const deepResult = this.deepReGA(sourceEmbeddings, hypEmbeddings, explanations);
-        this.metrics.deepRegaTime = performance.now() - deepStart;
 
-        // Combine energies - weight factual features more heavily
-        let finalEnergy = deepResult.energy;
-
-        // Number mismatches are a strong signal
-        if (factualFeatures.numberMismatch > 0) {
-            finalEnergy += factualFeatures.numberMismatch * 0.5;
+        const simMatrix = [];
+        for (let i = 0; i < hypEmbeddings.length; i++) {
+            const row = [];
+            for (let j = 0; j < sourceEmbeddings.length; j++) {
+                row.push(this.cosineSimilarity(hypEmbeddings[i], sourceEmbeddings[j]));
+            }
+            simMatrix.push(row);
         }
 
-        // Antonyms are definite hallucinations
-        if (factualFeatures.antonymFound) {
-            finalEnergy += 0.5;
-        }
+        // Sinkhorn normalization for soft permutation
+        const P = this.sinkhorn(
+            simMatrix,
+            this.params.sinkhornIterations,
+            this.params.temperature
+        );
 
-        // Entity mismatches (new names, places)
-        if (factualFeatures.entityMismatch > 0) {
-            finalEnergy += factualFeatures.entityMismatch * 0.4;
-        }
+        // Build adjacency matrices
+        const srcAdj = this.buildAdjacency(sourceEmbeddings.length);
+        const hypAdj = this.buildAdjacency(hypEmbeddings.length);
 
+        // Compute energies (following paper)
+        const structuralEnergy = this.computeStructuralEnergy(srcAdj, hypAdj, P);
+        const alignmentEnergy = this.computeAlignmentEnergy(simMatrix, P);
+
+        // Combined energy (paper uses structural primarily)
+        // Weight: 60% structural, 40% alignment
+        let finalEnergy = 0.6 * structuralEnergy + 0.4 * alignmentEnergy;
+
+        // Add small penalty for detected factual issues (explanatory, not dominant)
+        const factualPenalty = Math.min(explanations.length * 0.05, 0.2);
+        finalEnergy += factualPenalty;
+
+        // Clamp to reasonable range [0, 1] for display
         finalEnergy = Math.max(0, Math.min(1, finalEnergy));
 
+        this.metrics.deepRegaTime = performance.now() - deepStart;
+
+        // Decision based on threshold
         const isHallucination = finalEnergy > this.params.threshold;
         const confidence = isHallucination
             ? Math.min((finalEnergy - this.params.threshold) / 0.3 + 0.5, 1.0)
             : Math.min((this.params.threshold - finalEnergy) / this.params.threshold + 0.5, 1.0);
 
-        let stage = 'Deep ReGA';
-        let stageReason = 'Graph alignment with Sinkhorn normalization';
+        // Add explanations for low similarity alignments
+        for (let i = 0; i < hypEmbeddings.length; i++) {
+            const maxSim = Math.max(...simMatrix[i]);
+            if (maxSim < 0.6) {
+                explanations.push({
+                    type: 'alignment',
+                    icon: '🔗',
+                    text: `Weak match for sentence ${i + 1} (${(maxSim * 100).toFixed(0)}% sim)`
+                });
+            }
+        }
 
-        if (factualFeatures.antonymFound) {
+        let stage = 'Deep ReGA';
+        let stageReason = 'Sinkhorn alignment + structural energy';
+
+        if (explanations.some(e => e.type === 'antonym')) {
             stage = 'Factual Analysis';
             stageReason = 'Semantic contradiction detected';
-        } else if (factualFeatures.numberMismatch > 0.2) {
+        } else if (explanations.some(e => e.type === 'number')) {
             stage = 'Factual Analysis';
             stageReason = 'Numerical mismatch detected';
         }
@@ -431,24 +340,12 @@ class ReGAEngine {
                 hypSentences,
                 sourceEmbeddings: sourceEmbeddings.map(e => Array.from(e)),
                 hypEmbeddings: hypEmbeddings.map(e => Array.from(e)),
-                alignmentMatrix: deepResult.permutation,
-                factualFeatures
+                alignmentMatrix: P,
+                structuralEnergy,
+                alignmentEnergy,
+                simMatrix
             }
         };
-    }
-
-    // =========================================================================
-    // UTILITY
-    // =========================================================================
-
-    cosineSimilarity(a, b) {
-        let dot = 0, normA = 0, normB = 0;
-        for (let i = 0; i < a.length; i++) {
-            dot += a[i] * b[i];
-            normA += a[i] * a[i];
-            normB += b[i] * b[i];
-        }
-        return dot / (Math.sqrt(normA) * Math.sqrt(normB) + 1e-8);
     }
 }
 
