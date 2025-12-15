@@ -582,6 +582,60 @@ nav {
     line-height: 1.4;
 }
 
+/* Full-Width Explanations Bar */
+.explanations-bar {
+    margin-top: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+}
+
+.explanations-header {
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border);
+}
+
+.explanations-header i {
+    color: var(--legal-gold);
+}
+
+.explanations-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    min-height: 60px;
+}
+
+.explanation-placeholder {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    width: 100%;
+    padding: 0.5rem;
+}
+
+.explanations-content .audit-item {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 300px;
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .explanations-content .audit-item {
+        flex: 1 1 100%;
+    }
+}
+
 /* Presets */
 .presets-grid {
     display: flex;
