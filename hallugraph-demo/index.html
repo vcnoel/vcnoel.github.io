@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="HalluGraph: Interactive Legal RAG Hallucination Detection Demo. Verify LLM outputs against knowledge graphs using Entity Grounding and Relation Preservation metrics.">
+    <meta name="author" content="Valentin Noël">
+    <title>HalluGraph Demo | Legal RAG Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="bg-animation">
+        <canvas id="networkCanvas"></canvas>
+    </div>
+
+    <nav>
+        <a href="../" class="nav-brand">
+            <i class="fas fa-arrow-left"></i> Back to Portfolio
+        </a>
+        <div class="nav-title">HalluGraph Demo</div>
+        <span class="nav-badge">Legal AI</span>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-gavel"></i> Legal RAG Verification
+            </div>
+            <h1>HalluGraph: <span>Knowledge Graph Verification</span></h1>
+            <p class="hero-subtitle">
+                Detect hallucinations in legal AI outputs using Entity Grounding and Relation Preservation.
+                Audit every claim back to source documents with full traceability.
+            </p>
+        </div>
+    </section>
+
+    <!-- Model Loading Status -->
+    <section class="section" id="model-status">
+        <div class="status-card" id="modelStatusCard">
+            <div class="status-icon loading">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Loading NER & Embedding Models</div>
+                <div class="status-detail" id="modelStatusText">Initializing Transformers.js...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="modelProgress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Panel -->
+    <section class="section" id="demo-panel">
+        <div class="demo-container">
+            <!-- Left Panel: Input -->
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-file-contract"></i> Legal Documents</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="contextText">Source Context (Contract/Case)</label>
+                        <textarea id="contextText"
+                            placeholder="Enter the source legal document text...">Westfield Properties LLC ("Landlord") and Pacific Retail Group Inc. ("Tenant") entered into a Commercial Lease Agreement effective January 15, 2024. The monthly rent is $45,000 payable on the first business day of each month. The lease term is 5 years with two 3-year renewal options. Security deposit of $135,000 is required.</textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="responseText">LLM Response (To Verify)</label>
+                        <textarea id="responseText"
+                            placeholder="Enter the LLM-generated response to verify...">The lease agreement between Westfield Properties LLC and Pacific Retail Group Inc. was signed on January 15, 2024. The monthly rent is $48,000, due on the last day of each month. The lease runs for 3 years with options to renew.</textarea>
+                    </div>
+                    <button id="verifyBtn" class="verify-btn" disabled>
+                        <i class="fas fa-balance-scale"></i> Verify Fidelity
+                    </button>
+                </div>
+            </div>
+
+            <!-- Center Panel: Visualization -->
+            <div class="panel viz-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-project-diagram"></i> Knowledge Graph Alignment</h3>
+                </div>
+                <div class="panel-content">
+                    <div id="graphContainer" class="graph-container">
+                        <svg id="graphSvg"></svg>
+                        <div class="graph-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot source"></span> Source Entity
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot response"></span> Response Entity
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot ungrounded"></span> Ungrounded
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="panel results-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-chart-bar"></i> Fidelity Metrics</h3>
+                </div>
+                <div class="panel-content">
+                    <!-- Composite Score -->
+                    <div class="result-card">
+                        <div class="gauge-container">
+                            <svg class="gauge" viewBox="0 0 200 120">
+                                <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" />
+                                <path class="gauge-fill" id="gaugeFill" d="M 20 100 A 80 80 0 0 1 180 100" />
+                            </svg>
+                            <div class="gauge-value" id="cfiValue">--</div>
+                            <div class="gauge-label">CFI Score</div>
+                        </div>
+                        <div class="verdict" id="verdict">
+                            <span class="verdict-text">Awaiting Input</span>
+                        </div>
+                    </div>
+
+                    <!-- Component Metrics -->
+                    <div class="metrics-grid">
+                        <div class="metric highlight-eg">
+                            <div class="metric-label">Entity Grounding</div>
+                            <div class="metric-value" id="egScore">--%</div>
+                        </div>
+                        <div class="metric highlight-rp">
+                            <div class="metric-label">Relation Preservation</div>
+                            <div class="metric-value" id="rpScore">--%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Entities Found</div>
+                            <div class="metric-value" id="entityCount">-- / --</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Relations Verified</div>
+                            <div class="metric-value" id="relationCount">-- / --</div>
+                        </div>
+                    </div>
+
+                    <!-- Audit Trail -->
+                    <div class="audit-container" id="auditContainer">
+                        <div class="audit-header">
+                            <i class="fas fa-clipboard-check"></i> Audit Trail
+                        </div>
+                        <div class="audit-list" id="auditList">
+                            <div class="audit-placeholder">
+                                Verify documents to see detailed audit trail
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Preset Examples -->
+    <section class="section" id="presets">
+        <div class="section-header">
+            <h2><i class="fas fa-bookmark"></i> Legal Test Cases</h2>
+            <p>Test HalluGraph on different legal scenarios</p>
+        </div>
+        <div class="presets-grid">
+            <button class="preset-btn" data-preset="contract-faithful">
+                <i class="fas fa-check-circle"></i>
+                <span>Faithful Contract</span>
+            </button>
+            <button class="preset-btn" data-preset="contract-hallucinated">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Hallucinated Contract</span>
+            </button>
+            <button class="preset-btn" data-preset="case-faithful">
+                <i class="fas fa-gavel"></i>
+                <span>Faithful Case Law</span>
+            </button>
+            <button class="preset-btn" data-preset="case-hallucinated">
+                <i class="fas fa-times-circle"></i>
+                <span>Hallucinated Citation</span>
+            </button>
+            <button class="preset-btn" data-preset="party-swap">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Party Confusion</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section" id="how-it-works">
+        <div class="section-header">
+            <h2><i class="fas fa-cogs"></i> How HalluGraph Works</h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h4>Entity Extraction</h4>
+                <p>Extract named entities (parties, dates, amounts, provisions) from source and response using NER.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h4>Graph Construction</h4>
+                <p>Build knowledge graphs G_c (context) and G_a (answer) with entities as nodes and relations as edges.
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h4>Entity Grounding</h4>
+                <p>Compute EG: fraction of response entities that match entities in the source document.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h4>Relation Preservation</h4>
+                <p>Compute RP: fraction of response edges that are supported by source graph edges.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">5</div>
+                <h4>Composite Fidelity</h4>
+                <p>CFI = α·EG + (1-α)·RP provides a unified score with full audit trail for each flagged issue.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>HalluGraph Demo by <a href="../">Valentin Noël</a></p>
+            <p>Based on HalluGraph: Auditable Hallucination Detection for Legal RAG Systems</p>
+        </div>
+    </footer>
+
+    <!-- Load D3.js for visualization -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- HalluGraph Engine -->
+    <script type="module" src="hallugraph-engine.js"></script>
+    <!-- Visualizer -->
+    <script type="module" src="visualizer.js"></script>
+    <!-- Main App -->
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
