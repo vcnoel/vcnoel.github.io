@@ -73,13 +73,27 @@ class ReGAEngine {
     }
 
     extractEntities(text) {
-        const entities = [];
+        const entities = new Set();
+
+        // Match capitalized words and multi-word proper nouns
         const regex = /[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g;
         let match;
         while ((match = regex.exec(text)) !== null) {
-            entities.push(match[0].toLowerCase());
+            // Skip common words that happen to be capitalized at sentence start
+            const skipWords = ['the', 'a', 'an', 'it', 'its', 'is', 'was', 'were', 'has', 'have', 'been'];
+            const lower = match[0].toLowerCase();
+            if (!skipWords.includes(lower.split(' ')[0])) {
+                entities.add(lower);
+            }
         }
-        return [...new Set(entities)];
+
+        // Also extract quoted terms which are often entity-like
+        const quotedRegex = /["']([^"']+)["']/g;
+        while ((match = quotedRegex.exec(text)) !== null) {
+            entities.add(match[1].toLowerCase());
+        }
+
+        return [...entities];
     }
 
     // =========================================================================
@@ -364,17 +378,22 @@ class ReGAEngine {
         const deepResult = this.deepReGA(sourceEmbeddings, hypEmbeddings, explanations);
         this.metrics.deepRegaTime = performance.now() - deepStart;
 
-        // Combine energies
+        // Combine energies - weight factual features more heavily
         let finalEnergy = deepResult.energy;
 
+        // Number mismatches are a strong signal
         if (factualFeatures.numberMismatch > 0) {
-            finalEnergy += factualFeatures.numberMismatch * 0.3;
+            finalEnergy += factualFeatures.numberMismatch * 0.5;
         }
+
+        // Antonyms are definite hallucinations
         if (factualFeatures.antonymFound) {
-            finalEnergy += 0.4;
+            finalEnergy += 0.5;
         }
-        if (factualFeatures.entityMismatch > 0.3) {
-            finalEnergy += factualFeatures.entityMismatch * 0.2;
+
+        // Entity mismatches (new names, places)
+        if (factualFeatures.entityMismatch > 0) {
+            finalEnergy += factualFeatures.entityMismatch * 0.4;
         }
 
         finalEnergy = Math.max(0, Math.min(1, finalEnergy));
