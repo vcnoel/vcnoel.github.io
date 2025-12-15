@@ -149,39 +149,58 @@
             background-clip: text;
             font-weight: 600;
             overflow: visible;
+            display: inline-block;
+        }
+
+        .nav-links .golden-sparkle::before,
+        .nav-links .golden-sparkle::after {
+            position: absolute;
+            -webkit-text-fill-color: initial;
+            pointer-events: none;
         }
 
         .nav-links .golden-sparkle::before {
             content: '✨';
-            position: absolute;
-            top: -8px;
-            right: -12px;
-            font-size: 0.7rem;
-            animation: sparkle-float 2s ease-in-out infinite;
-            -webkit-text-fill-color: initial;
+            font-size: 0.6rem;
+            animation: orbit-sparkle 3s linear infinite;
         }
 
         .nav-links .golden-sparkle::after {
             content: '⭐';
-            position: absolute;
-            bottom: -5px;
-            left: -8px;
             font-size: 0.5rem;
-            animation: sparkle-float 2.5s ease-in-out infinite reverse;
-            -webkit-text-fill-color: initial;
+            animation: orbit-sparkle 3s linear infinite;
+            animation-delay: -1.5s;
         }
 
-        @keyframes sparkle-float {
+        @keyframes orbit-sparkle {
+            0% {
+                top: 50%;
+                left: -12px;
+                transform: translateY(-50%) scale(1);
+            }
 
-            0%,
-            100% {
-                transform: translateY(0) scale(1);
-                opacity: 1;
+            25% {
+                top: -10px;
+                left: 50%;
+                transform: translate(-50%, 0) scale(1.2);
             }
 
             50% {
-                transform: translateY(-3px) scale(1.2);
-                opacity: 0.8;
+                top: 50%;
+                left: calc(100% + 8px);
+                transform: translateY(-50%) scale(1);
+            }
+
+            75% {
+                top: calc(100% + 6px);
+                left: 50%;
+                transform: translate(-50%, 0) scale(1.2);
+            }
+
+            100% {
+                top: 50%;
+                left: -12px;
+                transform: translateY(-50%) scale(1);
             }
         }
 
@@ -777,7 +796,7 @@
             </div>
             <div class="hero-stats">
                 <div class="stat">
-                    <div class="stat-value">5+</div>
+                    <div class="stat-value">10+</div>
                     <div class="stat-label">Publications</div>
                 </div>
                 <div class="stat">
@@ -785,7 +804,7 @@
                     <div class="stat-label">Contributors Led</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">3+</div>
+                    <div class="stat-value">5+</div>
                     <div class="stat-label">Years Research</div>
                 </div>
             </div>
