@@ -30,8 +30,11 @@
             --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
             --success: #22c55e;
             --warning: #f59e0b;
+            --gold: #fbbf24;
+            --gold-light: #fcd34d;
             --border: rgba(255, 255, 255, 0.08);
             --glow: 0 0 40px rgba(99, 102, 241, 0.3);
+            --gold-glow: 0 0 30px rgba(251, 191, 36, 0.5);
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             --radius: 16px;
             --radius-sm: 8px;
@@ -135,6 +138,55 @@
 
         .nav-links a:hover {
             color: var(--accent-primary);
+        }
+
+        /* Golden Sparkle Button */
+        .nav-links .golden-sparkle {
+            position: relative;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+            overflow: visible;
+        }
+
+        .nav-links .golden-sparkle::before {
+            content: '✨';
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            font-size: 0.7rem;
+            animation: sparkle-float 2s ease-in-out infinite;
+            -webkit-text-fill-color: initial;
+        }
+
+        .nav-links .golden-sparkle::after {
+            content: '⭐';
+            position: absolute;
+            bottom: -5px;
+            left: -8px;
+            font-size: 0.5rem;
+            animation: sparkle-float 2.5s ease-in-out infinite reverse;
+            -webkit-text-fill-color: initial;
+        }
+
+        @keyframes sparkle-float {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translateY(-3px) scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        .nav-links .golden-sparkle:hover {
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
         }
 
         /* Hero Section */
@@ -695,7 +747,7 @@
             <li><a href="#about">About</a></li>
             <li><a href="#experience">Experience</a></li>
             <li><a href="#publications">Publications</a></li>
-            <li><a href="#demos">Demos</a></li>
+            <li><a href="#demos" class="golden-sparkle">Demos</a></li>
             <li><a href="#skills">Skills</a></li>
         </ul>
     </nav>
