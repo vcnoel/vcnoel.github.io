@@ -1,9 +1,12 @@
 /**
- * ReGA Engine - Proper Implementation
+ * ReGA Engine - Graph-Based RAG Verification
  * 
  * Based on: "ReGA: Zero-Cost Graph Alignment for Structural Hallucination Detection"
  * 
- * Key principle: Energy should be ~0 for identical/faithful texts, high for hallucinations
+ * Features:
+ * - Proper energy calibration (identical texts = 0)
+ * - White-box explainability (shows what triggered detection)
+ * - Sinkhorn-based graph alignment
  */
 
 import { embeddingEngine } from './embeddings.js';
@@ -34,9 +37,6 @@ class ReGAEngine {
     // TEXT PREPROCESSING
     // =========================================================================
 
-    /**
-     * Normalize text for comparison
-     */
     normalizeText(text) {
         return text.toLowerCase()
             .replace(/[^\w\s]/g, ' ')
@@ -44,16 +44,12 @@ class ReGAEngine {
             .trim();
     }
 
-    /**
-     * Check if texts are essentially identical
-     */
     areTextsIdentical(source, hypothesis) {
         const normSource = this.normalizeText(source);
         const normHyp = this.normalizeText(hypothesis);
 
         if (normSource === normHyp) return true;
 
-        // Check similarity of normalized versions
         const srcWords = new Set(normSource.split(' '));
         const hypWords = new Set(normHyp.split(' '));
 
@@ -63,12 +59,9 @@ class ReGAEngine {
         }
 
         const jaccardSim = overlap / (srcWords.size + hypWords.size - overlap);
-        return jaccardSim > 0.95;  // 95% word overlap = essentially identical
+        return jaccardSim > 0.95;
     }
 
-    /**
-     * Extract numbers from text
-     */
     extractNumbers(text) {
         const numbers = [];
         const regex = /\b\d{1,3}(?:,\d{3})*(?:\.\d+)?|\b\d+(?:\.\d+)?\b/g;
@@ -79,12 +72,8 @@ class ReGAEngine {
         return numbers;
     }
 
-    /**
-     * Extract key entities (proper nouns, capitalized phrases)
-     */
     extractEntities(text) {
         const entities = [];
-        // Match capitalized words and multi-word proper nouns
         const regex = /[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g;
         let match;
         while ((match = regex.exec(text)) !== null) {
@@ -94,18 +83,122 @@ class ReGAEngine {
     }
 
     // =========================================================================
-    // FEATURE-BASED REGA (Stage 1)
+    // FACTUAL ANALYSIS WITH EXPLANATIONS
     // =========================================================================
 
-    /**
-     * Compute alignment cost between source and hypothesis embeddings
-     * This is the core of Feature ReGA
-     */
+    computeFactualFeatures(sourceText, hypText) {
+        const explanations = [];
+
+        // Number comparison
+        const srcNums = this.extractNumbers(sourceText);
+        const hypNums = this.extractNumbers(hypText);
+        const mismatchedNumbers = [];
+
+        let numberMismatch = 0;
+        if (srcNums.length > 0 && hypNums.length > 0) {
+            for (const hypNum of hypNums) {
+                const matches = srcNums.some(srcNum =>
+                    Math.abs(hypNum - srcNum) / Math.max(srcNum, 1) < 0.01
+                );
+                if (!matches) {
+                    numberMismatch += 1;
+                    const closest = srcNums.reduce((a, b) =>
+                        Math.abs(b - hypNum) < Math.abs(a - hypNum) ? b : a
+                    );
+                    mismatchedNumbers.push({ hypothesis: hypNum, source: closest });
+                }
+            }
+            numberMismatch = numberMismatch / hypNums.length;
+        }
+
+        if (mismatchedNumbers.length > 0) {
+            for (const m of mismatchedNumbers) {
+                explanations.push({
+                    type: 'number',
+                    icon: '🔢',
+                    text: `Number mismatch: "${m.hypothesis}" should be "${m.source}"`
+                });
+            }
+        }
+
+        // Entity comparison
+        const srcEntities = new Set(this.extractEntities(sourceText));
+        const hypEntities = new Set(this.extractEntities(hypText));
+        const newEntities = [];
+
+        for (const entity of hypEntities) {
+            if (!srcEntities.has(entity)) {
+                newEntities.push(entity);
+            }
+        }
+
+        let entityMismatch = 0;
+        if (hypEntities.size > 0) {
+            entityMismatch = newEntities.length / hypEntities.size;
+        }
+
+        if (newEntities.length > 0) {
+            explanations.push({
+                type: 'entity',
+                icon: '👤',
+                text: `Unknown entities: ${newEntities.slice(0, 3).map(e => `"${e}"`).join(', ')}${newEntities.length > 3 ? '...' : ''}`
+            });
+        }
+
+        // Antonym detection
+        const antonymPairs = [
+            ['tallest', 'smallest'], ['largest', 'smallest'], ['highest', 'lowest'],
+            ['best', 'worst'], ['first', 'last'], ['increase', 'decrease'],
+            ['always', 'never'], ['all', 'none'], ['true', 'false'],
+            ['bought', 'sold'], ['acquired', 'divested'], ['created', 'destroyed'],
+            ['success', 'failure'], ['win', 'lose'], ['positive', 'negative'],
+            ['approved', 'rejected'], ['accept', 'reject'], ['allow', 'deny'],
+            ['started', 'ended'], ['opened', 'closed'], ['raised', 'lowered']
+        ];
+
+        const srcLower = sourceText.toLowerCase();
+        const hypLower = hypText.toLowerCase();
+        const foundAntonyms = [];
+
+        for (const [word1, word2] of antonymPairs) {
+            if (srcLower.includes(word1) && hypLower.includes(word2)) {
+                foundAntonyms.push({ source: word1, hypothesis: word2 });
+            } else if (srcLower.includes(word2) && hypLower.includes(word1)) {
+                foundAntonyms.push({ source: word2, hypothesis: word1 });
+            }
+        }
+
+        if (foundAntonyms.length > 0) {
+            for (const a of foundAntonyms) {
+                explanations.push({
+                    type: 'antonym',
+                    icon: '⚠️',
+                    text: `Contradiction: "${a.source}" → "${a.hypothesis}"`
+                });
+            }
+        }
+
+        return {
+            numberMismatch,
+            entityMismatch,
+            antonymFound: foundAntonyms.length > 0 ? 1 : 0,
+            explanations,
+            details: {
+                mismatchedNumbers,
+                newEntities,
+                foundAntonyms
+            }
+        };
+    }
+
+    // =========================================================================
+    // ALIGNMENT FEATURES
+    // =========================================================================
+
     computeAlignmentFeatures(sourceEmbeddings, hypEmbeddings) {
         const n = sourceEmbeddings.length;
         const m = hypEmbeddings.length;
 
-        // Build similarity matrix
         const simMatrix = [];
         for (let i = 0; i < m; i++) {
             const row = [];
@@ -115,7 +208,6 @@ class ReGAEngine {
             simMatrix.push(row);
         }
 
-        // For each hypothesis sentence, find best matching source sentence
         const alignments = [];
         for (let i = 0; i < m; i++) {
             const maxSim = Math.max(...simMatrix[i]);
@@ -123,11 +215,9 @@ class ReGAEngine {
             alignments.push({ hypIdx: i, srcIdx: bestMatch, similarity: maxSim });
         }
 
-        // Compute alignment quality score
         const avgSimilarity = alignments.reduce((sum, a) => sum + a.similarity, 0) / alignments.length;
         const minSimilarity = Math.min(...alignments.map(a => a.similarity));
 
-        // Cost = 1 - similarity (low similarity = high cost = likely hallucination)
         return {
             avgCost: 1 - avgSimilarity,
             maxCost: 1 - minSimilarity,
@@ -136,91 +226,23 @@ class ReGAEngine {
         };
     }
 
-    /**
-     * Compute factual consistency features
-     */
-    computeFactualFeatures(sourceText, hypText) {
-        // Number comparison
-        const srcNums = this.extractNumbers(sourceText);
-        const hypNums = this.extractNumbers(hypText);
-
-        let numberMismatch = 0;
-        if (srcNums.length > 0 && hypNums.length > 0) {
-            // Check if hypothesis numbers match source numbers
-            for (const hypNum of hypNums) {
-                const matches = srcNums.some(srcNum =>
-                    Math.abs(hypNum - srcNum) / Math.max(srcNum, 1) < 0.01  // 1% tolerance
-                );
-                if (!matches) {
-                    numberMismatch += 1;
-                }
-            }
-            numberMismatch = numberMismatch / hypNums.length;
-        }
-
-        // Entity comparison
-        const srcEntities = new Set(this.extractEntities(sourceText));
-        const hypEntities = new Set(this.extractEntities(hypText));
-
-        let entityMismatch = 0;
-        if (hypEntities.size > 0) {
-            let missing = 0;
-            for (const entity of hypEntities) {
-                if (!srcEntities.has(entity)) missing++;
-            }
-            entityMismatch = missing / hypEntities.size;
-        }
-
-        // Antonym detection
-        const antonyms = [
-            ['tallest', 'smallest'], ['largest', 'smallest'], ['highest', 'lowest'],
-            ['best', 'worst'], ['first', 'last'], ['increase', 'decrease'],
-            ['always', 'never'], ['all', 'none'], ['true', 'false'],
-            ['bought', 'sold'], ['acquired', 'divested'], ['created', 'destroyed']
-        ];
-
-        const srcLower = sourceText.toLowerCase();
-        const hypLower = hypText.toLowerCase();
-        let antonymFound = false;
-        for (const [word1, word2] of antonyms) {
-            if ((srcLower.includes(word1) && hypLower.includes(word2)) ||
-                (srcLower.includes(word2) && hypLower.includes(word1))) {
-                antonymFound = true;
-                break;
-            }
-        }
-
-        return {
-            numberMismatch,
-            entityMismatch,
-            antonymFound: antonymFound ? 1 : 0
-        };
-    }
-
     // =========================================================================
-    // DEEP REGA (Stage 2) - Graph-based alignment
+    // DEEP REGA - SINKHORN ALIGNMENT
     // =========================================================================
 
-    /**
-     * Sinkhorn-Knopp normalization
-     */
     sinkhorn(matrix, iters = 10, temperature = 1.0) {
         const rows = matrix.length;
         const cols = matrix[0].length;
 
-        // Scale by temperature
         let P = matrix.map(row =>
             row.map(val => Math.exp(val / temperature))
         );
 
-        // Normalize
         for (let iter = 0; iter < iters; iter++) {
-            // Row normalization
             for (let i = 0; i < rows; i++) {
                 const rowSum = P[i].reduce((a, b) => a + b, 0) + 1e-8;
                 P[i] = P[i].map(v => v / rowSum);
             }
-            // Column normalization
             for (let j = 0; j < cols; j++) {
                 let colSum = 0;
                 for (let i = 0; i < rows; i++) colSum += P[i][j];
@@ -232,21 +254,13 @@ class ReGAEngine {
         return P;
     }
 
-    /**
-     * Compute structural energy from alignment
-     * Energy = how well the hypothesis aligns with source
-     * Low energy = good alignment = faithful
-     * High energy = poor alignment = hallucination
-     */
     computeStructuralEnergy(simMatrix, permutation) {
         const m = permutation.length;
         const n = permutation[0].length;
 
-        // Compute weighted alignment cost
         let energy = 0;
         for (let i = 0; i < m; i++) {
             for (let j = 0; j < n; j++) {
-                // Cost is (1 - similarity), weighted by alignment probability
                 const cost = 1 - simMatrix[i][j];
                 energy += permutation[i][j] * cost;
             }
@@ -255,11 +269,7 @@ class ReGAEngine {
         return energy;
     }
 
-    /**
-     * Deep ReGA with graph neural network style processing
-     */
-    deepReGA(sourceEmbeddings, hypEmbeddings) {
-        // Build similarity matrix
+    deepReGA(sourceEmbeddings, hypEmbeddings, explanations) {
         const simMatrix = [];
         for (let i = 0; i < hypEmbeddings.length; i++) {
             const row = [];
@@ -269,15 +279,25 @@ class ReGAEngine {
             simMatrix.push(row);
         }
 
-        // Apply Sinkhorn to get soft permutation
         const permutation = this.sinkhorn(
             simMatrix,
             this.params.sinkhornIterations,
             this.params.temperature
         );
 
-        // Compute structural energy
         const energy = this.computeStructuralEnergy(simMatrix, permutation);
+
+        // Add explanation for low-similarity alignments
+        for (let i = 0; i < hypEmbeddings.length; i++) {
+            const maxSim = Math.max(...simMatrix[i]);
+            if (maxSim < 0.7) {
+                explanations.push({
+                    type: 'alignment',
+                    icon: '🔗',
+                    text: `Weak alignment for sentence ${i + 1} (${(maxSim * 100).toFixed(0)}% similarity)`
+                });
+            }
+        }
 
         return {
             energy,
@@ -311,6 +331,7 @@ class ReGAEngine {
                 confidence: 1.0,
                 stage: 'Identical Text',
                 stageReason: 'Source and hypothesis are essentially identical',
+                explanations: [],
                 metrics: { ...this.metrics },
                 details: {
                     sourceSentences: [sourceText],
@@ -332,49 +353,43 @@ class ReGAEngine {
         const hypEmbeddings = await embeddingEngine.embedBatch(hypSentences);
         this.metrics.embedTime = performance.now() - embedStart;
 
-        // Stage 1: Compute factual features
+        // Stage 1: Compute factual features with explanations
         const featureStart = performance.now();
         const factualFeatures = this.computeFactualFeatures(sourceText, hypothesisText);
-        const alignmentFeatures = this.computeAlignmentFeatures(sourceEmbeddings, hypEmbeddings);
+        const explanations = [...factualFeatures.explanations];
         this.metrics.featureTime = performance.now() - featureStart;
 
         // Stage 2: Deep ReGA
         const deepStart = performance.now();
-        const deepResult = this.deepReGA(sourceEmbeddings, hypEmbeddings);
+        const deepResult = this.deepReGA(sourceEmbeddings, hypEmbeddings, explanations);
         this.metrics.deepRegaTime = performance.now() - deepStart;
 
-        // Combine energies with weights
-        // - Alignment energy: base semantic alignment
-        // - Factual penalties: for specific factual errors
+        // Combine energies
         let finalEnergy = deepResult.energy;
 
-        // Add penalties for factual mismatches
         if (factualFeatures.numberMismatch > 0) {
             finalEnergy += factualFeatures.numberMismatch * 0.3;
         }
         if (factualFeatures.antonymFound) {
-            finalEnergy += 0.4;  // Major penalty for contradictions
+            finalEnergy += 0.4;
         }
         if (factualFeatures.entityMismatch > 0.3) {
             finalEnergy += factualFeatures.entityMismatch * 0.2;
         }
 
-        // Clamp energy to [0, 1]
         finalEnergy = Math.max(0, Math.min(1, finalEnergy));
 
-        // Make decision
         const isHallucination = finalEnergy > this.params.threshold;
         const confidence = isHallucination
             ? Math.min((finalEnergy - this.params.threshold) / 0.3 + 0.5, 1.0)
             : Math.min((this.params.threshold - finalEnergy) / this.params.threshold + 0.5, 1.0);
 
-        // Determine which stage contributed most
         let stage = 'Deep ReGA';
         let stageReason = 'Graph alignment with Sinkhorn normalization';
 
         if (factualFeatures.antonymFound) {
             stage = 'Factual Analysis';
-            stageReason = 'Semantic contradiction detected (antonyms)';
+            stageReason = 'Semantic contradiction detected';
         } else if (factualFeatures.numberMismatch > 0.2) {
             stage = 'Factual Analysis';
             stageReason = 'Numerical mismatch detected';
@@ -390,6 +405,7 @@ class ReGAEngine {
             confidence,
             stage,
             stageReason,
+            explanations,
             metrics: { ...this.metrics },
             details: {
                 sourceSentences,
@@ -397,15 +413,13 @@ class ReGAEngine {
                 sourceEmbeddings: sourceEmbeddings.map(e => Array.from(e)),
                 hypEmbeddings: hypEmbeddings.map(e => Array.from(e)),
                 alignmentMatrix: deepResult.permutation,
-                factualFeatures,
-                alignmentFeatures,
-                deepResult
+                factualFeatures
             }
         };
     }
 
     // =========================================================================
-    // UTILITY FUNCTIONS
+    // UTILITY
     // =========================================================================
 
     cosineSimilarity(a, b) {

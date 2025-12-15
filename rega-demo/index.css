@@ -600,6 +600,83 @@ nav {
     font-size: 1rem;
 }
 
+/* Explanations (White-box) */
+.explanations-container {
+    margin-top: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.explanations-header {
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.explanations-header i {
+    color: var(--warning);
+}
+
+.explanations-list {
+    padding: 0.75rem;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.explanation-placeholder {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.explanation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.explanation-item:last-child {
+    margin-bottom: 0;
+}
+
+.explanation-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.explanation-text {
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.explanation-item.number .explanation-text {
+    color: var(--warning);
+}
+
+.explanation-item.antonym .explanation-text {
+    color: var(--danger);
+}
+
+.explanation-item.entity .explanation-text {
+    color: var(--accent-secondary);
+}
+
+.explanation-item.alignment .explanation-text {
+    color: var(--text-muted);
+}
+
 /* Hyperparameters */
 .params-grid {
     display: grid;

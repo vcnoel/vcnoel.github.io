@@ -159,7 +159,10 @@ class DemoApp {
             batchThroughput: document.getElementById('batchThroughput'),
             batchLatency: document.getElementById('batchLatency'),
             batchAccuracy: document.getElementById('batchAccuracy'),
-            batchProgressBar: document.getElementById('batchProgressBar')
+            batchProgressBar: document.getElementById('batchProgressBar'),
+
+            // Explanations
+            explanationsList: document.getElementById('explanationsList')
         };
     }
 
@@ -287,6 +290,30 @@ class DemoApp {
         }
 
         this.elements.totalTime.textContent = `${result.metrics.totalTime.toFixed(1)} ms`;
+
+        // Display explanations
+        this.displayExplanations(result.explanations || []);
+    }
+
+    displayExplanations(explanations) {
+        const container = this.elements.explanationsList;
+
+        if (!explanations || explanations.length === 0) {
+            container.innerHTML = `
+                <div class="explanation-placeholder">
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                    No issues detected
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = explanations.map(exp => `
+            <div class="explanation-item ${exp.type}">
+                <span class="explanation-icon">${exp.icon}</span>
+                <span class="explanation-text">${exp.text}</span>
+            </div>
+        `).join('');
     }
 
     loadPreset(presetName) {
