@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="ReGA: Interactive Graph-Based RAG Verification Demo. Test hallucination detection with adjustable hyperparameters directly in your browser.">
+    <meta name="author" content="Valentin Noël">
+    <title>ReGA Demo | Graph-Based RAG Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="bg-animation">
+        <canvas id="networkCanvas"></canvas>
+    </div>
+
+    <nav>
+        <a href="../" class="nav-brand">
+            <i class="fas fa-arrow-left"></i> Back to Portfolio
+        </a>
+        <div class="nav-title">ReGA Demo</div>
+        <span class="nav-badge">Coming Soon</span>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-flask"></i> Interactive Research Demo
+            </div>
+            <h1>ReGA: <span>Graph-Based RAG Verification</span></h1>
+            <p class="hero-subtitle">
+                Detect hallucinations in LLM outputs using graph alignment and Sinkhorn normalization.
+                Runs entirely in your browser with Transformers.js — no server required.
+            </p>
+        </div>
+    </section>
+
+    <!-- Model Loading Status -->
+    <section class="section" id="model-status">
+        <div class="status-card" id="modelStatusCard">
+            <div class="status-icon loading">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Loading Embedding Model</div>
+                <div class="status-detail" id="modelStatusText">Initializing Transformers.js...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="modelProgress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Panel -->
+    <section class="section" id="demo-panel">
+        <div class="demo-container">
+            <!-- Left Panel: Input -->
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-edit"></i> Input Texts</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label for="sourceText">Source Text (Ground Truth)</label>
+                        <textarea id="sourceText"
+                            placeholder="Enter the source/reference text that contains factual information...">Apple Inc. was founded by Steve Jobs, Steve Wozniak, and Ronald Wayne in 1976. The company is headquartered in Cupertino, California. Tim Cook has been the CEO since 2011.</textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="hypothesisText">Hypothesis (Text to Verify)</label>
+                        <textarea id="hypothesisText"
+                            placeholder="Enter the text you want to check for hallucinations...">Apple was founded by Steve Jobs and Bill Gates in 1975. The company is based in San Francisco. Steve Jobs is still the CEO.</textarea>
+                    </div>
+                    <button id="verifyBtn" class="verify-btn" disabled>
+                        <i class="fas fa-search"></i> Verify Hypothesis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Center Panel: Visualization -->
+            <div class="panel viz-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-project-diagram"></i> Graph Alignment</h3>
+                </div>
+                <div class="panel-content">
+                    <div id="graphContainer" class="graph-container">
+                        <svg id="graphSvg"></svg>
+                        <div class="graph-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot source"></span> Source Node
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot hypothesis"></span> Hypothesis Node
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-line"></span> Alignment Edge
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="panel results-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-chart-bar"></i> Verification Results</h3>
+                </div>
+                <div class="panel-content">
+                    <!-- Energy Gauge -->
+                    <div class="result-card">
+                        <div class="gauge-container">
+                            <svg class="gauge" viewBox="0 0 200 120">
+                                <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" />
+                                <path class="gauge-fill" id="gaugeFill" d="M 20 100 A 80 80 0 0 1 180 100" />
+                            </svg>
+                            <div class="gauge-value" id="energyValue">--</div>
+                            <div class="gauge-label">Energy Score</div>
+                        </div>
+                        <div class="verdict" id="verdict">
+                            <span class="verdict-text">Awaiting Input</span>
+                        </div>
+                    </div>
+
+                    <!-- Metrics -->
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-label">Embedding</div>
+                            <div class="metric-value" id="embedTime">-- ms</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Graph Build</div>
+                            <div class="metric-value" id="graphTime">-- ms</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Sinkhorn</div>
+                            <div class="metric-value" id="sinkhornTime">-- ms</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Total</div>
+                            <div class="metric-value" id="totalTime">-- ms</div>
+                        </div>
+                    </div>
+
+                    <!-- Cost Comparison -->
+                    <div class="cost-comparison">
+                        <div class="cost-label">Cost vs. GPT-4 Judge</div>
+                        <div class="cost-bar">
+                            <div class="cost-rega">
+                                <span>ReGA</span>
+                                <strong>$0.00</strong>
+                            </div>
+                            <div class="cost-gpt">
+                                <span>GPT-4</span>
+                                <strong>~$0.02</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hyperparameters -->
+    <section class="section" id="hyperparams">
+        <div class="section-header">
+            <h2><i class="fas fa-sliders-h"></i> Hyperparameters</h2>
+            <p>Adjust algorithm parameters in real-time</p>
+        </div>
+        <div class="params-grid">
+            <div class="param-card">
+                <div class="param-header">
+                    <label for="sinkhornIters">Sinkhorn Iterations</label>
+                    <span class="param-value" id="sinkhornItersValue">10</span>
+                </div>
+                <input type="range" id="sinkhornIters" min="1" max="20" value="10" class="param-slider">
+                <p class="param-desc">Number of doubly-stochastic normalization iterations</p>
+            </div>
+            <div class="param-card">
+                <div class="param-header">
+                    <label for="temperature">Temperature</label>
+                    <span class="param-value" id="temperatureValue">1.0</span>
+                </div>
+                <input type="range" id="temperature" min="0.1" max="5.0" step="0.1" value="1.0" class="param-slider">
+                <p class="param-desc">Softmax temperature for alignment sharpness</p>
+            </div>
+            <div class="param-card">
+                <div class="param-header">
+                    <label for="matchSteps">Match Steps</label>
+                    <span class="param-value" id="matchStepsValue">5</span>
+                </div>
+                <input type="range" id="matchSteps" min="1" max="5" value="5" class="param-slider">
+                <p class="param-desc">GNN message passing iterations</p>
+            </div>
+            <div class="param-card">
+                <div class="param-header">
+                    <label for="threshold">Detection Threshold</label>
+                    <span class="param-value" id="thresholdValue">0.15</span>
+                </div>
+                <input type="range" id="threshold" min="0.05" max="0.5" step="0.01" value="0.15" class="param-slider">
+                <p class="param-desc">Energy threshold for hallucination detection</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Preset Examples -->
+    <section class="section" id="presets">
+        <div class="section-header">
+            <h2><i class="fas fa-bookmark"></i> Preset Examples</h2>
+            <p>Test ReGA on different domains</p>
+        </div>
+        <div class="presets-grid">
+            <button class="preset-btn" data-preset="business">
+                <i class="fas fa-briefcase"></i>
+                <span>Business</span>
+            </button>
+            <button class="preset-btn" data-preset="medical">
+                <i class="fas fa-heartbeat"></i>
+                <span>Medical</span>
+            </button>
+            <button class="preset-btn" data-preset="legal">
+                <i class="fas fa-gavel"></i>
+                <span>Legal</span>
+            </button>
+            <button class="preset-btn" data-preset="academic">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Academic</span>
+            </button>
+            <button class="preset-btn" data-preset="faithful">
+                <i class="fas fa-check-circle"></i>
+                <span>Faithful</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Batch Demo -->
+    <section class="section" id="batch-demo">
+        <div class="section-header">
+            <h2><i class="fas fa-bolt"></i> Batch Performance Demo</h2>
+            <p>Process multiple pairs to measure throughput</p>
+        </div>
+        <div class="batch-container">
+            <div class="batch-controls">
+                <div class="batch-input">
+                    <label for="batchSize">Sample Size</label>
+                    <select id="batchSize">
+                        <option value="10">10 pairs</option>
+                        <option value="25">25 pairs</option>
+                        <option value="50" selected>50 pairs</option>
+                        <option value="100">100 pairs</option>
+                    </select>
+                </div>
+                <button id="runBatchBtn" class="batch-btn" disabled>
+                    <i class="fas fa-play"></i> Run Batch Demo
+                </button>
+            </div>
+            <div class="batch-results" id="batchResults">
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Pairs Processed</div>
+                    <div class="batch-metric-value" id="batchProcessed">0 / 0</div>
+                </div>
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Throughput</div>
+                    <div class="batch-metric-value" id="batchThroughput">-- pairs/sec</div>
+                </div>
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Avg. Latency</div>
+                    <div class="batch-metric-value" id="batchLatency">-- ms</div>
+                </div>
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Accuracy</div>
+                    <div class="batch-metric-value" id="batchAccuracy">--%</div>
+                </div>
+            </div>
+            <div class="batch-progress" id="batchProgress">
+                <div class="batch-progress-bar" id="batchProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section" id="how-it-works">
+        <div class="section-header">
+            <h2><i class="fas fa-cogs"></i> How ReGA Works</h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h4>Text Embedding</h4>
+                <p>Sentences are encoded using MiniLM-L6-v2 via Transformers.js into 384-dimensional vectors.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h4>Graph Construction</h4>
+                <p>Build sentence-level graphs where nodes are sentence embeddings and edges connect sequential
+                    sentences.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h4>GNN Encoding</h4>
+                <p>Apply message passing to propagate information across the graph structure.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h4>Sinkhorn Alignment</h4>
+                <p>Compute doubly-stochastic assignment matrix between source and hypothesis nodes.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">5</div>
+                <h4>Energy Computation</h4>
+                <p>Calculate alignment energy score indicating semantic divergence and potential hallucination.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>ReGA Demo by <a href="../">Valentin Noël</a></p>
+            <p>Based on <a href="https://arxiv.org/abs/2510.19117" target="_blank">arXiv:2510.19117</a></p>
+        </div>
+    </footer>
+
+    <!-- Load D3.js for visualization -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Transformers.js for embeddings -->
+    <script type="module" src="embeddings.js"></script>
+    <!-- ReGA Engine -->
+    <script type="module" src="rega-engine.js"></script>
+    <!-- Visualizer -->
+    <script type="module" src="visualizer.js"></script>
+    <!-- Main App -->
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>

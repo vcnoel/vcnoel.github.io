@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Valentin Noël, PhD - AI Ambassador & Senior Research Engineer. Expert in LLMs, Interpretability, GraphRAG, and Trustworthy AI.">
+    <meta name="keywords"
+        content="Research Scientist, LLM, Interpretability, GraphRAG, Knowledge Graphs, Safety, Evaluation, PyTorch, Deep Learning">
+    <meta name="author" content="Valentin Noël">
+    <title>Valentin Noël, PhD | AI Research Scientist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: rgba(26, 26, 37, 0.8);
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6b6b80;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --border: rgba(255, 255, 255, 0.08);
+            --glow: 0 0 40px rgba(99, 102, 241, 0.3);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --radius: 16px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.03) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.03) 2px, transparent 2px);
+            background-size: 100px 100px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-weight: 600;
+            font-size: 1.1rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 2rem 4rem;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-badge i {
+            color: var(--success);
+            margin-right: 0.5rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .hero-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .hero-link.primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: var(--glow);
+        }
+
+        .hero-link.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.4);
+        }
+
+        .hero-link.secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .hero-link.secondary:hover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Stats */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Sections */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: var(--shadow);
+            transform: translateY(-4px);
+        }
+
+        /* Experience Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-primary), var(--accent-secondary), transparent);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .timeline-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .timeline-title a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .timeline-title a:hover {
+            text-decoration: underline;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .timeline-location {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .timeline-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .timeline-content li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .timeline-content li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+        }
+
+        /* Skills Grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .skill-category {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .skill-category h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .skill-category h3 i {
+            color: var(--accent-primary);
+        }
+
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .skill-tag {
+            padding: 0.35rem 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Publications */
+        .publications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .publication {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .publication:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .publication-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .publication-title a {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .publication-title a:hover {
+            color: var(--accent-primary);
+        }
+
+        .publication-venue {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .publication-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--success);
+            margin-left: 0.5rem;
+        }
+
+        /* Demos Section */
+        .demos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .demo-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .demo-card:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: var(--glow);
+            transform: translateY(-4px);
+        }
+
+        .demo-preview {
+            height: 180px;
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .demo-preview i {
+            font-size: 4rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+        }
+
+        .demo-content {
+            padding: 1.5rem;
+        }
+
+        .demo-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-tag {
+            padding: 0.25rem 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .demo-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .demo-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Talks */
+        .talks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .talk-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .talk-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .talk-card h4 a {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .talk-card h4 a:hover {
+            color: var(--accent-primary);
+        }
+
+        .talk-meta {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .timeline-header {
+                flex-direction: column;
+            }
+
+            .hero-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+
+    <nav>
+        <div class="nav-brand">Valentin Noël</div>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#experience">Experience</a></li>
+            <li><a href="#publications">Publications</a></li>
+            <li><a href="#demos">Demos</a></li>
+            <li><a href="#skills">Skills</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="about">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-circle"></i> AI Ambassador & Senior Research Engineer
+            </div>
+            <h1>Valentin <span>NOËL</span>, PhD</h1>
+            <p class="hero-subtitle">
+                Bridging R&D and industry with sustainable, compliant, interpretable (agentic) AI.
+                PhD in Applied Mathematics—Deep Learning & Inverse Problems from Paris-Saclay University
+                (CentraleSupelec / ENS Paris-Saclay). Research → Production at scale.
+            </p>
+            <div class="hero-links">
+                <a href="mailto:val.noel@proton.me" class="hero-link primary">
+                    <i class="fas fa-envelope"></i> Contact Me
+                </a>
+                <a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&hl=fr" target="_blank"
+                    class="hero-link secondary">
+                    <i class="fab fa-google-scholar"></i> Google Scholar
+                </a>
+                <a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" class="hero-link secondary">
+                    <i class="fab fa-linkedin"></i> LinkedIn
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-value">5+</div>
+                    <div class="stat-label">Publications</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">300+</div>
+                    <div class="stat-label">Contributors Led</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">3+</div>
+                    <div class="stat-label">Years Research</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="experience">
+        <div class="section-header">
+            <h2>Experience</h2>
+            <p>Building trustworthy AI systems from research to production</p>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        Senior Research Engineer & AI Program Manager — <a href="https://www.devoteam.com/"
+                            target="_blank">Devoteam</a>
+                    </div>
+                    <div class="timeline-date">Oct 2024 – Present</div>
+                </div>
+                <div class="timeline-location">Paris, France</div>
+                <div class="timeline-content">
+                    <ul>
+                        <li><strong>Research focus:</strong> Interpretable, compliant (agentic) LLM systems. Designed
+                            GraphRAG/KAG pipelines with uncertainty quantification and auditability</li>
+                        <li><strong>Interpretability tool:</strong> Training-free spectral connectivity diagnostic for
+                            transformers that surfaces early-layer voice-processing signatures</li>
+                        <li><strong>Benchmarks:</strong> Built internal eval suite for hallucination and safety;
+                            demonstrated ↓ hallucination rate and ↑ answer faithfulness</li>
+                        <li><strong>Publications:</strong> Led five arXiv preprints on Trustworthy AI and
+                            interpretability; submissions to AAAI/WWW/ICLR/ICASSP</li>
+                        <li><strong>Leadership:</strong> Cross-lab/industry collaborations; mentored
+                            researchers/engineers; coordinated 300+ contributors</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        PhD in Deep Learning — <a href="https://ens-paris-saclay.fr/" target="_blank">ENS
+                            Paris-Saclay</a> & <a href="https://www.centralesupelec.fr/"
+                            target="_blank">CentraleSupélec</a>
+                    </div>
+                    <div class="timeline-date">Oct 2021 – Sept 2024</div>
+                </div>
+                <div class="timeline-location">Paris-Saclay University</div>
+                <div class="timeline-content">
+                    <ul>
+                        <li>Deep learning for breast imaging, multimodal EM–US fusion, and Bayesian methods</li>
+                        <li>Supervisors: Thomas Rodet & Dominique Lesselier</li>
+                        <li>University teaching: AI, Signal Processing, Object-Oriented Design</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        Research Intern — <a href="https://www.airbus.com/en/products-services/space"
+                            target="_blank">Airbus Defence & Space</a> & <a
+                            href="https://www.irap.omp.eu/en/homepage-en/" target="_blank">IRAP</a>
+                    </div>
+                    <div class="timeline-date">Feb 2021 – July 2021</div>
+                </div>
+                <div class="timeline-location">Toulouse, France</div>
+                <div class="timeline-content">
+                    <ul>
+                        <li>Built forward/inverse simulation pipeline for DD-CASSI hyperspectral imaging in Python</li>
+                        <li>Implemented optimization-based reconstruction (ADMM, FISTA) for inverse problems</li>
+                        <li>Accelerated spectral reconstruction with CUDA/cuPy on GPU</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="publications">
+        <div class="section-header">
+            <h2>Selected Publications</h2>
+            <p>Research contributions in Trustworthy AI, Interpretability, and Deep Learning</p>
+        </div>
+        <div class="publications-list">
+            <div class="publication">
+                <div class="publication-title">
+                    <a href="http://arxiv.org/abs/2511.05804" target="_blank">Catching Contamination Before Generation:
+                        Spectral Kill Switches for Agents</a>
+                    <span class="publication-badge">AAAI 2026</span>
+                </div>
+                <div class="publication-venue">arXiv:2511.05804 — Accepted at AAAI 2026, TrustAgent (2025)</div>
+            </div>
+            <div class="publication">
+                <div class="publication-title">
+                    <a href="https://arxiv.org/abs/2512.01659" target="_blank">HalluGraph: Auditable Hallucination
+                        Detection for Legal RAG Systems via Knowledge Graph Alignment</a>
+                    <span class="publication-badge">AAAI 2026</span>
+                </div>
+                <div class="publication-venue">arXiv:2512.01659 — Accepted at AAAI 2026, AILaw (2025)</div>
+            </div>
+            <div class="publication">
+                <div class="publication-title">
+                    <a href="https://arxiv.org/abs/2510.19131" target="_blank">Training-Free Spectral Fingerprints of
+                        Voice Processing in Transformers</a>
+                </div>
+                <div class="publication-venue">arXiv:2510.19131 — Under review (2025)</div>
+            </div>
+            <div class="publication">
+                <div class="publication-title">
+                    <a href="https://arxiv.org/abs/2510.19117" target="_blank">A Graph Signal Processing Framework for
+                        Hallucination Detection in Large Language Models</a>
+                </div>
+                <div class="publication-venue">arXiv:2510.19117 — Under review (2025)</div>
+            </div>
+            <div class="publication">
+                <div class="publication-title">
+                    <a href="https://ieeexplore.ieee.org/abstract/document/10908587" target="_blank">Transfer Learning
+                        for Data Fusion for Electromagnetic and Ultrasound Breast Imaging</a>
+                </div>
+                <div class="publication-venue">IEEE Transactions on Computational Imaging (2024)</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="demos">
+        <div class="section-header">
+            <h2>Interactive Demos</h2>
+            <p>Try my research implementations directly in your browser</p>
+        </div>
+        <div class="demos-grid">
+            <div class="demo-card">
+                <div class="demo-preview">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="demo-content">
+                    <h3>ReGA: Graph-Based RAG Verification</h3>
+                    <p>Interactive hallucination detection using graph alignment and Sinkhorn normalization. Runs
+                        entirely in-browser with adjustable hyperparameters.</p>
+                    <div class="demo-tags">
+                        <span class="demo-tag">Transformers.js</span>
+                        <span class="demo-tag">GNN</span>
+                        <span class="demo-tag">Sinkhorn</span>
+                        <span class="demo-tag">D3.js</span>
+                    </div>
+                    <a href="rega-demo/" class="demo-link">
+                        Launch Demo <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="demo-card">
+                <div class="demo-preview">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="demo-content">
+                    <h3>More Coming Soon</h3>
+                    <p>Additional interactive demonstrations of research implementations are in development.</p>
+                    <div class="demo-tags">
+                        <span class="demo-tag">Stay Tuned</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="talks">
+        <div class="section-header">
+            <h2>Talks & Invited Presentations</h2>
+            <p>2025 Speaking Engagements</p>
+        </div>
+        <div class="talks-grid">
+            <div class="talk-card">
+                <h4><a href="https://www.nvidia.com/gtc/" target="_blank">NVIDIA GPU Technology Conference (GTC)</a>
+                </h4>
+                <div class="talk-meta">Paris, France — 2025</div>
+            </div>
+            <div class="talk-card">
+                <h4><a href="https://www.esilv.fr/" target="_blank">École Supérieure d'Ingénieurs Léonard de Vinci
+                        (ESILV)</a></h4>
+                <div class="talk-meta">Paris, France — 2025</div>
+            </div>
+            <div class="talk-card">
+                <h4><a href="https://en.uestc.edu.cn/" target="_blank">University of Electronic Science and Technology
+                        of China (UESTC)</a></h4>
+                <div class="talk-meta">Chengdu, China — 2025</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="skills">
+        <div class="section-header">
+            <h2>Technical Skills</h2>
+            <p>Tools and technologies for production AI systems</p>
+        </div>
+        <div class="skills-grid">
+            <div class="skill-category">
+                <h3><i class="fas fa-code"></i> Programming</h3>
+                <div class="skill-tags">
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">C/C++</span>
+                    <span class="skill-tag">CUDA</span>
+                    <span class="skill-tag">Bash</span>
+                </div>
+            </div>
+            <div class="skill-category">
+                <h3><i class="fas fa-rocket"></i> Inference & Optimization</h3>
+                <div class="skill-tags">
+                    <span class="skill-tag">TensorRT-LLM</span>
+                    <span class="skill-tag">Triton Server</span>
+                    <span class="skill-tag">vLLM</span>
+                    <span class="skill-tag">ONNX</span>
+                    <span class="skill-tag">DeepSpeed</span>
+                    <span class="skill-tag">INT8/FP8</span>
+                    <span class="skill-tag">QLoRA</span>
+                </div>
+            </div>
+            <div class="skill-category">
+                <h3><i class="fas fa-brain"></i> ML/DL Frameworks</h3>
+                <div class="skill-tags">
+                    <span class="skill-tag">PyTorch</span>
+                    <span class="skill-tag">Hugging Face</span>
+                    <span class="skill-tag">DeepSpeed</span>
+                    <span class="skill-tag">JAX</span>
+                    <span class="skill-tag">FSDP/ZeRO</span>
+                </div>
+            </div>
+            <div class="skill-category">
+                <h3><i class="fas fa-project-diagram"></i> RAG & Graph</h3>
+                <div class="skill-tags">
+                    <span class="skill-tag">FAISS</span>
+                    <span class="skill-tag">Milvus</span>
+                    <span class="skill-tag">Neo4j</span>
+                    <span class="skill-tag">NetworkX</span>
+                    <span class="skill-tag">PyG</span>
+                    <span class="skill-tag">DGL</span>
+                    <span class="skill-tag">GraphRAG</span>
+                </div>
+            </div>
+            <div class="skill-category">
+                <h3><i class="fas fa-cloud"></i> Cloud & MLOps</h3>
+                <div class="skill-tags">
+                    <span class="skill-tag">AWS</span>
+                    <span class="skill-tag">GCP</span>
+                    <span class="skill-tag">Azure</span>
+                    <span class="skill-tag">Kubernetes</span>
+                    <span class="skill-tag">Docker</span>
+                    <span class="skill-tag">MLflow</span>
+                    <span class="skill-tag">W&B</span>
+                </div>
+            </div>
+            <div class="skill-category">
+                <h3><i class="fas fa-language"></i> Languages</h3>
+                <div class="skill-tags">
+                    <span class="skill-tag">French (Native)</span>
+                    <span class="skill-tag">English (C2)</span>
+                    <span class="skill-tag">German (B2-C1)</span>
+                    <span class="skill-tag">Italian (B1)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="education">
+        <div class="section-header">
+            <h2>Education</h2>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        Master in Control and Robotics — <a href="https://www.ec-nantes.fr/" target="_blank">Ecole
+                            Centrale de Nantes</a>
+                    </div>
+                    <div class="timeline-date">Sept 2019 – July 2021</div>
+                </div>
+                <div class="timeline-location">Nantes, France</div>
+                <div class="timeline-content">
+                    <ul>
+                        <li>Graduated 2nd in class; focus on AI, inverse problems, and robotics</li>
+                        <li>Signal Processing & AI specialization</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        Bachelor in Electronics, Energy and Control — <a href="https://www.univ-nantes.fr/"
+                            target="_blank">Nantes University</a>
+                    </div>
+                    <div class="timeline-date">Sept 2018 – June 2019</div>
+                </div>
+                <div class="timeline-location">Nantes, France</div>
+                <div class="timeline-content">
+                    <ul>
+                        <li>Top 2%; coursework in embedded systems, signal processing, and automation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="awards">
+        <div class="section-header">
+            <h2>Awards & Recognition</h2>
+        </div>
+        <div class="talks-grid">
+            <div class="talk-card">
+                <h4><a href="https://lablab.ai/event/execute-ai-genesis" target="_blank">Finalist & Best Use of AI/ML
+                        API</a></h4>
+                <div class="talk-meta">/execute: AI Genesis Hackathon — Dubai, UAE (2025)</div>
+            </div>
+            <div class="talk-card">
+                <h4>Best Student Paper Award</h4>
+                <div class="talk-meta">PIERS — Prague, Czechia (2023)</div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-links">
+            <a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" title="LinkedIn"><i
+                    class="fab fa-linkedin"></i></a>
+            <a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&hl=fr" target="_blank"
+                title="Google Scholar"><i class="fab fa-google-scholar"></i></a>
+            <a href="mailto:val.noel@proton.me" title="Email"><i class="fas fa-envelope"></i></a>
+        </div>
+        <p class="footer-text">© 2025 Valentin Noël. Built with passion for research.</p>
+    </footer>
+</body>
+
+</html>
