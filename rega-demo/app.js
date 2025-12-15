@@ -31,6 +31,10 @@ const PRESETS = {
     faithful: {
         source: "The Eiffel Tower was constructed from 1887 to 1889 as the entrance arch for the 1889 World's Fair. It was designed by Gustave Eiffel's engineering company. The tower stands 330 meters tall and was the world's tallest man-made structure until 1930.",
         hypothesis: "The Eiffel Tower was built between 1887 and 1889 for the World's Fair. Gustave Eiffel's company designed it. It is 330 meters tall and held the record for the world's tallest structure until 1930."
+    },
+    directional: {
+        source: "Microsoft acquired Activision Blizzard in January 2022 for $68.7 billion. This made Microsoft the third-largest gaming company by revenue. The acquisition was completed after regulatory approval.",
+        hypothesis: "Activision Blizzard acquired Microsoft in January 2022 for $68.7 billion. This made Activision the third-largest gaming company by revenue. The acquisition was completed after regulatory approval."
     }
 };
 
@@ -181,7 +185,7 @@ class DemoApp {
 
         this.elements.threshold.addEventListener('input', (e) => {
             this.elements.thresholdValue.textContent = parseFloat(e.target.value).toFixed(2);
-            regaEngine.setParams({ threshold: parseFloat(e.target.value) });
+            regaEngine.setParams({ energyThreshold: parseFloat(e.target.value) });
         });
 
         // Preset buttons
@@ -259,14 +263,29 @@ class DemoApp {
         this.elements.gaugeFill.style.strokeDashoffset = gaugeOffset;
         this.elements.energyValue.textContent = result.energy.toFixed(3);
 
-        // Update verdict
+        // Update verdict with stage info
         this.elements.verdict.className = `verdict ${result.isHallucination ? 'fail' : 'pass'}`;
-        this.elements.verdict.innerHTML = `<span class="verdict-text">${result.verdict}: ${result.isHallucination ? 'Hallucination Detected' : 'Text Appears Faithful'}</span>`;
+        const stageLabel = result.stage || 'ReGA';
+        this.elements.verdict.innerHTML = `
+            <span class="verdict-text">${result.verdict}: ${result.isHallucination ? 'Hallucination Detected' : 'Text Appears Faithful'}</span>
+            <span class="verdict-stage">${stageLabel}</span>
+        `;
 
-        // Update metrics
+        // Update metrics based on cascade stage
         this.elements.embedTime.textContent = `${result.metrics.embedTime.toFixed(1)} ms`;
-        this.elements.graphTime.textContent = `${result.metrics.graphTime.toFixed(1)} ms`;
-        this.elements.sinkhornTime.textContent = `${result.metrics.sinkhornTime.toFixed(1)} ms`;
+
+        if (result.metrics.featureTime !== undefined) {
+            this.elements.graphTime.textContent = `${result.metrics.featureTime.toFixed(1)} ms`;
+        } else {
+            this.elements.graphTime.textContent = `-- ms`;
+        }
+
+        if (result.metrics.deepRegaTime !== undefined && result.metrics.deepRegaTime > 0) {
+            this.elements.sinkhornTime.textContent = `${result.metrics.deepRegaTime.toFixed(1)} ms`;
+        } else {
+            this.elements.sinkhornTime.textContent = `-- ms`;
+        }
+
         this.elements.totalTime.textContent = `${result.metrics.totalTime.toFixed(1)} ms`;
     }
 

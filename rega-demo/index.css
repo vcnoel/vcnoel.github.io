@@ -507,6 +507,15 @@ nav {
     color: var(--text-muted);
 }
 
+.verdict-stage {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
