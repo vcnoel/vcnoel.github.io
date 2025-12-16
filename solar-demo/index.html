@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Solar Irradiance Simulator - Calculate GHI, DNI, DHI for any location worldwide.">
+    <meta name="author" content="Valentin Noël">
+    <title>Solar Irradiance Demo | Interactive GHI/DNI/DHI Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="bg-animation">
+        <div class="sun-rays"></div>
+    </div>
+
+    <nav>
+        <a href="../" class="nav-brand">
+            <i class="fas fa-arrow-left"></i> Back to Portfolio
+        </a>
+        <div class="nav-title">☀️ Solar Irradiance Simulator</div>
+        <span class="nav-badge">Python Port</span>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-sun"></i> Interactive Demo
+            </div>
+            <h1>Solar <span>Irradiance</span> Simulator</h1>
+            <p class="hero-subtitle">
+                Calculate Global, Direct, and Diffuse solar irradiance (GHI, DNI, DHI) for any location.
+                Based on the Kasten-Young and Cooper models for atmospheric corrections.
+            </p>
+        </div>
+    </section>
+
+    <!-- City Selection -->
+    <section class="section" id="city-selection">
+        <div class="section-header">
+            <h2><i class="fas fa-city"></i> Select a City</h2>
+            <p>Quick presets for major global cities</p>
+        </div>
+        <div class="cities-grid">
+            <button class="city-btn" data-lat="48.8566" data-long="2.3522" data-alt="35" data-tz="1">
+                <span class="city-icon">🗼</span>
+                <span class="city-name">Paris</span>
+                <span class="city-country">France</span>
+            </button>
+            <button class="city-btn" data-lat="40.7128" data-long="-74.0060" data-alt="10" data-tz="-5">
+                <span class="city-icon">🗽</span>
+                <span class="city-name">New York</span>
+                <span class="city-country">USA</span>
+            </button>
+            <button class="city-btn" data-lat="35.6762" data-long="139.6503" data-alt="40" data-tz="9">
+                <span class="city-icon">🗾</span>
+                <span class="city-name">Tokyo</span>
+                <span class="city-country">Japan</span>
+            </button>
+            <button class="city-btn" data-lat="-33.8688" data-long="151.2093" data-alt="58" data-tz="11">
+                <span class="city-icon">🦘</span>
+                <span class="city-name">Sydney</span>
+                <span class="city-country">Australia</span>
+            </button>
+            <button class="city-btn" data-lat="55.7558" data-long="37.6173" data-alt="156" data-tz="3">
+                <span class="city-icon">🏛️</span>
+                <span class="city-name">Moscow</span>
+                <span class="city-country">Russia</span>
+            </button>
+            <button class="city-btn" data-lat="-22.9068" data-long="-43.1729" data-alt="11" data-tz="-3">
+                <span class="city-icon">🏖️</span>
+                <span class="city-name">Rio de Janeiro</span>
+                <span class="city-country">Brazil</span>
+            </button>
+            <button class="city-btn" data-lat="28.6139" data-long="77.2090" data-alt="216" data-tz="5.5">
+                <span class="city-icon">🕌</span>
+                <span class="city-name">New Delhi</span>
+                <span class="city-country">India</span>
+            </button>
+            <button class="city-btn" data-lat="-16.5" data-long="-68.15" data-alt="3640" data-tz="-4">
+                <span class="city-icon">⛰️</span>
+                <span class="city-name">La Paz</span>
+                <span class="city-country">Bolivia</span>
+            </button>
+            <button class="city-btn" data-lat="0.0" data-long="0.0" data-alt="0" data-tz="0">
+                <span class="city-icon">🌍</span>
+                <span class="city-name">Equator</span>
+                <span class="city-country">Atlantic</span>
+            </button>
+            <button class="city-btn" data-lat="25.2048" data-long="55.2708" data-alt="5" data-tz="4">
+                <span class="city-icon">🏙️</span>
+                <span class="city-name">Dubai</span>
+                <span class="city-country">UAE</span>
+            </button>
+            <button class="city-btn" data-lat="-34.6037" data-long="-58.3816" data-alt="25" data-tz="-3">
+                <span class="city-icon">💃</span>
+                <span class="city-name">Buenos Aires</span>
+                <span class="city-country">Argentina</span>
+            </button>
+            <button class="city-btn" data-lat="64.1466" data-long="-21.9426" data-alt="14" data-tz="0">
+                <span class="city-icon">🌋</span>
+                <span class="city-name">Reykjavik</span>
+                <span class="city-country">Iceland</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Parameters Panel -->
+    <section class="section" id="params-section">
+        <div class="demo-container">
+            <!-- Left: Custom Location -->
+            <div class="panel params-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Location Parameters</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="params-grid">
+                        <div class="param-item">
+                            <label for="latitude">Latitude</label>
+                            <input type="number" id="latitude" value="48.8566" min="-90" max="90" step="0.0001">
+                            <span class="param-unit">°</span>
+                        </div>
+                        <div class="param-item">
+                            <label for="longitude">Longitude</label>
+                            <input type="number" id="longitude" value="2.3522" min="-180" max="180" step="0.0001">
+                            <span class="param-unit">°</span>
+                        </div>
+                        <div class="param-item">
+                            <label for="altitude">Altitude</label>
+                            <input type="number" id="altitude" value="35" min="0" max="9000" step="1">
+                            <span class="param-unit">m</span>
+                        </div>
+                        <div class="param-item">
+                            <label for="timezone">Timezone</label>
+                            <input type="number" id="timezone" value="1" min="-12" max="14" step="0.5">
+                            <span class="param-unit">UTC</span>
+                        </div>
+                    </div>
+                    <div class="date-input">
+                        <label for="simDate">Simulation Date</label>
+                        <input type="date" id="simDate">
+                    </div>
+                    <div class="sky-toggle">
+                        <label>Sky Conditions</label>
+                        <div class="toggle-buttons">
+                            <button class="toggle-btn active" data-sky="clear">
+                                <i class="fas fa-sun"></i> Clear Sky
+                            </button>
+                            <button class="toggle-btn" data-sky="cloudy">
+                                <i class="fas fa-cloud"></i> Cloudy
+                            </button>
+                        </div>
+                    </div>
+                    <button id="simulateBtn" class="simulate-btn">
+                        <i class="fas fa-play"></i> Run Simulation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Sun Info -->
+            <div class="panel info-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-info-circle"></i> Solar Information</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="sun-info-grid">
+                        <div class="sun-info-item">
+                            <div class="sun-info-icon">🌅</div>
+                            <div class="sun-info-content">
+                                <div class="sun-info-label">Sunrise</div>
+                                <div class="sun-info-value" id="sunriseTime">--:--</div>
+                            </div>
+                        </div>
+                        <div class="sun-info-item">
+                            <div class="sun-info-icon">🌇</div>
+                            <div class="sun-info-content">
+                                <div class="sun-info-label">Sunset</div>
+                                <div class="sun-info-value" id="sunsetTime">--:--</div>
+                            </div>
+                        </div>
+                        <div class="sun-info-item">
+                            <div class="sun-info-icon">📅</div>
+                            <div class="sun-info-content">
+                                <div class="sun-info-label">Day of Year</div>
+                                <div class="sun-info-value" id="dayOfYear">--</div>
+                            </div>
+                        </div>
+                        <div class="sun-info-item">
+                            <div class="sun-info-icon">📐</div>
+                            <div class="sun-info-content">
+                                <div class="sun-info-label">Declination</div>
+                                <div class="sun-info-value" id="declination">--°</div>
+                            </div>
+                        </div>
+                        <div class="sun-info-item highlight">
+                            <div class="sun-info-icon">🔆</div>
+                            <div class="sun-info-content">
+                                <div class="sun-info-label">Max Elevation (Solar Noon)</div>
+                                <div class="sun-info-value" id="maxElevation">--°</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="section" id="results-section">
+        <div class="section-header">
+            <h2><i class="fas fa-chart-line"></i> Simulation Results</h2>
+        </div>
+
+        <!-- Energy Totals -->
+        <div class="totals-grid">
+            <div class="total-card ghi">
+                <div class="total-icon">⚡</div>
+                <div class="total-content">
+                    <div class="total-label">GHI Total (Global)</div>
+                    <div class="total-value" id="totalGHI">-- kWh/m²</div>
+                    <div class="total-bar">
+                        <div class="total-bar-fill" id="ghiBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="total-card dni">
+                <div class="total-icon">☀️</div>
+                <div class="total-content">
+                    <div class="total-label">DNI Total (Direct)</div>
+                    <div class="total-value" id="totalDNI">-- kWh/m²</div>
+                    <div class="total-bar">
+                        <div class="total-bar-fill" id="dniBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="total-card dhi">
+                <div class="total-icon">🌤️</div>
+                <div class="total-content">
+                    <div class="total-label">DHI Total (Diffuse)</div>
+                    <div class="total-value" id="totalDHI">-- kWh/m²</div>
+                    <div class="total-bar">
+                        <div class="total-bar-fill" id="dhiBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>Daily Irradiance Profile</h3>
+                <div class="chart-legend">
+                    <span class="legend-item ghi"><span class="legend-dot"></span> GHI</span>
+                    <span class="legend-item dni"><span class="legend-dot"></span> DNI</span>
+                    <span class="legend-item dhi"><span class="legend-dot"></span> DHI</span>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="irradianceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-table"></i> Hourly Data</h3>
+            </div>
+            <div class="table-scroll">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Hour</th>
+                            <th>Elevation</th>
+                            <th>GHI (W/m²)</th>
+                            <th>DNI (W/m²)</th>
+                            <th>DHI (W/m²)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="6" class="placeholder">Run simulation to see data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section" id="how-it-works">
+        <div class="section-header">
+            <h2><i class="fas fa-cogs"></i> How It Works</h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h4>Solar Position</h4>
+                <p>Calculate solar declination using Cooper's formula and true solar time from longitude and timezone.
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h4>Zenith Angle</h4>
+                <p>Compute the solar zenith angle based on latitude, declination, and hour angle throughout the day.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h4>Air Mass</h4>
+                <p>Use Kasten-Young (1989) formula for accurate air mass calculation at high zenith angles.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h4>Transmissivity</h4>
+                <p>Apply Beer-Lambert law with altitude and pressure corrections for atmospheric attenuation.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">5</div>
+                <h4>Irradiance</h4>
+                <p>Calculate DNI, DHI, and GHI using the decomposition: GHI = DHI + DNI × cos(θz).</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulas -->
+    <section class="section" id="formulas">
+        <div class="section-header">
+            <h2><i class="fas fa-square-root-alt"></i> Key Formulas</h2>
+        </div>
+        <div class="formulas-grid">
+            <div class="formula-card">
+                <div class="formula-title">Global Horizontal Irradiance</div>
+                <div class="formula">GHI = DHI + DNI × cos(θz)</div>
+            </div>
+            <div class="formula-card">
+                <div class="formula-title">Direct Normal Irradiance</div>
+                <div class="formula">DNI = S₀ × τ<sup>m</sup> × f(altitude)</div>
+            </div>
+            <div class="formula-card">
+                <div class="formula-title">Solar Declination (Cooper)</div>
+                <div class="formula">δ = 23.45° × sin(360/365 × (284 + n))</div>
+            </div>
+            <div class="formula-card">
+                <div class="formula-title">Air Mass (Kasten-Young)</div>
+                <div class="formula">AM = 1 / [cos(θz) + 0.50572(96.08 - θz)<sup>-1.6364</sup>]</div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>Solar Irradiance Demo by <a href="../">Valentin Noël</a></p>
+            <p>Based on VB.NET implementation • S₀ = 1367 W/m²</p>
+        </div>
+    </footer>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Solar Engine -->
+    <script src="solar-engine.js"></script>
+    <!-- Main App -->
+    <script src="app.js"></script>
+</body>
+
+</html>
