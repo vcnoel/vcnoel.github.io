@@ -147,6 +147,12 @@ class HalluGraphApp {
             totalTime: document.getElementById('totalTime'),
             carbonValue: document.getElementById('carbonValue'),
 
+            // Hyperparameters
+            threshold: document.getElementById('threshold'),
+            thresholdValue: document.getElementById('thresholdValue'),
+            alpha: document.getElementById('alpha'),
+            alphaValue: document.getElementById('alphaValue'),
+
             // Batch Demo Elements
             batchSize: document.getElementById('batchSize'),
             runBatchBtn: document.getElementById('runBatchBtn'),
@@ -159,6 +165,19 @@ class HalluGraphApp {
     }
 
     bindEvents() {
+        // Hyperparameters
+        const updateParams = () => {
+            const t = parseFloat(this.elements.threshold.value);
+            const a = parseFloat(this.elements.alpha.value);
+            this.elements.thresholdValue.textContent = t.toFixed(2);
+            this.elements.alphaValue.textContent = a.toFixed(1);
+            halluGraphEngine.params.threshold = t;
+            halluGraphEngine.params.alpha = a;
+        };
+        this.elements.threshold.addEventListener('input', updateParams);
+        this.elements.alpha.addEventListener('input', updateParams);
+
+        // Verification
         this.elements.verifyBtn.addEventListener('click', () => this.runVerification());
 
         // Batch Demo
