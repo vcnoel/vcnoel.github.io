@@ -11,56 +11,76 @@ import { visualizer } from './visualizer.js';
 
 function generateBatchData(count) {
     const pairs = [];
-    const templates = [
-        {
-            context: "The lease agreement between {partyA} and {partyB} commences on {date}. Monthly rent is {amount}.",
-            hallucinated: "The lease between {partyA} and {partyB} starts on {wrongDate}. Rent is {wrongAmount}.",
-            faithful: "The lease agreement between {partyA} and {partyB} begins on {date}. The rent is {amount} per month."
-        },
-        {
-            context: "In the case of {caseName}, the court ruled that {ruling}.",
-            hallucinated: "In {caseName}, the judge decided that {wrongRuling}.",
-            faithful: "The court in {caseName} held that {ruling}."
-        },
-        {
-            context: "Section {section} of the contract requires {action} within {days} days.",
-            hallucinated: "Section {section} states that {wrongAction} is needed within {wrongDays} days.",
-            faithful: "According to Section {section}, {action} must be completed in {days} days."
-        }
-    ];
 
-    const values = {
-        partyA: ["Alpha Corp", "Beta LLC", "Gamma Inc", "Delta Ltd"],
-        partyB: ["Epsilon Co", "Zeta Group", "Omega Partners", "Theta Systems"],
-        date: ["January 1, 2024", "March 15, 2023", "July 10, 2025"],
-        wrongDate: ["January 1, 2020", "December 31, 2022", "May 5, 2026"],
-        amount: ["$5,000", "$10,000", "$2,500", "$50,000"],
-        wrongAmount: ["$500", "$100,000", "$0", "$1,000,000"],
-        caseName: ["Smith v. Jones", "State v. Doe", "Tech Corp v. Data Inc", "People v. Johnson"],
-        ruling: ["damages were owed", "contract was valid", "defendant was liable", "dismissal was proper"],
-        wrongRuling: ["no damages were owed", "contract was void", "plaintiff was liable", "case was remanded"],
-        section: ["1.2", "4.5", "10(a)", "12(b)"],
-        action: ["payment", "delivery", "notification", "response"],
-        wrongAction: ["refund", "cancellation", "silence", "ignoring"],
-        days: ["30", "15", "60", "90"],
-        wrongDays: ["365", "0", "1000", "5"]
+    // Helper to generate a random date
+    const randomDate = () => {
+        const year = 2020 + Math.floor(Math.random() * 6);
+        const month = Math.floor(Math.random() * 12);
+        const day = 1 + Math.floor(Math.random() * 28);
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        return `${months[month]} ${day}, ${year}`;
     };
 
+    // Helper to generate a random money amount
+    const randomMoney = () => {
+        const amount = (Math.floor(Math.random() * 1000) + 1) * 1000;
+        return `$${amount.toLocaleString()}`;
+    };
+
+    const companies = ["Alpha Corp", "Beta LLC", "Gamma Inc", "Delta Ltd", "Epsilon Co", "Zeta Group", "Omega Partners", "Theta Systems", "Apex Industries", "Blue Sky Ventures"];
+
     for (let i = 0; i < count; i++) {
-        const template = templates[i % templates.length];
         const isHallucination = Math.random() > 0.5;
 
-        let context = template.context;
-        let response = isHallucination ? template.hallucinated : template.faithful;
+        // Build a Long Contract
+        const partyA = companies[Math.floor(Math.random() * companies.length)];
+        let partyB = companies[Math.floor(Math.random() * companies.length)];
+        while (partyB === partyA) partyB = companies[Math.floor(Math.random() * companies.length)];
 
-        // Fill in values
-        for (const [key, vals] of Object.entries(values)) {
-            const val = vals[Math.floor(Math.random() * vals.length)];
-            context = context.replace(`{${key}}`, val);
-            response = response.replace(`{${key}}`, val);
+        const effectiveDate = randomDate();
+        const baseRent = randomMoney();
+
+        // 1. Header
+        let sourceText = `COMMERCIAL LEASE AGREEMENT\n\nThis Lease Agreement is made and entered into on ${effectiveDate}, by and between ${partyA} ("Landlord") and ${partyB} ("Tenant").\n\n`;
+        let responseText = isHallucination
+            ? `Summary of Lease:\nAgreement between ${partyA} and ${partyB} dated ${randomDate()} (wrong date).\n` // Hallucination start
+            : `Summary of Lease:\nAgreement between ${partyA} and ${partyB} dated ${effectiveDate}.\n`;
+
+        // 2. Generate many sections to increase entity count
+        // Aiming for ~20-30 sections with entities
+        const numberOfSections = 40; // High density
+
+        for (let s = 1; s <= numberOfSections; s++) {
+            const date = randomDate();
+            const amount = randomMoney();
+            const sectionNum = `Section ${s}.0`;
+
+            // Source Clause
+            sourceText += `${sectionNum}: Payment of ${amount} is due by ${partyB} on ${date}. The Landlord, ${partyA}, acknowledges receipt of prior obligations.\n`;
+
+            // Response Clause
+            if (isHallucination && Math.random() > 0.3) {
+                // High probability of hallucination per section if global isHallucination
+                // Scramble amounts and dates
+                const wrongAmount = randomMoney(); // Likely different
+                const wrongDate = randomDate();
+                responseText += `${sectionNum}: Tenant must pay ${wrongAmount} by ${wrongDate}.\n`;
+            } else {
+                // Faithful representation
+                responseText += `${sectionNum}: Tenant must pay ${amount} by ${date}.\n`;
+            }
         }
 
-        pairs.push({ context, response, label: isHallucination ? 1 : 0 });
+        // 3. Add some case citations for flavor
+        const citation = "Doe v. Smith";
+        sourceText += `\nDisputes shall be resolved according to the precedent in ${citation}, 500 U.S. 123.\n`;
+        if (isHallucination) {
+            responseText += `\nGoverning law based on Roe v. Wade (irrelevant).\n`;
+        } else {
+            responseText += `\nGoverning law follows ${citation}.\n`;
+        }
+
+        pairs.push({ context: sourceText, response: responseText, label: isHallucination ? 1 : 0 });
     }
 
     return pairs;
