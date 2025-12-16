@@ -61,9 +61,18 @@ class ReGAEngine {
 
     meanEmbedding(embeddings) {
         if (!embeddings || embeddings.length === 0) {
+            console.warn('meanEmbedding: embeddings array is empty or undefined');
+            return [];
+        }
+        if (!embeddings[0]) {
+            console.error('meanEmbedding: embeddings[0] is undefined', embeddings);
             return [];
         }
         const d = embeddings[0].length;
+        if (!d) {
+            console.error('meanEmbedding: embeddings[0].length is undefined or 0', embeddings[0]);
+            return [];
+        }
         const result = new Array(d).fill(0);
         for (const emb of embeddings) {
             for (let i = 0; i < d; i++) {
