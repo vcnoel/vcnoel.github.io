@@ -60,6 +60,9 @@ class ReGAEngine {
     }
 
     meanEmbedding(embeddings) {
+        if (!embeddings || embeddings.length === 0) {
+            return [];
+        }
         const d = embeddings[0].length;
         const result = new Array(d).fill(0);
         for (const emb of embeddings) {
@@ -82,6 +85,19 @@ class ReGAEngine {
     // =========================================================================
 
     extractFeatures(srcEmbs, hypEmbs) {
+        // Guard against empty embeddings
+        if (!srcEmbs || !hypEmbs || srcEmbs.length === 0 || hypEmbs.length === 0) {
+            return {
+                features: [1, 1, 1, 1, 1, 1, 1, 1, 1],
+                costMatrix: [],
+                meanDistance: 1,
+                cosineDistance: 1,
+                diagMeanCost: 1,
+                swapIndicator: 0,
+                meanCost: 1
+            };
+        }
+
         const features = [];
         const n = Math.min(srcEmbs.length, hypEmbs.length);
 
