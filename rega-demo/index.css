@@ -791,6 +791,57 @@ nav {
     color: var(--accent-secondary);
 }
 
+/* Carbon Footprint Section */
+.carbon-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: var(--radius);
+}
+
+.carbon-icon {
+    font-size: 1.5rem;
+}
+
+.carbon-content {
+    text-align: center;
+}
+
+.carbon-value {
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--success);
+}
+
+.carbon-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.carbon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(34, 197, 94, 0.2);
+    border-radius: 50%;
+    color: var(--success);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.carbon-badge:hover {
+    background: var(--success);
+    color: white;
+    transform: scale(1.1);
+}
+
 .cost-section {
     display: flex;
     align-items: center;
