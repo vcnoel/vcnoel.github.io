@@ -62,7 +62,8 @@ class HalluGraphApp {
             auditList: document.getElementById('auditList'),
             extractTime: document.getElementById('extractTime'),
             alignTime: document.getElementById('alignTime'),
-            totalTime: document.getElementById('totalTime')
+            totalTime: document.getElementById('totalTime'),
+            carbonValue: document.getElementById('carbonValue')
         };
     }
 
@@ -172,6 +173,17 @@ class HalluGraphApp {
             this.elements.extractTime.textContent = `${Math.round(total * 0.4)} ms`;
             this.elements.alignTime.textContent = `${Math.round(total * 0.6)} ms`;
             this.elements.totalTime.textContent = `${Math.round(total)} ms`;
+
+            // Calculate and display carbon footprint (estimated based on processing time)
+            // Approximate: 0.0001g CO2 per 100ms of CPU processing time
+            const carbonGrams = (total / 100) * 0.0001;
+            if (this.elements.carbonValue) {
+                if (carbonGrams < 0.0001) {
+                    this.elements.carbonValue.textContent = `~${(carbonGrams * 1000).toFixed(3)}mg`;
+                } else {
+                    this.elements.carbonValue.textContent = `~${carbonGrams.toFixed(4)}g`;
+                }
+            }
         }
 
         // Update audit trail (improved white-box explanations)
