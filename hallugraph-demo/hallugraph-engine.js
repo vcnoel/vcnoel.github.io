@@ -12,7 +12,7 @@
 class HalluGraphEngine {
     constructor() {
         this.params = {
-            alpha: 0.7,         // Weight for EG in CFI
+            alpha: 0.8,         // Weight for EG in CFI
             threshold: 0.75,    // CFI threshold for pass/fail
             similarityThreshold: 0.7  // Embedding similarity threshold for matching
         };
