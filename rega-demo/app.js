@@ -20,10 +20,7 @@ const PRESETS = {
         source: "Type 2 diabetes is characterized by insulin resistance and relative insulin deficiency. Risk factors include obesity, sedentary lifestyle, and genetic predisposition. Treatment typically involves lifestyle modifications, oral medications like metformin, and sometimes insulin therapy. Regular monitoring of blood glucose levels is essential.",
         hypothesis: "Type 2 diabetes is caused by excessive sugar intake alone. The only treatment is insulin injections. Patients with Type 2 diabetes always need insulin from diagnosis. Blood glucose monitoring is optional and only needed during illness."
     },
-    legal: {
-        source: "The Fourth Amendment to the United States Constitution protects citizens against unreasonable searches and seizures. A warrant is generally required for searches, which must be issued by a judge and supported by probable cause. Exceptions include consent searches, plain view doctrine, and exigent circumstances.",
-        hypothesis: "The Fourth Amendment allows police to search any property without restrictions. Warrants are never required for law enforcement searches. Judges cannot issue search warrants. There are no exceptions to warrant requirements."
-    },
+
     academic: {
         source: "The transformer architecture was introduced in the 2017 paper 'Attention Is All You Need' by Vaswani et al. It relies entirely on self-attention mechanisms, eliminating the need for recurrence. Key innovations include multi-head attention and positional encoding. The architecture has become foundational for modern NLP models like BERT and GPT.",
         hypothesis: "The transformer was invented by OpenAI in 2019. It uses recurrent neural networks as its core mechanism. The architecture does not use attention mechanisms. Transformers were first used for computer vision, not NLP."
