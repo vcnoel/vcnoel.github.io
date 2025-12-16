@@ -763,8 +763,8 @@ nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
-    gap: 2rem;
+    padding: 1.25rem 2rem;
+    gap: 3rem;
 }
 
 .timing-section {
@@ -777,14 +777,16 @@ nav {
 }
 
 .timing-section .timing-label {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .timing-section .timing-value {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
     font-family: 'JetBrains Mono', monospace;
     color: var(--accent-secondary);
 }
@@ -792,24 +794,25 @@ nav {
 .cost-section {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .cost-section .cost-label {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
+    font-weight: 500;
 }
 
 .cost-items {
     display: flex;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
 .cost-section .cost-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
     border-radius: var(--radius-sm);
 }
 
@@ -822,7 +825,7 @@ nav {
 }
 
 .cost-section .cost-name {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
 }
 
