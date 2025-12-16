@@ -318,7 +318,7 @@ class ReGAEngine {
         // (moved inside the loop logic below)
 
         const combinedText = (sourceText + ' ' + hypothesisText).toLowerCase();
-        let deepRegaEnergy = 0;
+        let deepRegaEnergy = null;
         let deepRegaExplanation = null;
 
         const directionalVerbs = [
@@ -370,20 +370,14 @@ class ReGAEngine {
                         // Entities don't match even if direction is same?
                         // If they don't match at all, energy is high anyway.
                         // Assuming identical entities for this probe case.
-                    } else {
-                        // Structure is consistent
-                        deepRegaEnergy = 0.00;
                     }
                 }
                 break; // Only check first directional verb found
             }
         }
 
-        if (stage === 'Deep ReGA') {
-            // Override energy with Deep ReGA's structural energy
-            // Softmax-like blend or direct override? Paper uses direct energy threshold.
-            // If energy was low (0.08) but swap detected, it becomes high (1.82).
-            // If energy was low and structure consistent, it becomes very low (0.00).
+        if (stage === 'Deep ReGA' && deepRegaEnergy !== null) {
+            // Override energy ONLY if Deep ReGA detected a specific structural violation (swap)
             energy = deepRegaEnergy;
 
             if (deepRegaExplanation) {
