@@ -304,17 +304,11 @@ class ReGAEngine {
 
         // Compute energy
         const deepStart = performance.now();
-        const energy = this.computeEnergy(featureResult);
+        let energy = this.computeEnergy(featureResult);
         this.metrics.deepRegaTime = performance.now() - deepStart;
 
         // Generate explanations
         const explanations = this.generateExplanations(sourceText, hypothesisText, featureResult);
-
-        // Decision
-        const isHallucination = energy > this.params.threshold;
-        const confidence = isHallucination
-            ? Math.min((energy - this.params.threshold) / 0.3 + 0.5, 1.0)
-            : Math.min((this.params.threshold - energy) / this.params.threshold + 0.5, 1.0);
 
         // Determine stage: Deep ReGA if directional verbs are present
         let stage = 'Feature ReGA';
@@ -398,6 +392,12 @@ class ReGAEngine {
         }
 
         this.metrics.totalTime = performance.now() - startTime;
+
+        // Decision (recalculated after potentially Deep ReGA update)
+        const isHallucination = energy > this.params.threshold;
+        const confidence = isHallucination
+            ? Math.min((energy - this.params.threshold) / 0.3 + 0.5, 1.0)
+            : Math.min((this.params.threshold - energy) / this.params.threshold + 0.5, 1.0);
 
         // Build similarity matrix for visualization
         const simMatrix = featureResult.costMatrix.map(row =>
