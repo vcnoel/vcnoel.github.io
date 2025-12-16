@@ -59,7 +59,43 @@ function calculateExtraterrestrialIrradiance(dayOfYear) {
     return SOLAR_CONSTANT * (1.0 + 0.033 * Math.cos(arg));
 }
 
-function calculateIrradiance(lat, lon, alt, date, hour, tz, clearSky) {
+// ... existing code ...
+
+function calculateSolarAzimuth(latitude, declination, hourAngle, zenithAngle) {
+    const latRad = latitude * DEG_TO_RAD;
+    const decRad = declination * DEG_TO_RAD;
+    const omegaRad = hourAngle * DEG_TO_RAD;
+    const zenRad = zenithAngle * DEG_TO_RAD;
+
+    // Avoid division by zero
+    if (zenRad === 0) return 180.0;
+
+    const arg = (Math.sin(decRad) * Math.cos(latRad) - Math.cos(decRad) * Math.sin(latRad) * Math.cos(omegaRad)) / Math.sin(zenRad);
+    // Clamp arg to [-1, 1]
+    const clampedArg = Math.max(-1.0, Math.min(1.0, arg));
+    let azimuth = Math.acos(clampedArg) * RAD_TO_DEG;
+
+    // Azimuth convention: South = 0, East = -90, West = 90
+    // If hour angle is positive (afternoon), azimuth is positive (West)
+    // If hour angle is negative (morning), azimuth is negative (East)
+    if (hourAngle < 0) azimuth = -azimuth;
+
+    return azimuth;
+}
+
+function calculateAngleOfIncidence(zenithAngle, solarAzimuth, tilt, panelAzimuth) {
+    const zenRad = zenithAngle * DEG_TO_RAD;
+    const solAzRad = solarAzimuth * DEG_TO_RAD;
+    const tiltRad = tilt * DEG_TO_RAD;
+    const panAzRad = panelAzimuth * DEG_TO_RAD;
+
+    const cosTheta = Math.cos(zenRad) * Math.cos(tiltRad) +
+        Math.sin(zenRad) * Math.sin(tiltRad) * Math.cos(solAzRad - panAzRad);
+
+    return Math.acos(Math.max(-1.0, Math.min(1.0, cosTheta))) * RAD_TO_DEG;
+}
+
+function calculateIrradiance(lat, lon, alt, date, hour, tz, clearSky, tilt = 0, panelAzimuth = 0) {
     const dayOfYear = getDayOfYear(date);
     const declination = calculateSolarDeclination(dayOfYear);
     const solarHour = calculateTrueSolarTime(hour, lon, dayOfYear, tz);
@@ -67,7 +103,7 @@ function calculateIrradiance(lat, lon, alt, date, hour, tz, clearSky) {
     const zenithAngle = calculateZenithAngle(lat, declination, hourAngle);
     const elevation = 90.0 - zenithAngle;
 
-    const result = { hour, zenithAngle, elevation, sunVisible: elevation > 0, dni: 0, dhi: 0, ghi: 0 };
+    const result = { hour, zenithAngle, elevation, sunVisible: elevation > 0, dni: 0, dhi: 0, ghi: 0, gti: 0, beamTilted: 0, diffuseTilted: 0, reflectedTilted: 0 };
     if (!result.sunVisible) return result;
 
     const extraIrr = calculateExtraterrestrialIrradiance(dayOfYear);
@@ -82,22 +118,54 @@ function calculateIrradiance(lat, lon, alt, date, hour, tz, clearSky) {
     const zenRad = zenithAngle * DEG_TO_RAD;
     result.dhi = extraIrr * (1 - transmissivity) * diffuseProp * Math.pow(Math.cos(zenRad / 2), 2);
     result.ghi = result.dhi + result.dni * Math.cos(zenRad);
+
+    // Tilted Surface Calculations
+    const solarAzimuth = calculateSolarAzimuth(lat, declination, hourAngle, zenithAngle);
+    const aoi = calculateAngleOfIncidence(zenithAngle, solarAzimuth, tilt, panelAzimuth);
+    const aoiRad = aoi * DEG_TO_RAD;
+    const tiltRad = tilt * DEG_TO_RAD;
+    const albedo = 0.2; // Typical ground reflectance
+
+    // 1. Beam Component
+    // If AOI > 90, beam component is 0 (sun behind panel)
+    result.beamTilted = (aoi < 90) ? result.dni * Math.cos(aoiRad) : 0;
+
+    // 2. Diffuse Component (Isotropic Sky Model)
+    // DHI * (1 + cos(beta)) / 2
+    result.diffuseTilted = result.dhi * (1 + Math.cos(tiltRad)) / 2;
+
+    // 3. Reflected Component
+    // GHI * albedo * (1 - cos(beta)) / 2
+    result.reflectedTilted = result.ghi * albedo * (1 - Math.cos(tiltRad)) / 2;
+
+    result.gti = result.beamTilted + result.diffuseTilted + result.reflectedTilted;
+
     return result;
 }
 
-function simulateDay(lat, lon, alt, date, tz, interval, clearSky) {
+function simulateDay(lat, lon, alt, date, tz, interval, clearSky, tilt = 0, panelAzimuth = 0) {
     const results = [];
     for (let h = 0; h < 24; h += interval / 60.0) {
-        results.push(calculateIrradiance(lat, lon, alt, date, h, tz, clearSky));
+        results.push(calculateIrradiance(lat, lon, alt, date, h, tz, clearSky, tilt, panelAzimuth));
     }
     return results;
 }
 
 function calculateDailyTotals(results, interval) {
-    let ghi = 0, dni = 0, dhi = 0;
-    for (const r of results) { ghi += r.ghi; dni += r.dni; dhi += r.dhi; }
+    let ghi = 0, dni = 0, dhi = 0, gti = 0;
+    for (const r of results) {
+        ghi += r.ghi;
+        dni += r.dni;
+        dhi += r.dhi;
+        gti += r.gti;
+    }
     const h = interval / 60.0;
-    return { ghi: ghi * h / 1000, dni: dni * h / 1000, dhi: dhi * h / 1000 };
+    return {
+        ghi: ghi * h / 1000,
+        dni: dni * h / 1000,
+        dhi: dhi * h / 1000,
+        gti: gti * h / 1000
+    };
 }
 
 function formatHour(h) {

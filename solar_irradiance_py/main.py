@@ -37,26 +37,28 @@ class Colors:
 def print_title():
     """Display program title."""
     print()
-    print(f"{Colors.CYAN}╔═══════════════════════════════════════════════════════════════════════╗{Colors.RESET}")
-    print(f"{Colors.CYAN}║     ☀️  SOLAR IRRADIANCE SIMULATOR  ☀️                                  ║{Colors.RESET}")
-    print(f"{Colors.CYAN}║         GHI, DNI, DHI Calculation for a Full Day                      ║{Colors.RESET}")
-    print(f"{Colors.CYAN}╚═══════════════════════════════════════════════════════════════════════╝{Colors.RESET}")
+    print(f"{Colors.CYAN}======================================================================={Colors.RESET}")
+    print(f"{Colors.CYAN}      SOLAR IRRADIANCE SIMULATOR                                       {Colors.RESET}")
+    print(f"{Colors.CYAN}      GHI, DNI, DHI Calculation for a Full Day                         {Colors.RESET}")
+    print(f"{Colors.CYAN}======================================================================={Colors.RESET}")
     print()
 
 
 def print_parameters(args):
     """Display simulation parameters."""
-    print(f"{Colors.GREEN}═══════════════════════════════════════════════════════════════════════{Colors.RESET}")
+    print(f"{Colors.GREEN}======================================================================={Colors.RESET}")
     print(f"{Colors.GREEN}                        SITE PARAMETERS{Colors.RESET}")
-    print(f"{Colors.GREEN}═══════════════════════════════════════════════════════════════════════{Colors.RESET}")
-    print(f"  📍 Latitude:      {args.lat:.4f}°")
-    print(f"  📍 Longitude:     {args.long:.4f}°")
-    print(f"  ⛰️  Altitude:      {args.alt:.0f} m")
-    print(f"  📅 Date:          {args.date}")
+    print(f"{Colors.GREEN}======================================================================={Colors.RESET}")
+    print(f"  Latitude:      {args.lat:.4f} deg")
+    print(f"  Longitude:     {args.long:.4f} deg")
+    print(f"  Altitude:      {args.alt:.0f} m")
+    print(f"  Date:          {args.date}")
     sign = '+' if args.timezone >= 0 else ''
-    print(f"  🕐 Timezone:      UTC{sign}{args.timezone}")
-    print(f"  ⏱️  Interval:      {args.interval} minutes")
-    print(f"  ☁️  Conditions:    {'Clear sky' if args.clear_sky else 'Cloudy'}")
+    print(f"  Timezone:      UTC{sign}{args.timezone}")
+    print(f"  Tilt:          {args.tilt} deg")
+    print(f"  Azimuth:       {args.azimuth} deg (0=South)")
+    print(f"  Interval:      {args.interval} minutes")
+    print(f"  Conditions:    {'Clear sky' if args.clear_sky else 'Cloudy'}")
     print()
 
 
@@ -69,52 +71,53 @@ def format_hour(decimal_hour: float) -> str:
 
 def print_results(results: List[IrradianceResult], interval_minutes: int):
     """Display hourly results as a table."""
-    print(f"{Colors.GREEN}═══════════════════════════════════════════════════════════════════════{Colors.RESET}")
-    print(f"{Colors.GREEN}                    SOLAR IRRADIANCE (W/m²){Colors.RESET}")
-    print(f"{Colors.GREEN}═══════════════════════════════════════════════════════════════════════{Colors.RESET}")
+    print(f"{Colors.GREEN}======================================================================={Colors.RESET}")
+    print(f"{Colors.GREEN}                    SOLAR IRRADIANCE (W/m2){Colors.RESET}")
+    print(f"{Colors.GREEN}======================================================================={Colors.RESET}")
     print()
     
     # Table header
-    print(f"{Colors.WHITE}  Hour   │ Elev. │    GHI    │    DNI    │    DHI    │ Sun{Colors.RESET}")
-    print(f"─────────┼───────┼───────────┼───────────┼───────────┼────────")
+    print(f"{Colors.WHITE}  Hour   | Elev. |    GHI    |    DNI    |    DHI    |    GTI    | Sun{Colors.RESET}")
+    print(f"---------+-------+-----------+-----------+-----------+-----------+--------")
     
     # Data (show only hours between 5h and 21h for readability)
     for r in results:
         if 5.0 <= r.hour <= 21.0:
-            symbol = "  ☀️" if r.sun_visible else "  🌙"
+            symbol = "  UP" if r.sun_visible else "  --"
             
             if r.sun_visible:
                 color = Colors.YELLOW
             else:
                 color = Colors.DARK_GRAY
             
-            print(f"{color}  {format_hour(r.hour)}  │ {r.solar_elevation:5.1f}° │ {r.ghi:9.1f} │ {r.dni:9.1f} │ {r.dhi:9.1f} │{symbol}{Colors.RESET}")
+            print(f"{color}  {format_hour(r.hour)}  | {r.solar_elevation:5.1f} | {r.ghi:9.1f} | {r.dni:9.1f} | {r.dhi:9.1f} | {r.gti:9.1f} |{symbol}{Colors.RESET}")
     
     print()
 
 
 def print_totals(totals: tuple):
     """Display daily energy totals."""
-    ghi, dni, dhi = totals
+    ghi, dni, dhi, gti = totals
     
-    print(f"{Colors.MAGENTA}═══════════════════════════════════════════════════════════════════════{Colors.RESET}")
-    print(f"{Colors.MAGENTA}                  TOTAL DAILY ENERGY (kWh/m²){Colors.RESET}")
-    print(f"{Colors.MAGENTA}═══════════════════════════════════════════════════════════════════════{Colors.RESET}")
+    print(f"{Colors.MAGENTA}======================================================================={Colors.RESET}")
+    print(f"{Colors.MAGENTA}                  TOTAL DAILY ENERGY (kWh/m2){Colors.RESET}")
+    print(f"{Colors.MAGENTA}======================================================================={Colors.RESET}")
     print()
-    print(f"  ⚡ GHI Total (Global):    {ghi:.2f} kWh/m²")
-    print(f"  ⚡ DNI Total (Direct):    {dni:.2f} kWh/m²")
-    print(f"  ⚡ DHI Total (Diffuse):   {dhi:.2f} kWh/m²")
+    print(f"  GHI Total (Global):    {ghi:.2f} kWh/m2")
+    print(f"  DNI Total (Direct):    {dni:.2f} kWh/m2")
+    print(f"  DHI Total (Diffuse):   {dhi:.2f} kWh/m2")
+    print(f"  GTI Total (Tilted):    {gti:.2f} kWh/m2")
     print()
     
     # Visual progress bar for GHI
-    max_ghi = 8.0  # Typical max kWh/m²
-    percentage = int(min(100, (ghi / max_ghi) * 100))
+    max_irr = max(8.0, gti)  # Scale to max of GTI or typical
+    percentage = int(min(100, (gti / max_irr) * 100))
     filled = percentage // 2
     
-    bar_filled = '█' * filled
-    bar_empty = '░' * (50 - filled)
+    bar_filled = '#' * filled
+    bar_empty = '-' * (50 - filled)
     
-    print(f"  GHI: [{Colors.YELLOW}{bar_filled}{Colors.DARK_GRAY}{bar_empty}{Colors.RESET}] {percentage}%")
+    print(f"  GTI: [{Colors.YELLOW}{bar_filled}{Colors.DARK_GRAY}{bar_empty}{Colors.RESET}] {percentage}%")
     print()
 
 
@@ -135,10 +138,10 @@ def run_simulation(args):
     declination = calculate_solar_declination(day_of_year)
     sunrise, sunset = calculate_sunrise_sunset(args.lat, declination)
     
-    print(f"{Colors.YELLOW}🌅 Sunrise (solar):  {format_hour(sunrise)}{Colors.RESET}")
-    print(f"{Colors.YELLOW}🌇 Sunset (solar):   {format_hour(sunset)}{Colors.RESET}")
-    print(f"{Colors.YELLOW}📅 Day of year: {day_of_year}{Colors.RESET}")
-    print(f"{Colors.YELLOW}📐 Solar declination: {declination:.2f}°{Colors.RESET}")
+    print(f"{Colors.YELLOW}Sunrise (solar):  {format_hour(sunrise)}{Colors.RESET}")
+    print(f"{Colors.YELLOW}Sunset (solar):   {format_hour(sunset)}{Colors.RESET}")
+    print(f"{Colors.YELLOW}Day of year: {day_of_year}{Colors.RESET}")
+    print(f"{Colors.YELLOW}Solar declination: {declination:.2f} deg{Colors.RESET}")
     print()
     
     # Run simulation
@@ -152,7 +155,9 @@ def run_simulation(args):
         date_calc,
         args.timezone,
         args.interval,
-        args.clear_sky
+        args.clear_sky,
+        args.tilt,
+        args.internal_azimuth
     )
     
     # Display results
@@ -165,7 +170,7 @@ def run_simulation(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='☀️ Solar Irradiance Simulator - Calculate GHI, DNI, DHI',
+        description='Solar Irradiance Simulator - Calculate GHI, DNI, DHI, GTI',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -180,14 +185,17 @@ Examples:
 
   # Specific date (summer solstice)
   python main.py --lat 48.8566 --long 2.3522 --date 2024-06-21 --timezone 1
+
+  # With Tilt and Azimuth
+  python main.py --lat 48.8566 --long 2.3522 --tilt 35 --azimuth 0
 """
     )
     
     # Required arguments
     parser.add_argument('--lat', type=float, required=True,
-                        help='Latitude (-90 to 90°)')
+                        help='Latitude (-90 to 90 deg)')
     parser.add_argument('--long', type=float, required=True,
-                        help='Longitude (-180 to 180°)')
+                        help='Longitude (-180 to 180 deg)')
     
     # Optional arguments
     parser.add_argument('--alt', type=float, default=0,
@@ -200,6 +208,10 @@ Examples:
                         help='Calculation interval in minutes (default: 30)')
     parser.add_argument('--cloudy', action='store_true',
                         help='Use cloudy sky conditions (default: clear sky)')
+    parser.add_argument('--tilt', type=float, default=0,
+                        help='Panel tilt in degrees (0=horizontal, 90=vertical). Default: 0')
+    parser.add_argument('--azimuth', type=float, default=0,
+                        help='Panel azimuth in degrees (0=South, -90=East, 90=West). Default: 0 (South)')
     
     args = parser.parse_args()
     
@@ -211,6 +223,9 @@ Examples:
     if not (-180 <= args.long <= 180):
         print(f"{Colors.RED}Error: Longitude must be between -180 and 180 degrees{Colors.RESET}")
         return 1
+        
+    # Convert azimuth from User convention (S=0, E=-90) to Internal (N=0, E=90)
+    args.internal_azimuth = (180.0 + args.azimuth) % 360.0
     
     args.clear_sky = not args.cloudy
     

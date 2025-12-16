@@ -143,6 +143,86 @@
                             <span class="param-unit">UTC</span>
                         </div>
                     </div>
+
+                    <div class="mode-toggle-container">
+                        <div class="mode-toggle">
+                            <button class="mode-btn active" data-mode="standard">
+                                <i class="fas fa-cube"></i> Standard
+                            </button>
+                            <button class="mode-btn" data-mode="comparison">
+                                <i class="fas fa-layer-group"></i> Multi-Angle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="standard-mode">
+                        <div class="panel-header-small">
+                            <h4><i class="fas fa-solar-panel"></i> Panel Configuration</h4>
+                        </div>
+                        <div class="params-grid">
+                            <div class="param-item">
+                                <label for="tilt">Tilt Angle <button id="matchLatBtn" class="icon-btn"
+                                        title="Match Latitude">Match Lat</button></label>
+                                <input type="number" id="tilt" value="0" min="0" max="90" step="1">
+                                <span class="param-unit">°</span>
+                            </div>
+                            <div class="param-item">
+                                <label for="azimuth">Azimuth</label>
+                                <input type="number" id="azimuth" value="0" min="-180" max="180" step="1">
+                                <span class="param-unit">°</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="comparison-mode" class="hidden">
+                        <div class="scenario-card scenario-a">
+                            <div class="scenario-header">
+                                <span class="scenario-dot"></span> Scenario A (Red)
+                            </div>
+                            <div class="params-grid compact">
+                                <div class="param-item">
+                                    <label>Tilt</label>
+                                    <input type="number" id="tiltA" value="0" min="0" max="90">
+                                </div>
+                                <div class="param-item">
+                                    <label>Azim.</label>
+                                    <input type="number" id="azimuthA" value="0" min="-180" max="180">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="scenario-card scenario-b">
+                            <div class="scenario-header">
+                                <span class="scenario-dot"></span> Scenario B (Blue)
+                            </div>
+                            <div class="params-grid compact">
+                                <div class="param-item">
+                                    <label>Tilt</label>
+                                    <input type="number" id="tiltB" value="30" min="0" max="90">
+                                </div>
+                                <div class="param-item">
+                                    <label>Azim.</label>
+                                    <input type="number" id="azimuthB" value="45" min="-180" max="180">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="scenario-card scenario-c">
+                            <div class="scenario-header">
+                                <span class="scenario-dot"></span> Scenario C (Purple)
+                            </div>
+                            <div class="params-grid compact">
+                                <div class="param-item">
+                                    <label>Tilt</label>
+                                    <input type="number" id="tiltC" value="45" min="0" max="90">
+                                </div>
+                                <div class="param-item">
+                                    <label>Azim.</label>
+                                    <input type="number" id="azimuthC" value="-45" min="-180" max="180">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="date-input">
                         <label for="simDate">Simulation Date</label>
                         <input type="date" id="simDate">
@@ -218,8 +298,32 @@
             <h2><i class="fas fa-chart-line"></i> Simulation Results</h2>
         </div>
 
-        <!-- Energy Totals -->
-        <div class="totals-grid">
+        <!-- Comparison Totals (Hidden by default) -->
+        <div id="comparison-totals" class="totals-grid hidden">
+            <div class="total-card gti" style="--gti-color: var(--scenario-a-color)">
+                <div class="total-icon">A</div>
+                <div class="total-content">
+                    <div class="total-label">Scenario A Total</div>
+                    <div class="total-value" id="totalGTIA">-- kWh/m²</div>
+                </div>
+            </div>
+            <div class="total-card gti" style="--gti-color: var(--scenario-b-color)">
+                <div class="total-icon">B</div>
+                <div class="total-content">
+                    <div class="total-label">Scenario B Total</div>
+                    <div class="total-value" id="totalGTIB">-- kWh/m²</div>
+                </div>
+            </div>
+            <div class="total-card gti" style="--gti-color: var(--scenario-c-color)">
+                <div class="total-icon">C</div>
+                <div class="total-content">
+                    <div class="total-label">Scenario C Total</div>
+                    <div class="total-value" id="totalGTIC">-- kWh/m²</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="standard-totals" class="totals-grid">
             <div class="total-card ghi">
                 <div class="total-icon">⚡</div>
                 <div class="total-content">
@@ -250,6 +354,16 @@
                     </div>
                 </div>
             </div>
+            <div class="total-card gti highlight-card">
+                <div class="total-icon">📐</div>
+                <div class="total-content">
+                    <div class="total-label">GTI Total (Tilted)</div>
+                    <div class="total-value" id="totalGTI">-- kWh/m²</div>
+                    <div class="total-bar">
+                        <div class="total-bar-fill" id="gtiBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Chart -->
@@ -260,6 +374,7 @@
                     <span class="legend-item ghi"><span class="legend-dot"></span> GHI</span>
                     <span class="legend-item dni"><span class="legend-dot"></span> DNI</span>
                     <span class="legend-item dhi"><span class="legend-dot"></span> DHI</span>
+                    <span class="legend-item gti"><span class="legend-dot"></span> GTI</span>
                 </div>
             </div>
             <div class="chart-wrapper">
@@ -281,6 +396,7 @@
                             <th>GHI (W/m²)</th>
                             <th>DNI (W/m²)</th>
                             <th>DHI (W/m²)</th>
+                            <th>GTI (W/m²)</th>
                             <th>Status</th>
                         </tr>
                     </thead>

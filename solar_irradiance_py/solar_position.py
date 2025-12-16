@@ -188,3 +188,35 @@ def calculate_sunrise_sunset(
     sunset = 12.0 + omega_s / 15.0
     
     return (sunrise, sunset)
+
+
+def calculate_angle_of_incidence(
+    zenith_angle: float,
+    solar_azimuth: float,
+    tilt: float,
+    panel_azimuth: float
+) -> float:
+    """
+    Calculate angle of incidence (AOI) on a tilted surface.
+    
+    Args:
+        zenith_angle: Solar zenith angle in degrees
+        solar_azimuth: Solar azimuth in degrees (North=0, East=90)
+        tilt: Surface tilt from horizontal in degrees
+        panel_azimuth: Surface azimuth in degrees (North=0, East=90)
+        
+    Returns:
+        Angle of incidence in degrees
+    """
+    zen_rad = zenith_angle * DEG_TO_RAD
+    sol_az_rad = solar_azimuth * DEG_TO_RAD
+    tilt_rad = tilt * DEG_TO_RAD
+    pan_az_rad = panel_azimuth * DEG_TO_RAD
+    
+    cos_theta = (
+        math.cos(zen_rad) * math.cos(tilt_rad) +
+        math.sin(zen_rad) * math.sin(tilt_rad) * math.cos(sol_az_rad - pan_az_rad)
+    )
+    
+    cos_theta = max(-1.0, min(1.0, cos_theta))
+    return math.acos(cos_theta) * RAD_TO_DEG

@@ -34,8 +34,11 @@ class IrradianceResult:
     dni: float = 0.0  # Direct Normal Irradiance (W/m²)
     dhi: float = 0.0  # Diffuse Horizontal Irradiance (W/m²)
     ghi: float = 0.0  # Global Horizontal Irradiance (W/m²)
+    gti: float = 0.0  # Global Tilted Irradiance (W/m²)
     zenith_angle: float = 0.0  # Zenith angle (degrees)
     solar_elevation: float = 0.0  # Solar elevation (degrees)
+    solar_azimuth: float = 0.0  # Solar azimuth (degrees, N=0)
+    angle_of_incidence: float = 0.0  # Angle of incidence (degrees)
     hour: float = 0.0  # Calculation hour
     sun_visible: bool = False  # Is sun above horizon?
 
@@ -47,15 +50,15 @@ def calculate_dni(
 ) -> float:
     """
     Calculate DNI (Direct Normal Irradiance).
-    DNI = S₀ × τ^m × altitude_correction
+    DNI = S0 * t^m * altitude_correction
     
     Args:
-        extraterrestrial_irradiance: Extraterrestrial irradiance (W/m²)
+        extraterrestrial_irradiance: Extraterrestrial irradiance (W/m2)
         transmissivity: Effective transmissivity
         altitude_correction: Altitude correction factor
         
     Returns:
-        DNI in W/m²
+        DNI in W/m2
     """
     if transmissivity <= 0:
         return 0.0
@@ -74,13 +77,13 @@ def calculate_dhi(
     Simplified model based on diffuse proportion and zenith angle.
     
     Args:
-        extraterrestrial_irradiance: Extraterrestrial irradiance (W/m²)
+        extraterrestrial_irradiance: Extraterrestrial irradiance (W/m2)
         transmissivity: Effective transmissivity
         zenith_angle: Zenith angle in degrees
         diffuse_proportion: Proportion of diffuse radiation
         
     Returns:
-        DHI in W/m²
+        DHI in W/m2
     """
     if zenith_angle >= 90.0:
         return 0.0
@@ -102,15 +105,15 @@ def calculate_ghi(
 ) -> float:
     """
     Calculate GHI (Global Horizontal Irradiance).
-    GHI = DHI + DNI × cos(θz)
+    GHI = DHI + DNI * cos(theta_z)
     
     Args:
-        dni: Direct Normal Irradiance (W/m²)
-        dhi: Diffuse Horizontal Irradiance (W/m²)
+        dni: Direct Normal Irradiance (W/m2)
+        dhi: Diffuse Horizontal Irradiance (W/m2)
         zenith_angle: Zenith angle in degrees
         
     Returns:
-        GHI in W/m²
+        GHI in W/m2
     """
     if zenith_angle >= 90.0:
         return dhi  # Only diffuse is present below horizon
@@ -121,6 +124,33 @@ def calculate_ghi(
     return dhi + direct_component
 
 
+def calculate_gti(
+    dni: float,
+    dhi: float,
+    ghi: float,
+    angle_of_incidence: float,
+    tilt: float,
+    albedo: float = 0.2
+) -> float:
+    """
+    Calculate Global Tilted Irradiance (GTI) using Isotropic Sky Model.
+    GTI = Beam + Diffuse + Reflected
+    """
+    tilt_rad = tilt * DEG_TO_RAD
+    aoi_rad = angle_of_incidence * DEG_TO_RAD
+    
+    # beam component
+    beam = dni * math.cos(aoi_rad) if angle_of_incidence < 90 else 0.0
+    
+    # diffuse component (isotropic)
+    diffuse = dhi * (1.0 + math.cos(tilt_rad)) / 2.0
+    
+    # reflected component
+    reflected = ghi * albedo * (1.0 - math.cos(tilt_rad)) / 2.0
+    
+    return beam + diffuse + reflected
+
+
 def calculate_complete_irradiance(
     latitude: float,
     longitude: float,
@@ -128,7 +158,9 @@ def calculate_complete_irradiance(
     date_calc: date,
     local_hour: float,
     timezone: float = 0,
-    clear_sky: bool = True
+    clear_sky: bool = True,
+    tilt: float = 0.0,
+    surface_azimuth: float = 180.0  # Default to South (North=0 convention)
 ) -> IrradianceResult:
     """
     Calculate all irradiances for a given moment.
@@ -144,15 +176,22 @@ def calculate_complete_irradiance(
     zenith_angle = calculate_zenith_angle(latitude, declination, hour_angle)
     elevation = calculate_solar_elevation(zenith_angle)
     
+    # Solar Azimuth conversion (solar_position uses N=0)
+    from solar_position import calculate_solar_azimuth, calculate_angle_of_incidence
+    solar_azimuth = calculate_solar_azimuth(latitude, declination, hour_angle, zenith_angle)
+    
     result.zenith_angle = zenith_angle
     result.solar_elevation = elevation
+    result.solar_azimuth = solar_azimuth
     result.sun_visible = elevation > 0
+    
+    # Calculate AOI
+    result.angle_of_incidence = calculate_angle_of_incidence(
+        zenith_angle, solar_azimuth, tilt, surface_azimuth
+    )
     
     # 2. If sun is below horizon, no irradiance
     if not result.sun_visible:
-        result.dni = 0.0
-        result.dhi = 0.0
-        result.ghi = 0.0
         return result
     
     # 3. Atmospheric calculations
@@ -168,6 +207,8 @@ def calculate_complete_irradiance(
     result.dhi = calculate_dhi(extraterrestrial_irradiance, transmissivity, zenith_angle, diffuse_proportion)
     result.ghi = calculate_ghi(result.dni, result.dhi, zenith_angle)
     
+    result.gti = calculate_gti(result.dni, result.dhi, result.ghi, result.angle_of_incidence, tilt)
+    
     return result
 
 
@@ -178,22 +219,12 @@ def simulate_day(
     date_calc: date,
     timezone: float = 0,
     interval_minutes: int = 30,
-    clear_sky: bool = True
+    clear_sky: bool = True,
+    tilt: float = 0.0,
+    surface_azimuth: float = 180.0
 ) -> List[IrradianceResult]:
     """
     Simulate irradiance over an entire day.
-    
-    Args:
-        latitude: Latitude in degrees
-        longitude: Longitude in degrees
-        altitude: Altitude in meters
-        date_calc: Simulation date
-        timezone: UTC offset in hours
-        interval_minutes: Interval between calculations (default 30 min)
-        clear_sky: Sky conditions
-        
-    Returns:
-        List of results for each time step
     """
     results = []
     
@@ -206,7 +237,8 @@ def simulate_day(
     while hour < end_hour:
         result = calculate_complete_irradiance(
             latitude, longitude, altitude,
-            date_calc, hour, timezone, clear_sky
+            date_calc, hour, timezone, clear_sky,
+            tilt, surface_azimuth
         )
         results.append(result)
         hour += step
@@ -217,26 +249,27 @@ def simulate_day(
 def calculate_daily_total_energy(
     results: List[IrradianceResult],
     interval_minutes: int
-) -> Tuple[float, float, float]:
+) -> Tuple[float, float, float, float]:
     """
     Calculate total energy received during the day (kWh/m²).
-    
-    Returns:
-        Tuple of (GHI, DNI, DHI) in kWh/m²
+    Returns: (GHI, DNI, DHI, GTI) in kWh/m²
     """
     total_ghi = 0.0
     total_dni = 0.0
     total_dhi = 0.0
+    total_gti = 0.0
     
     for r in results:
         total_ghi += r.ghi
         total_dni += r.dni
         total_dhi += r.dhi
+        total_gti += r.gti
     
     # Convert to kWh/m² (W/m² × hours / 1000)
     hours_per_interval = interval_minutes / 60.0
     total_ghi = total_ghi * hours_per_interval / 1000.0
     total_dni = total_dni * hours_per_interval / 1000.0
     total_dhi = total_dhi * hours_per_interval / 1000.0
+    total_gti = total_gti * hours_per_interval / 1000.0
     
-    return (total_ghi, total_dni, total_dhi)
+    return (total_ghi, total_dni, total_dhi, total_gti)
