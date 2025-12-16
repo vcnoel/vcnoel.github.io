@@ -149,37 +149,6 @@
                             <div class="metric-value" id="relationCount">-- / --</div>
                         </div>
                     </div>
-
-                    <!-- Timing Metrics -->
-                    <div class="timing-grid">
-                        <div class="timing-item">
-                            <div class="timing-label">Entity Extraction</div>
-                            <div class="timing-value" id="extractTime">-- ms</div>
-                        </div>
-                        <div class="timing-item">
-                            <div class="timing-label">Graph Alignment</div>
-                            <div class="timing-value" id="alignTime">-- ms</div>
-                        </div>
-                        <div class="timing-item">
-                            <div class="timing-label">Total</div>
-                            <div class="timing-value" id="totalTime">-- ms</div>
-                        </div>
-                    </div>
-
-                    <!-- Cost Comparison -->
-                    <div class="cost-comparison">
-                        <div class="cost-header">Cost vs. GPT-4 Judge</div>
-                        <div class="cost-grid">
-                            <div class="cost-item ours">
-                                <div class="cost-name">HalluGraph</div>
-                                <div class="cost-value" id="ourCost">$0.00</div>
-                            </div>
-                            <div class="cost-item theirs">
-                                <div class="cost-name">GPT-4</div>
-                                <div class="cost-value">~$0.02</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -192,6 +161,37 @@
             <div class="explanations-content" id="auditList">
                 <div class="explanation-placeholder">
                     Verify documents to see detailed explanations
+                </div>
+            </div>
+        </div>
+
+        <!-- Timing & Cost - Full Width Bar -->
+        <div class="metrics-bar">
+            <div class="timing-section">
+                <div class="timing-item">
+                    <div class="timing-label">Entity Extraction</div>
+                    <div class="timing-value" id="extractTime">-- ms</div>
+                </div>
+                <div class="timing-item">
+                    <div class="timing-label">Graph Alignment</div>
+                    <div class="timing-value" id="alignTime">-- ms</div>
+                </div>
+                <div class="timing-item">
+                    <div class="timing-label">Total</div>
+                    <div class="timing-value" id="totalTime">-- ms</div>
+                </div>
+            </div>
+            <div class="cost-section">
+                <div class="cost-label">Cost vs. GPT-4 Judge</div>
+                <div class="cost-items">
+                    <div class="cost-item ours">
+                        <span class="cost-name">HalluGraph</span>
+                        <span class="cost-value">$0.00</span>
+                    </div>
+                    <div class="cost-item theirs">
+                        <span class="cost-name">GPT-4</span>
+                        <span class="cost-value">~$0.02</span>
+                    </div>
                 </div>
             </div>
         </div>

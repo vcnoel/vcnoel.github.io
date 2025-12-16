@@ -127,41 +127,6 @@
                             <span class="verdict-text">Awaiting Input</span>
                         </div>
                     </div>
-
-                    <!-- Metrics -->
-                    <div class="metrics-grid">
-                        <div class="metric">
-                            <div class="metric-label">Embedding</div>
-                            <div class="metric-value" id="embedTime">-- ms</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">Feature ReGA</div>
-                            <div class="metric-value" id="graphTime">-- ms</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">Deep ReGA</div>
-                            <div class="metric-value" id="sinkhornTime">-- ms</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">Total</div>
-                            <div class="metric-value" id="totalTime">-- ms</div>
-                        </div>
-                    </div>
-
-                    <!-- Cost Comparison -->
-                    <div class="cost-comparison">
-                        <div class="cost-label">Cost vs. GPT-4 Judge</div>
-                        <div class="cost-bar">
-                            <div class="cost-rega">
-                                <span>ReGA</span>
-                                <strong>$0.00</strong>
-                            </div>
-                            <div class="cost-gpt">
-                                <span>GPT-4</span>
-                                <strong>~$0.02</strong>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -174,6 +139,41 @@
             <div class="explanations-bar-content" id="explanationsList">
                 <div class="explanation-placeholder">
                     Verify texts to see detailed explanations
+                </div>
+            </div>
+        </div>
+
+        <!-- Timing & Cost - Full Width Bar -->
+        <div class="metrics-bar">
+            <div class="timing-section">
+                <div class="timing-item">
+                    <div class="timing-label">Embedding</div>
+                    <div class="timing-value" id="embedTime">-- ms</div>
+                </div>
+                <div class="timing-item">
+                    <div class="timing-label">Feature ReGA</div>
+                    <div class="timing-value" id="graphTime">-- ms</div>
+                </div>
+                <div class="timing-item">
+                    <div class="timing-label">Deep ReGA</div>
+                    <div class="timing-value" id="sinkhornTime">-- ms</div>
+                </div>
+                <div class="timing-item">
+                    <div class="timing-label">Total</div>
+                    <div class="timing-value" id="totalTime">-- ms</div>
+                </div>
+            </div>
+            <div class="cost-section">
+                <div class="cost-label">Cost vs. GPT-4 Judge</div>
+                <div class="cost-items">
+                    <div class="cost-item ours">
+                        <span class="cost-name">ReGA</span>
+                        <span class="cost-value">$0.00</span>
+                    </div>
+                    <div class="cost-item theirs">
+                        <span class="cost-name">GPT-4</span>
+                        <span class="cost-value">~$0.02</span>
+                    </div>
                 </div>
             </div>
         </div>
