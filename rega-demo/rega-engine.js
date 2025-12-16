@@ -307,7 +307,17 @@ class ReGAEngine {
             ? Math.min((energy - this.params.threshold) / 0.3 + 0.5, 1.0)
             : Math.min((this.params.threshold - energy) / this.params.threshold + 0.5, 1.0);
 
-        this.metrics.stage = 'feature-rega';
+        // Determine stage: Deep ReGA if swap indicator is high (directional confusion)
+        let stage = 'Feature ReGA';
+        let stageReason = 'Alignment features from paper methodology';
+
+        if (featureResult.swapIndicator > 0.03) {
+            stage = 'Deep ReGA';
+            stageReason = 'Directional alignment analysis detected role confusion';
+            this.metrics.stage = 'deep-rega';
+        } else {
+            this.metrics.stage = 'feature-rega';
+        }
         this.metrics.totalTime = performance.now() - startTime;
 
         // Build similarity matrix for visualization
@@ -320,8 +330,8 @@ class ReGAEngine {
             isHallucination,
             verdict: isHallucination ? 'FAIL' : 'PASS',
             confidence,
-            stage: 'Feature ReGA',
-            stageReason: 'Alignment features from paper methodology',
+            stage,
+            stageReason,
             explanations,
             metrics: { ...this.metrics },
             details: {

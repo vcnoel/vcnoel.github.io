@@ -337,10 +337,7 @@ class DemoApp {
         this.elements.sourceText.value = preset.source;
         this.elements.hypothesisText.value = preset.hypothesis;
 
-        // Auto-run verification
-        if (this.isModelReady) {
-            this.runVerification();
-        }
+        // Just load the text - user must click Verify to run
     }
 
     async runBatchDemo() {
