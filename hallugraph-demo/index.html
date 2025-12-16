@@ -237,6 +237,51 @@
         </div>
     </section>
 
+    <!-- Batch Demo -->
+    <section class="section" id="batch-demo">
+        <div class="section-header">
+            <h2><i class="fas fa-bolt"></i> Batch Performance Demo</h2>
+            <p>Process multiple pairs to measure throughput</p>
+        </div>
+        <div class="batch-container">
+            <div class="batch-controls">
+                <div class="batch-input">
+                    <label for="batchSize">Sample Size</label>
+                    <select id="batchSize">
+                        <option value="10">10 samples</option>
+                        <option value="25">25 samples</option>
+                        <option value="50" selected>50 samples</option>
+                        <option value="100">100 samples</option>
+                    </select>
+                </div>
+                <button id="runBatchBtn" class="batch-btn">
+                    <i class="fas fa-play"></i> Run Batch Demo
+                </button>
+            </div>
+            <div class="batch-results" id="batchResults">
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Pairs Processed</div>
+                    <div class="batch-metric-value" id="batchProcessed">0 / 0</div>
+                </div>
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Throughput</div>
+                    <div class="batch-metric-value" id="batchThroughput">-- pairs/sec</div>
+                </div>
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Avg. Latency</div>
+                    <div class="batch-metric-value" id="batchLatency">-- ms</div>
+                </div>
+                <div class="batch-metric">
+                    <div class="batch-metric-label">Accuracy</div>
+                    <div class="batch-metric-value" id="batchAccuracy">--%</div>
+                </div>
+            </div>
+            <div class="batch-progress">
+                <div class="batch-progress-bar" id="batchProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+    </section>
+
     <!-- How It Works -->
     <section class="section" id="how-it-works">
         <div class="section-header">

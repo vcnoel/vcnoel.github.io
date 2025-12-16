@@ -5,6 +5,67 @@
 import { halluGraphEngine } from './hallugraph-engine.js';
 import { visualizer } from './visualizer.js';
 
+// ============================================================================
+// Batch Test Data Generator (Legal Theme)
+// ============================================================================
+
+function generateBatchData(count) {
+    const pairs = [];
+    const templates = [
+        {
+            context: "The lease agreement between {partyA} and {partyB} commences on {date}. Monthly rent is {amount}.",
+            hallucinated: "The lease between {partyA} and {partyB} starts on {wrongDate}. Rent is {wrongAmount}.",
+            faithful: "The lease agreement between {partyA} and {partyB} begins on {date}. The rent is {amount} per month."
+        },
+        {
+            context: "In the case of {caseName}, the court ruled that {ruling}.",
+            hallucinated: "In {caseName}, the judge decided that {wrongRuling}.",
+            faithful: "The court in {caseName} held that {ruling}."
+        },
+        {
+            context: "Section {section} of the contract requires {action} within {days} days.",
+            hallucinated: "Section {section} states that {wrongAction} is needed within {wrongDays} days.",
+            faithful: "According to Section {section}, {action} must be completed in {days} days."
+        }
+    ];
+
+    const values = {
+        partyA: ["Alpha Corp", "Beta LLC", "Gamma Inc", "Delta Ltd"],
+        partyB: ["Epsilon Co", "Zeta Group", "Omega Partners", "Theta Systems"],
+        date: ["January 1, 2024", "March 15, 2023", "July 10, 2025"],
+        wrongDate: ["January 1, 2020", "December 31, 2022", "May 5, 2026"],
+        amount: ["$5,000", "$10,000", "$2,500", "$50,000"],
+        wrongAmount: ["$500", "$100,000", "$0", "$1,000,000"],
+        caseName: ["Smith v. Jones", "State v. Doe", "Tech Corp v. Data Inc", "People v. Johnson"],
+        ruling: ["damages were owed", "contract was valid", "defendant was liable", "dismissal was proper"],
+        wrongRuling: ["no damages were owed", "contract was void", "plaintiff was liable", "case was remanded"],
+        section: ["1.2", "4.5", "10(a)", "12(b)"],
+        action: ["payment", "delivery", "notification", "response"],
+        wrongAction: ["refund", "cancellation", "silence", "ignoring"],
+        days: ["30", "15", "60", "90"],
+        wrongDays: ["365", "0", "1000", "5"]
+    };
+
+    for (let i = 0; i < count; i++) {
+        const template = templates[i % templates.length];
+        const isHallucination = Math.random() > 0.5;
+
+        let context = template.context;
+        let response = isHallucination ? template.hallucinated : template.faithful;
+
+        // Fill in values
+        for (const [key, vals] of Object.entries(values)) {
+            const val = vals[Math.floor(Math.random() * vals.length)];
+            context = context.replace(`{${key}}`, val);
+            response = response.replace(`{${key}}`, val);
+        }
+
+        pairs.push({ context, response, label: isHallucination ? 1 : 0 });
+    }
+
+    return pairs;
+}
+
 class HalluGraphApp {
     constructor() {
         this.elements = {};
@@ -63,12 +124,25 @@ class HalluGraphApp {
             extractTime: document.getElementById('extractTime'),
             alignTime: document.getElementById('alignTime'),
             totalTime: document.getElementById('totalTime'),
-            carbonValue: document.getElementById('carbonValue')
+            totalTime: document.getElementById('totalTime'),
+            carbonValue: document.getElementById('carbonValue'),
+
+            // Batch Demo Elements
+            batchSize: document.getElementById('batchSize'),
+            runBatchBtn: document.getElementById('runBatchBtn'),
+            batchProcessed: document.getElementById('batchProcessed'),
+            batchThroughput: document.getElementById('batchThroughput'),
+            batchLatency: document.getElementById('batchLatency'),
+            batchAccuracy: document.getElementById('batchAccuracy'),
+            batchProgressBar: document.getElementById('batchProgressBar')
         };
     }
 
     bindEvents() {
         this.elements.verifyBtn.addEventListener('click', () => this.runVerification());
+
+        // Batch Demo
+        this.elements.runBatchBtn.addEventListener('click', () => this.runBatchDemo());
 
         // Preset buttons
         document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -131,6 +205,55 @@ class HalluGraphApp {
         } finally {
             this.elements.verifyBtn.disabled = false;
             this.elements.verifyBtn.innerHTML = '<i class="fas fa-balance-scale"></i> Verify Fidelity';
+        }
+    }
+
+    async runBatchDemo() {
+        if (this.elements.runBatchBtn.disabled) return;
+
+        const batchSize = parseInt(this.elements.batchSize.value);
+        const testData = generateBatchData(batchSize);
+
+        this.elements.runBatchBtn.disabled = true;
+        this.elements.runBatchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+
+        const startTime = performance.now();
+        let correct = 0;
+        let totalLatency = 0;
+
+        try {
+            for (let i = 0; i < testData.length; i++) {
+                const pair = testData[i];
+                // Reuse existing engine verify, but suppress UI updates for speed if possible
+                // Here we call verify directly
+                const startItem = performance.now();
+                const result = await halluGraphEngine.verify(pair.context, pair.response);
+                totalLatency += (performance.now() - startItem);
+
+                const predicted = result.isHallucination ? 1 : 0;
+                if (predicted === pair.label) correct++;
+
+                // Update progress
+                const progress = ((i + 1) / testData.length) * 100;
+                this.elements.batchProgressBar.style.width = `${progress}%`;
+                this.elements.batchProcessed.textContent = `${i + 1} / ${testData.length}`;
+            }
+
+            const totalTime = performance.now() - startTime;
+            const throughput = (testData.length / totalTime) * 1000;
+            const avgLatency = totalLatency / testData.length;
+            const accuracy = (correct / testData.length) * 100;
+
+            this.elements.batchThroughput.textContent = `${throughput.toFixed(2)} pairs/sec`;
+            this.elements.batchLatency.textContent = `${avgLatency.toFixed(1)} ms`;
+            this.elements.batchAccuracy.textContent = `${accuracy.toFixed(1)}%`;
+
+        } catch (error) {
+            console.error('Batch demo error:', error);
+            alert('Error during batch demo: ' + error.message);
+        } finally {
+            this.elements.runBatchBtn.disabled = false;
+            this.elements.runBatchBtn.innerHTML = '<i class="fas fa-play"></i> Run Batch Demo';
         }
     }
 
