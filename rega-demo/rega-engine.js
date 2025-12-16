@@ -316,13 +316,26 @@ class ReGAEngine {
             ? Math.min((energy - this.params.threshold) / 0.3 + 0.5, 1.0)
             : Math.min((this.params.threshold - energy) / this.params.threshold + 0.5, 1.0);
 
-        // Determine stage: Deep ReGA if swap indicator is high (directional confusion)
+        // Determine stage: Deep ReGA if directional verbs are present
         let stage = 'Feature ReGA';
         let stageReason = 'Alignment features from paper methodology';
 
-        if (featureResult.swapIndicator > 0.03) {
+        // List of verbs that imply directionality or asymmetric relationships
+        const directionalVerbs = [
+            'acquired', 'bought', 'sold', 'purchased',
+            'defeated', 'beat', 'won against', 'lost to',
+            'sued', 'filed against',
+            'invented', 'created', 'founded', 'built',
+            'wrote', 'authored',
+            'killed', 'murdered', 'attacked'
+        ];
+
+        const combinedText = (sourceText + ' ' + hypothesisText).toLowerCase();
+        const hasDirectionalVerb = directionalVerbs.some(verb => combinedText.includes(verb));
+
+        if (hasDirectionalVerb) {
             stage = 'Deep ReGA';
-            stageReason = 'Directional alignment analysis detected role confusion';
+            stageReason = 'Directional relationship verification required';
             this.metrics.stage = 'deep-rega';
         } else {
             this.metrics.stage = 'feature-rega';
