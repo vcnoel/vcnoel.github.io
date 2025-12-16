@@ -141,6 +141,7 @@ class HalluGraphEngine {
             { regex: /lease\s+(?:term|runs)\s+(?:is|for)?\s*(\d+\s+years?)/gi, type: 'term' },
             { regex: /([\w\s]+)\s+held\s+that\s+([\w\s,]+)/gi, type: 'held' },
             { regex: /([\w\s]+)\s+filed\s+(?:a\s+)?(\w+)\s+against\s+([\w\s]+)/gi, type: 'filed' },
+            { regex: /(?:Section|Article|Clause)\s+([\w\.]+)\s+(?:requires|states|mandates)\s+(?:that\s+)?([\w\s]+?)(?:\s+within|\.|$)/gi, type: 'requires' }
         ];
 
         for (const pattern of patterns) {
@@ -283,8 +284,16 @@ class HalluGraphEngine {
 
     fuzzyMatch(str1, str2) {
         if (!str1 || !str2) return 0;
-        const s1 = str1.toLowerCase();
-        const s2 = str2.toLowerCase();
+        const s1 = str1.toLowerCase().replace(/[\$,]/g, '').trim();
+        const s2 = str2.toLowerCase().replace(/[\$,]/g, '').trim();
+
+        // Strict check for numbers/dates (if they contain digits)
+        const hasDigits = /\d/.test(s1) && /\d/.test(s2);
+        if (hasDigits) {
+            // For numbers/dates, we require exact match or very high similarity
+            return s1 === s2 ? 1 : 0;
+        }
+
         if (s1 === s2) return 1;
         if (s1.includes(s2) || s2.includes(s1)) return 0.8;
 
