@@ -255,6 +255,10 @@
                 <i class="fas fa-exchange-alt"></i>
                 <span>Directional</span>
             </button>
+            <button class="preset-btn" data-preset="negation">
+                <i class="fas fa-ban"></i>
+                <span>Negation</span>
+            </button>
             <button class="preset-btn" data-preset="faithful">
                 <i class="fas fa-check-circle"></i>
                 <span>Faithful</span>
@@ -320,22 +324,28 @@
             </div>
             <div class="step-card">
                 <div class="step-number">2</div>
+                <h4>Pattern-Based Graph Extraction (PBGE)</h4>
+                <p>Extract signed directional triplets (Subject, Verb, Polarity, Object) using regex for rapid
+                    structural verification.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
                 <h4>Graph Construction</h4>
                 <p>Build sentence-level graphs where nodes are sentence embeddings and edges connect sequential
                     sentences.</p>
             </div>
             <div class="step-card">
-                <div class="step-number">3</div>
+                <div class="step-number">4</div>
                 <h4>GNN Encoding</h4>
                 <p>Apply message passing to propagate information across the graph structure.</p>
             </div>
             <div class="step-card">
-                <div class="step-number">4</div>
+                <div class="step-number">5</div>
                 <h4>Sinkhorn Alignment</h4>
                 <p>Compute doubly-stochastic assignment matrix between source and hypothesis nodes.</p>
             </div>
             <div class="step-card">
-                <div class="step-number">5</div>
+                <div class="step-number">6</div>
                 <h4>Energy Computation</h4>
                 <p>Calculate alignment energy score indicating semantic divergence and potential hallucination.</p>
             </div>

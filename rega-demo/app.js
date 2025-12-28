@@ -32,6 +32,10 @@ const PRESETS = {
     directional: {
         source: "Microsoft acquired Activision Blizzard in January 2022 for $68.7 billion. This made Microsoft the third-largest gaming company by revenue. The acquisition was completed after regulatory approval.",
         hypothesis: "Activision Blizzard acquired Microsoft in January 2022 for $68.7 billion. This made Activision the third-largest gaming company by revenue. The acquisition was completed after regulatory approval."
+    },
+    negation: {
+        source: "Google acquired YouTube in 2006. The deal was finalized in November.",
+        hypothesis: "Google did not acquire YouTube in 2006. The deal was never finalized."
     }
 };
 

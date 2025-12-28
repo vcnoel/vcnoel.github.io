@@ -270,6 +270,40 @@ class ReGAEngine {
     }
 
     // =========================================================================
+    // PBGE EXTRACTOR (Pseudo-Graph Extraction)
+    // =========================================================================
+
+    extractTriplet(text, verb) {
+        // Simple normalization
+        const normalize = (t) => t.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s{2,}/g, " ");
+        const normalizedText = normalize(text);
+
+        const parts = normalizedText.split(verb);
+
+        // Need at least Subject and Object
+        if (parts.length < 2) return null;
+
+        let subject = parts[0].trim();
+        let object = parts[1].trim();
+
+        // Define Negation Markers
+        const negationMarkers = ["not", "did not", "didn't", "never", "refused to", "failed to", "was not", "is not"];
+
+        let polarity = 1; // Positive
+
+        // Check for negation immediately preceding the verb in the subject part
+        for (const marker of negationMarkers) {
+            if (subject.endsWith(marker)) {
+                polarity = -1; // Negative
+                subject = subject.slice(0, -marker.length).trim(); // Clean the subject of the marker
+                break;
+            }
+        }
+
+        return { s: subject, o: object, v: verb, p: polarity };
+    }
+
+    // =========================================================================
     // MAIN VERIFICATION
     // =========================================================================
 
@@ -322,54 +356,48 @@ class ReGAEngine {
         let deepRegaExplanation = null;
 
         const directionalVerbs = [
-            'acquired', 'bought', 'sold', 'purchased',
-            'defeated', 'beat', 'won against', 'lost to',
-            'sued', 'filed against',
-            'invented', 'created', 'founded', 'built',
-            'wrote', 'authored',
-            'killed', 'murdered', 'attacked'
+            'acquired', 'acquire', 'bought', 'buy', 'sold', 'sell', 'purchased', 'purchase',
+            'defeated', 'beat', 'won against', 'win against', 'lost to', 'lose to',
+            'sued', 'sue', 'filed against', 'file against',
+            'invented', 'invent', 'created', 'create', 'founded', 'built', 'build',
+            'wrote', 'write', 'authored', 'author',
+            'killed', 'kill', 'murdered', 'murder', 'attacked', 'attack'
         ];
 
         // identifying the verb and checking order consistency to simulate Deep ReGA structure awareness
         for (const verb of directionalVerbs) {
             if (sourceText.toLowerCase().includes(verb) && hypothesisText.toLowerCase().includes(verb)) {
                 stage = 'Deep ReGA';
-                stageReason = 'Directional relationship verification required';
+                stageReason = 'Directional/Polarity verification required';
                 this.metrics.stage = 'deep-rega';
 
-                // Simple heuristic: check if words before/after verb are consistent
-                const normalize = (t) => t.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s{2,}/g, " ");
+                const srcTriplet = this.extractTriplet(sourceText, verb);
+                const hypTriplet = this.extractTriplet(hypothesisText, verb);
 
-                const srcParts = normalize(sourceText).split(verb);
-                const hypParts = normalize(hypothesisText).split(verb);
-
-                if (srcParts.length > 1 && hypParts.length > 1) {
-                    const srcSubject = srcParts[0].trim();
-                    const srcObject = srcParts[1].trim();
-                    const hypSubject = hypParts[0].trim();
-                    const hypObject = hypParts[1].trim();
-
-                    // Check for overlap (fuzzy match subject/object)
-                    const subjectMatch = srcSubject.includes(hypSubject) || hypSubject.includes(srcSubject);
-                    const objectMatch = srcObject.includes(hypObject) || hypObject.includes(srcObject);
-
-                    // Check for SWAP (Role Reversal)
-                    const subjectSwapped = srcSubject.includes(hypObject) || hypObject.includes(srcSubject);
-                    const objectSwapped = srcObject.includes(hypSubject) || hypSubject.includes(srcObject);
-
-                    if (subjectSwapped || objectSwapped) {
-                        // Directional Inversion Detected!
-                        // Deep ReGA assigns high energy to inversions (e.g. 1.82 in method)
-                        deepRegaEnergy = 1.82;
+                if (srcTriplet && hypTriplet) {
+                    // 1. Check Polarity (Signed Graph)
+                    if (srcTriplet.p !== hypTriplet.p) {
+                        deepRegaEnergy = 1.82; // Trigger Kill Switch
                         deepRegaExplanation = {
                             type: 'alignment',
-                            icon: '🔄',
-                            text: `Deep ReGA detected directional inversion with verb "${verb}" (Energy: 1.82)`
+                            icon: '⛔',
+                            text: `Polarity mismatch detected with verb "${verb}" (Source: ${srcTriplet.p > 0 ? '+' : '-'}, Hypothesis: ${hypTriplet.p > 0 ? '+' : '-'})`
                         };
-                    } else if (!subjectMatch || !objectMatch) {
-                        // Entities don't match even if direction is same?
-                        // If they don't match at all, energy is high anyway.
-                        // Assuming identical entities for this probe case.
+                    }
+                    // 2. Check Direction (Topological Swap)
+                    else {
+                        const subjectSwapped = srcTriplet.s.includes(hypTriplet.o) || hypTriplet.o.includes(srcTriplet.s);
+                        const objectSwapped = srcTriplet.o.includes(hypTriplet.s) || hypTriplet.s.includes(srcTriplet.o);
+
+                        if (subjectSwapped || objectSwapped) {
+                            // Directional Inversion Detected!
+                            deepRegaEnergy = 1.82;
+                            deepRegaExplanation = {
+                                type: 'alignment',
+                                icon: '🔄',
+                                text: `Deep ReGA detected directional inversion with verb "${verb}" (Energy: 1.82)`
+                            };
+                        }
                     }
                 }
                 break; // Only check first directional verb found
