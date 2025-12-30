@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry of Reason | Spectral Proof Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: rgba(26, 26, 37, 0.8);
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6b6b80;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --border: rgba(255, 255, 255, 0.08);
+            --glow: 0 0 40px rgba(99, 102, 241, 0.3);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --radius: 16px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+
+        nav {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-back {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-back:hover {
+            color: var(--accent-primary);
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .main-view {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            min-height: 600px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .control-group {
+            margin-bottom: 2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .metrics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .checkbox-group:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--accent-primary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 500px;
+            width: 100%;
+        }
+
+        .stat-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-primary);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .file-info {
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            margin-bottom: 2rem;
+        }
+
+        .file-name {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-secondary);
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+    <nav>
+        <a href="index.html" class="nav-back"><i class="fas fa-arrow-left"></i> Back to Portfolio</a>
+        <span style="color: var(--border);">|</span>
+        <span style="font-weight: 600;">Spectral Proof Demo</span>
+    </nav>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1>Geometry of Reason</h1>
+
+            <div class="control-group">
+                <label>Select Proof Trace</label>
+                <select id="proofSelect">
+                    <!-- Populated by JS -->
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Metrics to Plot</label>
+                <div class="metrics-list">
+                    <label class="checkbox-group">
+                        <input type="checkbox" value="fiedler_value" checked> Fiedler Value (Algebraic Connectivity)
+                    </label>
+                    <label class="checkbox-group">
+                        <input type="checkbox" value="hfer" checked> HFER (High-Freq Energy Ratio)
+                    </label>
+                    <label class="checkbox-group">
+                        <input type="checkbox" value="entropy"> Spectral Entropy
+                    </label>
+                    <label class="checkbox-group">
+                        <input type="checkbox" value="smoothness"> Global Smoothness
+                    </label>
+                    <label class="checkbox-group">
+                        <input type="checkbox" value="energy"> Dirichlet Energy
+                    </label>
+                </div>
+            </div>
+
+            <div class="file-info">
+                <label>Current Proof File</label>
+                <div class="file-name" id="fileNameDisplay">Select a proof...</div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Each point represents the geometric property of the token attention graph at a specific layer.
+            </p>
+        </aside>
+
+        <main class="main-view">
+            <h2>Spectral Trajectory Analysis</h2>
+            <div class="chart-container">
+                <canvas id="spectralChart"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load Data -->
+    <script src="demo_data.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        // Check if DEMO_DATA is loaded
+        if (typeof DEMO_DATA === 'undefined') {
+            console.error('DEMO_DATA not loaded!');
+            document.querySelector('.main-view').innerHTML = '<h3 style="color:red">Error loading demo data. Please run extracting script.</h3>';
+        }
+
+        const ctx = document.getElementById('spectralChart').getContext('2d');
+        let chart;
+
+        // Colors for simple differentiation
+        const colors = {
+            fiedler_value: '#6366f1',
+            hfer: '#ec4899',
+            entropy: '#22c55e',
+            smoothness: '#f59e0b',
+            energy: '#06b6d4'
+        };
+
+        function init() {
+            const select = document.getElementById('proofSelect');
+
+            // Populate Dropdown
+            DEMO_DATA.forEach((proof, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                // Shorten filename for display
+                const name = proof.file.split('/').pop().replace('.lean', '');
+                opt.innerText = name;
+                select.appendChild(opt);
+            });
+
+            // Listeners
+            select.addEventListener('change', updateChart);
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', updateChart);
+            });
+
+            // Initial render
+            updateChart();
+        }
+
+        function updateChart() {
+            const index = document.getElementById('proofSelect').value;
+            const proof = DEMO_DATA[index];
+
+            // Update Text
+            document.getElementById('fileNameDisplay').innerText = proof.file;
+
+            // Get selected metrics
+            const selectedMetrics = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+
+            // Prepare Datasets
+            // Sort trajectory by layer just in case, though usually sorted
+            const trajectory = proof.trajectory.sort((a, b) => a.layer - b.layer);
+
+            const datasets = selectedMetrics.map(metric => {
+                // Determine if we need a secondary y-axis? 
+                // Energy is huge (600k), others are 0-1 or small.
+                // For simplicity, we might normalize or use log scale?
+                // Or just let Chart.js handle it (it might squash small values).
+                // Let's use a second axis for 'energy' or 'entropy' if mixed.
+                // Actually, 'energy' is typically huge. Let's exclude it or put it on right axis if selected.
+
+                const isLarge = metric === 'energy';
+
+                return {
+                    label: metric,
+                    data: trajectory.map(t => t[metric]),
+                    borderColor: colors[metric] || '#ffffff',
+                    backgroundColor: (colors[metric] || '#ffffff') + '20',
+                    tension: 0.4,
+                    yAxisID: isLarge ? 'y1' : 'y',
+                    pointRadius: 3
+                };
+            });
+
+            // Destroy old chart
+            if (chart) chart.destroy();
+
+            // Create new chart
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trajectory.map(t => 'L' + t.layer),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#a0a0b0' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a0a0b0' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a0a0b0' },
+                            title: {
+                                display: true,
+                                text: 'Standard Metrics',
+                                color: '#a0a0b0'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: selectedMetrics.includes('energy'),
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#06b6d4' },
+                            title: {
+                                display: true,
+                                text: 'Energy',
+                                color: '#06b6d4'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Run
+        init();
+    </script>
+</body>
+
+</html>
