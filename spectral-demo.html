@@ -548,19 +548,12 @@
             const proofData = DEMO_DATA[state.currentModel][state.currentProofIndex];
             fileNameDisplay.textContent = proofData.file;
 
-            // Prepare Datasets
-            // Assuming data structure: proofData[metric] is an array of values per layer
-            // But we actually have proofData['metrics'] or similar? Let's check format.
-            // Oh, the processed json usually has keys like "hfer", "fiedler_value" at top level if from valid list?
-            // Let's inspect data safely.
-
-            // Based on previous JSON structure 'demo_data.js' was just list of objects.
-            // Each object has { file: "...", hfer: [...], fiedler_value: [...] }
-
-            const layers = Array.from({ length: proofData['hfer'].length }, (_, i) => i + 1);
+            // Prepare Datasets from Trajectory
+            // Data structure: proofData.trajectory is a list of objects { layer, fiedler_value, hfer, ... }
+            const layers = proofData.trajectory.map(step => step.layer);
 
             const datasets = state.activeMetrics.map(metric => {
-                const data = proofData[metric] || [];
+                const data = proofData.trajectory.map(step => step[metric] || 0);
                 return {
                     label: METRIC_LABELS[metric],
                     data: data,
