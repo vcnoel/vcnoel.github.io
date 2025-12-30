@@ -66,6 +66,42 @@ def encode_text(text):
 # FEATURE EXTRACTION
 # ============================================================================
 
+DIRECTIONAL_VERBS = [
+    'acquired', 'acquire', 'bought', 'buy', 'sold', 'sell', 'purchased', 'purchase',
+    'defeated', 'beat', 'won against', 'win against', 'lost to', 'lose to',
+    'sued', 'sue', 'filed against', 'file against',
+    'invented', 'invent', 'created', 'create', 'founded', 'built', 'build',
+    'wrote', 'write', 'authored', 'author',
+    'killed', 'kill', 'murdered', 'murder', 'attacked', 'attack'
+]
+
+NEGATION_MARKERS = ["not", "did not", "didn't", "never", "refused to", "failed to", "was not", "is not"]
+
+def extract_triplet(text, verb):
+    """
+    Extract (Subject, Verb, Object, Polarity) triplet using regex-like splitting.
+    Polarity: 1 (Positive), -1 (Negative)
+    """
+    # Normalize
+    text_norm = text.lower().replace('.', '').replace(',', '')
+    parts = text_norm.split(verb)
+    
+    if len(parts) < 2:
+        return None
+        
+    subject = parts[0].strip()
+    object = parts[1].strip()
+    polarity = 1
+    
+    # Check negation
+    for marker in NEGATION_MARKERS:
+        if subject.endswith(marker):
+            polarity = -1
+            subject = subject[:-len(marker)].strip()
+            break
+            
+    return {'s': subject, 'o': object, 'v': verb, 'p': polarity}
+
 def extract_rega_features(source_text, hypothesis_text):
     """Extract ReGA features"""
     # Split into sentences/phrases
@@ -99,6 +135,43 @@ def extract_rega_features(source_text, hypothesis_text):
     features.append(diag - mins)
     
     features.extend([cost_matrix.mean(), cost_matrix.std()])
+    
+    # ============================================================================
+    # PBGE (Pattern-Based Graph Extraction) - "Kill Switch" Features
+    # ============================================================================
+    polarity_mismatch = 0.0
+    directional_swap = 0.0
+    
+    src_lower = source_text.lower()
+    hyp_lower = hypothesis_text.lower()
+    
+    for verb in DIRECTIONAL_VERBS:
+        if verb in src_lower and verb in hyp_lower:
+            src_triplet = extract_triplet(source_text, verb)
+            hyp_triplet = extract_triplet(hypothesis_text, verb)
+            
+            if src_triplet and hyp_triplet:
+                # 1. Polarity Mismatch
+                if src_triplet['p'] != hyp_triplet['p']:
+                    polarity_mismatch = 1.0
+                
+                # 2. Directional Swap
+                # Check if subject/object are reversed (fuzzy match)
+                s_s, s_o = src_triplet['s'], src_triplet['o']
+                h_s, h_o = hyp_triplet['s'], hyp_triplet['o']
+                
+                # Swap logic: Source Subject matches Hyp Object OR Source Object matches Hyp Subject
+                sub_swapped = (h_s in s_o) or (s_o in h_s)
+                obj_swapped = (h_o in s_s) or (s_s in h_o)
+                
+                if sub_swapped or obj_swapped:
+                    directional_swap = 1.0
+            
+            if polarity_mismatch or directional_swap:
+                break # Stop at first detection
+                
+    features.append(polarity_mismatch)
+    features.append(directional_swap)
     
     return np.array(features, dtype=np.float32)
 
