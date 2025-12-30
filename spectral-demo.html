@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geometry of Reason | Spectral Proof Demo</title>
+    <title>Geometry of Reason | Multi-Model Spectral Proofs</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -14,23 +14,28 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
+            /* Palette borrowed from ReGA Demo for consistency */
             --bg-primary: #0a0a0f;
             --bg-secondary: #12121a;
             --bg-tertiary: #1a1a25;
-            --bg-card: rgba(26, 26, 37, 0.8);
+            --bg-card: rgba(26, 26, 37, 0.6);
+            --bg-card-hover: rgba(40, 40, 55, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
             --text-primary: #f0f0f5;
             --text-secondary: #a0a0b0;
             --text-muted: #6b6b80;
+
             --accent-primary: #6366f1;
             --accent-secondary: #8b5cf6;
+            --accent-glow: rgba(99, 102, 241, 0.4);
             --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+
             --success: #22c55e;
             --warning: #f59e0b;
-            --border: rgba(255, 255, 255, 0.08);
-            --glow: 0 0 40px rgba(99, 102, 241, 0.3);
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            --radius: 16px;
+            --radius-lg: 24px;
+            --radius-md: 16px;
             --radius-sm: 8px;
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
         * {
@@ -48,6 +53,7 @@
             min-height: 100vh;
         }
 
+        /* Ambient Background similar to ReGA */
         .bg-animation {
             position: fixed;
             top: 0;
@@ -56,152 +62,280 @@
             height: 100%;
             z-index: -1;
             background:
-                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 25%),
                 var(--bg-primary);
         }
 
+        /* Navigation */
         nav {
             padding: 1.5rem 2rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 1rem;
-            background: rgba(10, 10, 15, 0.9);
+            justify-content: space-between;
+            background: rgba(10, 10, 15, 0.7);
             backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
         }
 
         .nav-back {
             color: var(--text-secondary);
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             transition: color 0.3s;
+            font-size: 0.95rem;
         }
 
         .nav-back:hover {
-            color: var(--accent-primary);
-        }
-
-        .app-container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 2rem;
-        }
-
-        .sidebar {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            height: fit-content;
-        }
-
-        .main-view {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 2rem;
-            min-height: 600px;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        h2 {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
             color: var(--text-primary);
         }
 
-        .control-group {
-            margin-bottom: 2rem;
+        .nav-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            padding-left: 1.5rem;
+            border-left: 1px solid var(--border);
         }
 
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
+        .nav-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-primary);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            font-weight: 500;
+        }
+
+        /* Main Layout */
+        .app-container {
+            max-width: 1600px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 2rem;
+            height: calc(100vh - 120px);
+        }
+
+        /* Sidebar Glass Card */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            height: fit-content;
+        }
+
+        .section-title {
             font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 0;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '\f107';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
         }
 
         select {
             width: 100%;
-            padding: 0.75rem;
+            padding: 1rem;
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             color: var(--text-primary);
             font-family: inherit;
-            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            appearance: none;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover {
+            border-color: var(--accent-primary);
         }
 
         select:focus {
             outline: none;
             border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-glow);
         }
 
-        .metrics-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+        /* Checkboxes */
+        .metrics-grid {
+            display: grid;
+            gap: 0.75rem;
         }
 
-        .checkbox-group {
+        .checkbox-item {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.02);
             border-radius: var(--radius-sm);
             cursor: pointer;
             transition: background 0.2s;
+            border: 1px solid transparent;
         }
 
-        .checkbox-group:hover {
+        .checkbox-item:hover {
             background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         input[type="checkbox"] {
-            accent-color: var(--accent-primary);
-            width: 16px;
-            height: 16px;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--text-muted);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .chart-container {
+        input[type="checkbox"]:checked {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Main View */
+        .main-view {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            height: 100%;
             position: relative;
-            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .chart-title p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .model-badge {
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .model-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-success, #22c55e);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-success, #22c55e);
+        }
+
+        .chart-container-inner {
+            flex-grow: 1;
+            position: relative;
             width: 100%;
         }
 
-        .stat-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--accent-primary);
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
+        /* File Info Footer */
         .file-info {
+            margin-top: auto;
             padding: 1rem;
             background: var(--bg-tertiary);
             border-radius: var(--radius-sm);
-            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .file-info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
         }
 
         .file-name {
             font-family: 'JetBrains Mono', monospace;
-            color: var(--accent-secondary);
-            font-size: 0.9rem;
+            color: var(--accent-primary);
+            font-size: 0.85rem;
             word-break: break-all;
         }
     </style>
@@ -209,58 +343,89 @@
 
 <body>
     <div class="bg-animation"></div>
+
     <nav>
-        <a href="index.html" class="nav-back"><i class="fas fa-arrow-left"></i> Back to Portfolio</a>
-        <span style="color: var(--border);">|</span>
-        <span style="font-weight: 600;">Spectral Proof Demo</span>
+        <div class="nav-left">
+            <a href="index.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <div class="nav-title">Geometry of Reason</div>
+        </div>
+        <div class="nav-right">
+            <span class="nav-badge">Interactive Demo</span>
+        </div>
     </nav>
 
     <div class="app-container">
-        <aside class="sidebar">
-            <h1>Geometry of Reason</h1>
+        <!-- Sidebar Controls -->
+        <aside class="glass-card">
 
+            <!-- Model Selection -->
             <div class="control-group">
-                <label>Select Proof Trace</label>
-                <select id="proofSelect">
-                    <!-- Populated by JS -->
-                </select>
+                <div class="section-title"><i class="fas fa-robot"></i> Model Family</div>
+                <div class="select-wrapper">
+                    <select id="modelSelect">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
             </div>
 
+            <!-- Proof Selection -->
             <div class="control-group">
-                <label>Metrics to Plot</label>
-                <div class="metrics-list">
-                    <label class="checkbox-group">
-                        <input type="checkbox" value="fiedler_value" checked> Fiedler Value (Algebraic Connectivity)
+                <div class="section-title"><i class="fas fa-file-signature"></i> Proof Trace</div>
+                <div class="select-wrapper">
+                    <select id="proofSelect">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Metrics Selection -->
+            <div class="control-group">
+                <div class="section-title"><i class="fas fa-chart-line"></i> Spectral Metrics</div>
+                <div class="metrics-grid">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="fiedler_value" checked>
+                        <span>Fiedler Value</span>
                     </label>
-                    <label class="checkbox-group">
-                        <input type="checkbox" value="hfer" checked> HFER (High-Freq Energy Ratio)
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="hfer" checked>
+                        <span>HFER (Energy)</span>
                     </label>
-                    <label class="checkbox-group">
-                        <input type="checkbox" value="entropy"> Spectral Entropy
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="entropy">
+                        <span>Spectral Entropy</span>
                     </label>
-                    <label class="checkbox-group">
-                        <input type="checkbox" value="smoothness"> Global Smoothness
-                    </label>
-                    <label class="checkbox-group">
-                        <input type="checkbox" value="energy"> Dirichlet Energy
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="smoothness">
+                        <span>Global Smoothness</span>
                     </label>
                 </div>
             </div>
 
+            <!-- Current File Info -->
             <div class="file-info">
-                <label>Current Proof File</label>
-                <div class="file-name" id="fileNameDisplay">Select a proof...</div>
+                <div class="file-info-label">Active Proof File</div>
+                <div class="file-name" id="fileNameDisplay">--</div>
             </div>
 
-            <p style="font-size: 0.85rem; color: var(--text-muted);">
-                Each point represents the geometric property of the token attention graph at a specific layer.
-            </p>
         </aside>
 
+        <!-- Main Visualization -->
         <main class="main-view">
-            <h2>Spectral Trajectory Analysis</h2>
-            <div class="chart-container">
-                <canvas id="spectralChart"></canvas>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <h2>Spectral Signature</h2>
+                        <p>Layer-wise evolution of trust metrics</p>
+                    </div>
+                    <div class="model-badge" id="activeModelBadge">
+                        Loading...
+                    </div>
+                </div>
+                <div class="chart-container-inner">
+                    <canvas id="spectralChart"></canvas>
+                </div>
             </div>
         </main>
     </div>
@@ -268,93 +433,152 @@
     <!-- Load Data -->
     <script src="demo_data.js"></script>
 
-    <!-- App Logic -->
     <script>
-        // Check if DEMO_DATA is loaded
-        if (typeof DEMO_DATA === 'undefined') {
-            console.error('DEMO_DATA not loaded!');
-            document.querySelector('.main-view').innerHTML = '<h3 style="color:red">Error loading demo data. Please run extracting script.</h3>';
-        }
-
-        const ctx = document.getElementById('spectralChart').getContext('2d');
-        let chart;
-
-        // Colors for simple differentiation
-        const colors = {
-            fiedler_value: '#6366f1',
-            hfer: '#ec4899',
-            entropy: '#22c55e',
-            smoothness: '#f59e0b',
-            energy: '#06b6d4'
+        // --- State Management ---
+        const state = {
+            currentModel: null,
+            currentProofIndex: 0,
+            activeMetrics: ['fiedler_value', 'hfer']
         };
 
-        function init() {
-            const select = document.getElementById('proofSelect');
+        // --- Mappings ---
+        const METRIC_LABELS = {
+            'fiedler_value': 'Algebraic Connectivity (Fiedler)',
+            'hfer': 'High-Freq Energy Ratio (HFER)',
+            'entropy': 'Spectral Entropy',
+            'smoothness': 'Global Smoothness',
+            'energy': 'Dirichlet Energy'
+        };
 
-            // Populate Dropdown
-            DEMO_DATA.forEach((proof, index) => {
+        const METRIC_COLORS = {
+            'fiedler_value': '#6366f1', // Indigo
+            'hfer': '#22c55e',          // Green
+            'entropy': '#f59e0b',       // Amber
+            'smoothness': '#ec4899',    // Pink
+            'energy': '#06b6d4'         // Cyan
+        };
+
+        // --- Elements ---
+        const modelSelect = document.getElementById('modelSelect');
+        const proofSelect = document.getElementById('proofSelect');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const activeModelBadge = document.getElementById('activeModelBadge');
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const ctx = document.getElementById('spectralChart').getContext('2d');
+
+        let chart;
+
+        // --- Initialization ---
+        function init() {
+            // Populate Model Select
+            const models = Object.keys(DEMO_DATA);
+            models.forEach(model => {
+                const opt = document.createElement('option');
+                opt.value = model;
+                opt.textContent = model;
+                modelSelect.appendChild(opt);
+            });
+
+            // Set Initial State
+            state.currentModel = models[0];
+
+            // Events
+            modelSelect.addEventListener('change', (e) => {
+                state.currentModel = e.target.value;
+                updateProofList();
+            });
+
+            proofSelect.addEventListener('change', (e) => {
+                state.currentProofIndex = parseInt(e.target.value);
+                updateChart();
+            });
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    state.activeMetrics = Array.from(checkboxes)
+                        .filter(c => c.checked)
+                        .map(c => c.value);
+                    updateChart();
+                });
+            });
+
+            // Start
+            updateProofList();
+        }
+
+        function updateProofList() {
+            // Get proofs for current model
+            const proofs = DEMO_DATA[state.currentModel];
+
+            // Save current selection text if possible to maintain selection across models
+            const previousText = proofSelect.options[proofSelect.selectedIndex]?.textContent;
+
+            proofSelect.innerHTML = '';
+            proofs.forEach((proof, index) => {
                 const opt = document.createElement('option');
                 opt.value = index;
-                // Shorten filename for display
-                const name = proof.file.split('/').pop().replace('.lean', '');
-                opt.innerText = name;
-                select.appendChild(opt);
+                // Beautify name (remove .lean and extension)
+                let name = proof.file.replace('.lean', '').replace(/_/g, ' ');
+                if (name.length > 40) name = name.substring(0, 37) + '...';
+
+                opt.textContent = name;
+                proofSelect.appendChild(opt);
             });
 
-            // Listeners
-            select.addEventListener('change', updateChart);
-            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                cb.addEventListener('change', updateChart);
-            });
+            // Try to restore selection by text matching
+            let newIndex = 0;
+            if (previousText) {
+                for (let i = 0; i < proofSelect.options.length; i++) {
+                    if (proofSelect.options[i].textContent === previousText) {
+                        newIndex = i;
+                        break;
+                    }
+                }
+            }
+            state.currentProofIndex = newIndex;
+            proofSelect.selectedIndex = newIndex;
 
-            // Initial render
+            activeModelBadge.textContent = state.currentModel;
             updateChart();
         }
 
         function updateChart() {
-            const index = document.getElementById('proofSelect').value;
-            const proof = DEMO_DATA[index];
+            if (chart) chart.destroy();
 
-            // Update Text
-            document.getElementById('fileNameDisplay').innerText = proof.file;
-
-            // Get selected metrics
-            const selectedMetrics = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
-                .map(cb => cb.value);
+            const proofData = DEMO_DATA[state.currentModel][state.currentProofIndex];
+            fileNameDisplay.textContent = proofData.file;
 
             // Prepare Datasets
-            // Sort trajectory by layer just in case, though usually sorted
-            const trajectory = proof.trajectory.sort((a, b) => a.layer - b.layer);
+            // Assuming data structure: proofData[metric] is an array of values per layer
+            // But we actually have proofData['metrics'] or similar? Let's check format.
+            // Oh, the processed json usually has keys like "hfer", "fiedler_value" at top level if from valid list?
+            // Let's inspect data safely.
 
-            const datasets = selectedMetrics.map(metric => {
-                // Determine if we need a secondary y-axis? 
-                // Energy is huge (600k), others are 0-1 or small.
-                // For simplicity, we might normalize or use log scale?
-                // Or just let Chart.js handle it (it might squash small values).
-                // Let's use a second axis for 'energy' or 'entropy' if mixed.
-                // Actually, 'energy' is typically huge. Let's exclude it or put it on right axis if selected.
+            // Based on previous JSON structure 'demo_data.js' was just list of objects.
+            // Each object has { file: "...", hfer: [...], fiedler_value: [...] }
 
-                const isLarge = metric === 'energy';
+            const layers = Array.from({ length: proofData['hfer'].length }, (_, i) => i + 1);
 
+            const datasets = state.activeMetrics.map(metric => {
+                const data = proofData[metric] || [];
                 return {
-                    label: metric,
-                    data: trajectory.map(t => t[metric]),
-                    borderColor: colors[metric] || '#ffffff',
-                    backgroundColor: (colors[metric] || '#ffffff') + '20',
-                    tension: 0.4,
-                    yAxisID: isLarge ? 'y1' : 'y',
-                    pointRadius: 3
+                    label: METRIC_LABELS[metric],
+                    data: data,
+                    borderColor: METRIC_COLORS[metric],
+                    backgroundColor: METRIC_COLORS[metric] + '20', // Low opacity fill
+                    borderWidth: 2,
+                    tension: 0.4, // Smooth curves
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    fill: 'start' // Fill area under curve
                 };
             });
 
-            // Destroy old chart
-            if (chart) chart.destroy();
-
-            // Create new chart
+            // Chart Configuration
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: trajectory.map(t => 'L' + t.layer),
+                    labels: layers,
                     datasets: datasets
                 },
                 options: {
@@ -366,45 +590,67 @@
                     },
                     plugins: {
                         legend: {
-                            labels: { color: '#a0a0b0' }
+                            position: 'top',
+                            labels: {
+                                color: '#a0a0b0',
+                                font: { family: 'Inter', size: 12 },
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 37, 0.95)',
+                            titleColor: '#f0f0f5',
+                            bodyColor: '#a0a0b0',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            titleFont: { family: 'JetBrains Mono' },
+                            callbacks: {
+                                title: (items) => `Layer ${items[0].label}`
+                            }
                         }
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#a0a0b0' }
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6b6b80',
+                                maxTicksLimit: 10
+                            },
+                            title: {
+                                display: true,
+                                text: 'Transformer Layers (Input → Output)',
+                                color: '#6b6b80',
+                                font: { size: 11 }
+                            }
                         },
                         y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#a0a0b0' },
-                            title: {
-                                display: true,
-                                text: 'Standard Metrics',
-                                color: '#a0a0b0'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: selectedMetrics.includes('energy'),
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            ticks: { color: '#06b6d4' },
-                            title: {
-                                display: true,
-                                text: 'Energy',
-                                color: '#06b6d4'
-                            }
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6b6b80'
+                            },
+                            beginAtZero: true
                         }
                     }
                 }
             });
         }
 
-        // Run
-        init();
+        // Initialize App
+        if (typeof DEMO_DATA !== 'undefined') {
+            init();
+        } else {
+            console.error('Demo data not loaded!');
+            document.querySelector('.main-view').innerHTML = '<div style="padding:2rem; color:red">Error: Data not loaded. Please run the generation script.</div>';
+        }
+
     </script>
 </body>
 
