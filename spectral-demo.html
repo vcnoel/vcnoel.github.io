@@ -127,7 +127,10 @@
             display: grid;
             grid-template-columns: 380px 1fr;
             gap: 2rem;
-            height: calc(100vh - 120px);
+            min-height: 80vh;
+            /* Ensure tall canvas by default */
+            align-items: stretch;
+            /* Force equal height columns */
         }
 
         /* Sidebar Glass Card */
@@ -141,9 +144,11 @@
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            height: fit-content;
+            height: 100%;
+            /* Stretch to fill grid cell */
         }
 
+        /* ... section titles ... */
         .section-title {
             font-size: 0.9rem;
             text-transform: uppercase;
@@ -155,107 +160,12 @@
             gap: 0.5rem;
         }
 
-        /* Controls */
-        .control-group {
-            margin-bottom: 0;
-        }
-
-        .select-wrapper {
-            position: relative;
-        }
-
-        .select-wrapper::after {
-            content: '\f107';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            pointer-events: none;
-        }
-
-        select {
-            width: 100%;
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.95rem;
-            appearance: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        select:hover {
-            border-color: var(--accent-primary);
-        }
-
-        select:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 2px var(--accent-glow);
-        }
-
-        /* Checkboxes */
-        .metrics-grid {
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: background 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .checkbox-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        input[type="checkbox"] {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--text-muted);
-            border-radius: 4px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        input[type="checkbox"]:checked {
-            background: var(--accent-primary);
-            border-color: var(--accent-primary);
-        }
-
-        input[type="checkbox"]:checked::after {
-            content: '\f00c';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            color: white;
-            font-size: 10px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+        /* ... controls ... */
 
         /* Main View */
         .main-view {
-            display: grid;
-            grid-template-rows: auto 1fr;
-            gap: 1.5rem;
+            display: flex;
+            flex-direction: column;
             height: 100%;
         }
 
@@ -264,8 +174,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 2rem;
-            height: 100%;
-            position: relative;
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
         }
@@ -275,45 +184,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            flex-shrink: 0;
         }
 
-        .chart-title h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .chart-title p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 0.25rem;
-        }
-
-        .model-badge {
-            padding: 0.5rem 1rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--accent-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .model-badge::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: var(--accent-success, #22c55e);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent-success, #22c55e);
-        }
+        /* ... chart title ... */
 
         .chart-container-inner {
             flex-grow: 1;
             position: relative;
             width: 100%;
+            min-height: 600px;
+            /* Guarantee vertical space for chart */
         }
 
         /* File Info Footer */
