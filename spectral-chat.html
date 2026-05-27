@@ -475,10 +475,10 @@ function renderMetrics({ dV, eV, lV, real }) {
 
     const numEl = document.getElementById('trust-num');
     numEl.textContent = Math.round(score);
-    numEl.style.color = score > 70 ? 'var(--trust-high)' : score > 40 ? 'var(--trust-mid)' : 'var(--trust-low)';
+    numEl.style.color = score > 62 ? 'var(--trust-high)' : score > 38 ? 'var(--trust-mid)' : 'var(--trust-low)';
     document.getElementById('trust-desc').textContent =
-        score > 70 ? 'Coherent, focused attention topology' :
-        score > 40 ? 'Moderate spectral coherence' : 'Diffuse or uncertain attention patterns';
+        score > 62 ? 'Coherent, focused attention topology' :
+        score > 38 ? 'Moderate spectral coherence' : 'Diffuse or uncertain attention patterns';
 
     const avgD = dV.reduce((a, b) => a + b, 0) / dV.length;
     const avgE = eV.reduce((a, b) => a + b, 0) / eV.length;

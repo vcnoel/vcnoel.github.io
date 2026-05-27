@@ -43,13 +43,25 @@ function localityScore(A, n) {
 
 function proxyMetrics(text) {
     const words = text.trim().split(/\s+/);
+    const lower = text.toLowerCase();
     const div = new Set(words).size / Math.max(words.length, 1);
+
+    // Semantic signals that correlate with real attention diffuseness
+    const hedges = (lower.match(/\b(maybe|possibly|perhaps|might|could be|i think|i believe|seems|appears|roughly|approximately|probably|likely|i suppose)\b/g) || []).length;
+    const confident = (lower.match(/\b(definitely|certainly|clearly|obviously|absolutely|confirmed|accurate|correct|precise|confident|without doubt|i am sure|i know)\b/g) || []).length;
+    const selfDoubt = (lower.match(/\b(i don't know|don't know|not sure|no idea|hard to say|beyond my|i'm uncertain|i cannot)\b/g) || []).length;
+
+    // Tuned so neutral diverse text → avgD≈0.09, avgE≈1.7 → trust≈70
+    const baseD = 0.12, baseE = 2.1;
+    const semD = hedges * 0.025 - confident * 0.018 + selfDoubt * 0.045;
+    const semE = hedges * 0.18  - confident * 0.12  + selfDoubt * 0.30;
+
     const n = 28;
     const dV = [], eV = [], lV = [];
     for (let l = 0; l < n; l++) {
         const t = l / (n - 1);
-        dV.push(Math.max(0, 0.26 * (1 - t * 0.55) + (1 - div) * 0.04 + (Math.random() - 0.5) * 0.025));
-        eV.push(Math.max(0, 3.1 * (1 - t * 0.38) + (1 - div) * 0.4 + (Math.random() - 0.5) * 0.15));
+        dV.push(Math.max(0, baseD * (1 - t * 0.55) + (1 - div) * 0.04 + semD + (Math.random() - 0.5) * 0.018));
+        eV.push(Math.max(0, baseE * (1 - t * 0.38) + (1 - div) * 0.35 + semE + (Math.random() - 0.5) * 0.12));
         lV.push(Math.max(0, Math.min(1, 0.34 + t * 0.38 + (Math.random() - 0.5) * 0.04)));
     }
     return { dV, eV, lV, real: false };
