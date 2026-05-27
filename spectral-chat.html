@@ -606,8 +606,8 @@ async function generate(userText) {
 
     const inputs = tokenizer(chatText, { return_tensors: 'pt' });
 
-    const output = await model.generate(inputs.input_ids, {
-        attention_mask: inputs.attention_mask,
+    const output = await model.generate({
+        ...inputs,
         max_new_tokens: 220,
         do_sample: true,
         temperature: 0.7,
@@ -615,8 +615,9 @@ async function generate(userText) {
         repetition_penalty: 1.1
     });
 
-    const newIds = output.slice(null, [inputs.input_ids.dims[1], null]);
-    const text = tokenizer.decode(newIds.data, { skip_special_tokens: true });
+    const inputLength = inputs.input_ids.dims[1];
+    const newTokenIds = Array.from(output.data).slice(inputLength);
+    const text = tokenizer.decode(newTokenIds, { skip_special_tokens: true });
     history.push({ role: 'assistant', content: text });
 
     // Spectral analysis
