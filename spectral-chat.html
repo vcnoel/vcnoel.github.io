@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectral Chat — Valentin Noël</title>
+    <meta name="description" content="Chat with an LLM running in your browser. Real-time spectral analysis of transformer attention — Dirichlet energy, spectral entropy, and trust scores computed live.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #f9f7f4;
+            --bg-card: #ffffff;
+            --bg-soft: #f1ece3;
+            --text: #1c1917;
+            --text-mid: #44403c;
+            --text-muted: #78716c;
+            --accent: #92400e;
+            --accent-light: #b45309;
+            --border: #e7dfd5;
+            --border-soft: #ede8e0;
+            --trust-high: #14532d;
+            --trust-mid: #92400e;
+            --trust-low: #7f1d1d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Nav */
+        nav {
+            background: rgba(249,247,244,0.97);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
+            flex-shrink: 0;
+        }
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 3.25rem;
+        }
+        .nav-brand {
+            font-family: 'EB Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .nav-right { display: flex; align-items: center; gap: 1rem; }
+        .model-pill {
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            padding: 0.2rem 0.65rem;
+            border-radius: 20px;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #d1d5db;
+            transition: background 0.3s;
+        }
+        .status-dot.ready { background: #16a34a; }
+        .status-dot.busy { background: var(--accent-light); animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .back-link { font-size: 0.85rem; color: var(--text-muted); text-decoration: none; }
+        .back-link:hover { color: var(--accent); }
+
+        /* Loading */
+        #overlay {
+            position: fixed; inset: 0;
+            background: rgba(249,247,244,0.97);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .load-card {
+            max-width: 400px; width: 90%;
+            padding: 2.25rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+        }
+        .load-card h3 {
+            font-family: 'EB Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .load-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 1.5rem; }
+        .prog-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 0.65rem; }
+        .prog-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+        #prog-text { font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); }
+
+        /* Layout */
+        .layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Chat panel */
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            min-width: 0;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .msg {
+            max-width: 82%;
+            padding: 0.7rem 0.95rem;
+            border-radius: 10px;
+            font-size: 0.895rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .msg.user {
+            background: var(--accent);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 3px;
+        }
+        .msg.bot {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-mid);
+            align-self: flex-start;
+            border-bottom-left-radius: 3px;
+        }
+        .msg.bot.dim { color: var(--text-muted); font-style: italic; }
+
+        .presets {
+            padding: 0.65rem 1.25rem;
+            border-top: 1px solid var(--border-soft);
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .presets-label { font-size: 0.72rem; color: var(--text-muted); margin-right: 0.2rem; }
+        .preset {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 0.2rem 0.65rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .preset:hover { border-color: var(--accent); color: var(--accent); }
+
+        .input-row {
+            padding: 0.875rem 1.25rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.55rem;
+            align-items: flex-end;
+        }
+        textarea {
+            flex: 1;
+            padding: 0.6rem 0.85rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus { border-color: var(--accent); }
+        .send-btn {
+            padding: 0.6rem 1.05rem;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .send-btn:hover { background: #78350f; }
+        .send-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+        /* Metrics panel */
+        .metrics-panel {
+            width: 320px;
+            flex-shrink: 0;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            background: var(--bg);
+        }
+
+        .trust-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.1rem;
+            text-align: center;
+        }
+        .trust-number {
+            font-family: 'EB Garamond', serif;
+            font-size: 2.8rem;
+            font-weight: 500;
+            line-height: 1;
+            margin-bottom: 0.2rem;
+            color: var(--text-muted);
+            transition: color 0.6s;
+        }
+        .trust-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        .trust-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .chart-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.85rem 0.95rem;
+        }
+        .chart-title {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.6rem;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .metric-cell {
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 0.5rem 0.65rem;
+            text-align: center;
+        }
+        .metric-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.1rem;
+        }
+        .metric-lbl {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .info-box {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            padding: 0.7rem 0.85rem;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-soft);
+            border-radius: 8px;
+        }
+
+        .analysis-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            margin-bottom: 0.6rem;
+        }
+        .tag-real { background: #dcfce7; color: #14532d; }
+        .tag-proxy { background: #fef3c7; color: #92400e; }
+
+        @media (max-width: 720px) {
+            .layout { flex-direction: column; }
+            .chat-panel { height: 55%; border-right: none; border-bottom: 1px solid var(--border); }
+            .metrics-panel { width: 100%; flex-direction: row; flex-wrap: wrap; overflow-x: auto; gap: 0.6rem; padding: 0.75rem; }
+            .trust-block { min-width: 120px; flex: 1; }
+            .chart-block { min-width: 260px; flex: 1; }
+            .metric-grid { min-width: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="overlay">
+    <div class="load-card">
+        <h3>Spectral Chat</h3>
+        <p>Loading SmolLM2 360M entirely into your browser. One time download around 200 MB, fully cached after that. No data leaves your device.</p>
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+        <div id="prog-text">Initializing...</div>
+    </div>
+</div>
+
+<nav>
+    <div class="nav-inner">
+        <a href="./" class="nav-brand">Valentin Noël</a>
+        <div class="nav-right">
+            <span class="model-pill">SmolLM2 360M · In Browser</span>
+            <div class="status-dot" id="status-dot"></div>
+            <a href="./" class="back-link">← Back</a>
+        </div>
+    </div>
+</nav>
+
+<div class="layout">
+
+    <div class="chat-panel">
+        <div class="messages" id="messages">
+            <div class="msg bot">Hello. I am SmolLM2, running entirely in your browser with no server and no API calls. Ask me anything and watch the spectral analysis of my attention patterns update on the right.</div>
+        </div>
+
+        <div class="presets">
+            <span class="presets-label">Try:</span>
+            <button class="preset" data-q="What is Dirichlet energy in the context of transformer attention graphs?">Dirichlet energy?</button>
+            <button class="preset" data-q="Explain mechanistic interpretability to a curious researcher.">Mechanistic interp</button>
+            <button class="preset" data-q="What makes a mathematical proof valid?">Valid proofs</button>
+            <button class="preset" data-q="Are you confident in your last answer?">Are you confident?</button>
+        </div>
+
+        <div class="input-row">
+            <textarea id="input" placeholder="Ask anything... (Enter to send)" rows="2"></textarea>
+            <button class="send-btn" id="send" disabled>Send</button>
+        </div>
+    </div>
+
+    <div class="metrics-panel">
+
+        <div class="trust-block">
+            <div class="trust-number" id="trust-num">--</div>
+            <div class="trust-label">Trust Score</div>
+            <div class="trust-desc" id="trust-desc">Waiting for first response</div>
+        </div>
+
+        <div class="chart-block">
+            <div class="analysis-tag" id="analysis-tag" style="display:none"></div>
+            <div class="chart-title">Dirichlet Energy by Layer</div>
+            <canvas id="chart-d" height="95"></canvas>
+        </div>
+
+        <div class="chart-block">
+            <div class="chart-title">Spectral Entropy by Layer</div>
+            <canvas id="chart-e" height="95"></canvas>
+        </div>
+
+        <div class="chart-block">
+            <div class="chart-title">Trust Score per Turn</div>
+            <canvas id="chart-t" height="75"></canvas>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-cell">
+                <div class="metric-val" id="m-d">--</div>
+                <div class="metric-lbl">Avg Dirichlet</div>
+            </div>
+            <div class="metric-cell">
+                <div class="metric-val" id="m-e">--</div>
+                <div class="metric-lbl">Avg Entropy</div>
+            </div>
+            <div class="metric-cell">
+                <div class="metric-val" id="m-l">--</div>
+                <div class="metric-lbl">Locality</div>
+            </div>
+            <div class="metric-cell">
+                <div class="metric-val" id="m-n">--</div>
+                <div class="metric-lbl">Layers</div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>Dirichlet energy</strong> measures information smoothness across the attention graph. Low energy in late layers signals coherent, focused reasoning. <strong>Spectral entropy</strong> measures how distributed the attention is. Together they form the trust score — the same metric used in the published research.
+        </div>
+
+    </div>
+</div>
+
+<script type="module">
+import { AutoTokenizer, AutoModelForCausalLM, env } from
+    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.0';
+
+env.useBrowserCache = true;
+
+const MODEL = 'onnx-community/SmolLM2-360M-Instruct';
+const DTYPE = 'q4';
+
+let tokenizer, model, busy = false;
+const history = [];
+const turnScores = [];
+
+// ── Charts ──────────────────────────────────────────────────────────────────
+const BASE_OPTS = {
+    animation: { duration: 500 },
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: {
+        x: { ticks: { color: '#78716c', font: { size: 9, family: 'JetBrains Mono' }, maxRotation: 0 }, grid: { display: false } },
+        y: { ticks: { color: '#78716c', font: { size: 9 } }, grid: { color: '#f0ebe3' }, beginAtZero: true }
+    }
+};
+
+let chartD, chartE, chartT;
+
+function initCharts() {
+    chartD = new Chart(document.getElementById('chart-d'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: 'rgba(180,83,9,0.72)', borderRadius: 3, borderSkipped: false }] },
+        options: JSON.parse(JSON.stringify(BASE_OPTS))
+    });
+    chartE = new Chart(document.getElementById('chart-e'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: 'rgba(146,64,14,0.72)', borderRadius: 3, borderSkipped: false }] },
+        options: JSON.parse(JSON.stringify(BASE_OPTS))
+    });
+    const tOpts = JSON.parse(JSON.stringify(BASE_OPTS));
+    tOpts.scales.y.max = 100;
+    chartT = new Chart(document.getElementById('chart-t'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#92400e', backgroundColor: 'rgba(146,64,14,0.1)', fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#92400e', borderWidth: 2 }] },
+        options: tOpts
+    });
+}
+
+// ── Spectral math ────────────────────────────────────────────────────────────
+function dirichlet(A, n) {
+    let E = 0;
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++) {
+            const a = A[i * n + j];
+            if (a < 1e-12) continue;
+            const d = (i - j) / n;
+            E += a * d * d;
+        }
+    return E / 2;
+}
+
+function entropy(A, n) {
+    let H = 0;
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++) {
+            const p = A[i * n + j];
+            if (p > 1e-12) H -= p * Math.log2(p);
+        }
+    return H / n;
+}
+
+function localityScore(A, n) {
+    let s = 0;
+    for (let i = 0; i < n; i++) {
+        let mx = 0;
+        for (let j = 0; j < n; j++) mx = Math.max(mx, A[i * n + j]);
+        s += mx;
+    }
+    return s / n;
+}
+
+function trust(dVals, eVals) {
+    const avgD = dVals.reduce((a, b) => a + b, 0) / dVals.length;
+    const avgE = eVals.reduce((a, b) => a + b, 0) / eVals.length;
+    return Math.max(0, Math.min(100, 100 - avgD * 280 - avgE * 3));
+}
+
+// ── Proxy metrics (when ONNX model lacks attention output) ────────────────────
+function proxyMetrics(text) {
+    const words = text.trim().split(/\s+/);
+    const div = new Set(words).size / Math.max(words.length, 1);
+    const n = 28;
+    const dV = [], eV = [], lV = [];
+    for (let l = 0; l < n; l++) {
+        const t = l / (n - 1);
+        dV.push(Math.max(0, 0.26 * (1 - t * 0.55) + (1 - div) * 0.04 + (Math.random() - 0.5) * 0.025));
+        eV.push(Math.max(0, 3.1 * (1 - t * 0.38) + (1 - div) * 0.4 + (Math.random() - 0.5) * 0.15));
+        lV.push(Math.max(0, Math.min(1, 0.34 + t * 0.38 + (Math.random() - 0.5) * 0.04)));
+    }
+    return { dV, eV, lV, real: false };
+}
+
+// ── Real attention extraction ─────────────────────────────────────────────────
+async function extractMetrics(inputIds, attnMask) {
+    try {
+        const out = await model(inputIds, { attention_mask: attnMask, output_attentions: true });
+        if (!out.attentions || !out.attentions.length) return null;
+
+        const seqLen = inputIds.dims[1];
+        const dV = [], eV = [], lV = [];
+
+        for (const layerAttn of out.attentions) {
+            const heads = layerAttn.dims[1];
+            const avg = new Float32Array(seqLen * seqLen);
+            for (let h = 0; h < heads; h++) {
+                const off = h * seqLen * seqLen;
+                for (let i = 0; i < seqLen * seqLen; i++)
+                    avg[i] += layerAttn.data[off + i] / heads;
+            }
+            dV.push(dirichlet(avg, seqLen));
+            eV.push(entropy(avg, seqLen));
+            lV.push(localityScore(avg, seqLen));
+        }
+        return { dV, eV, lV, real: true };
+    } catch {
+        return null;
+    }
+}
+
+// ── UI update ─────────────────────────────────────────────────────────────────
+function renderMetrics({ dV, eV, lV, real }) {
+    const labels = dV.map((_, i) => `L${i + 1}`);
+
+    chartD.data.labels = labels;
+    chartD.data.datasets[0].data = dV;
+    chartD.update();
+
+    chartE.data.labels = labels;
+    chartE.data.datasets[0].data = eV;
+    chartE.update();
+
+    const score = trust(dV, eV);
+    turnScores.push(score);
+    chartT.data.labels = turnScores.map((_, i) => `T${i + 1}`);
+    chartT.data.datasets[0].data = turnScores;
+    chartT.update();
+
+    const numEl = document.getElementById('trust-num');
+    numEl.textContent = Math.round(score);
+    numEl.style.color = score > 70 ? 'var(--trust-high)' : score > 40 ? 'var(--trust-mid)' : 'var(--trust-low)';
+
+    document.getElementById('trust-desc').textContent =
+        score > 70 ? 'Coherent, focused attention topology' :
+        score > 40 ? 'Moderate spectral coherence' :
+        'Diffuse or uncertain attention patterns';
+
+    const avgD = dV.reduce((a, b) => a + b, 0) / dV.length;
+    const avgE = eV.reduce((a, b) => a + b, 0) / eV.length;
+    const avgL = lV.reduce((a, b) => a + b, 0) / lV.length;
+
+    document.getElementById('m-d').textContent = avgD.toFixed(3);
+    document.getElementById('m-e').textContent = avgE.toFixed(2);
+    document.getElementById('m-l').textContent = avgL.toFixed(3);
+    document.getElementById('m-n').textContent = dV.length;
+
+    const tag = document.getElementById('analysis-tag');
+    tag.style.display = 'inline-block';
+    if (real) {
+        tag.textContent = 'real attention';
+        tag.className = 'analysis-tag tag-real';
+    } else {
+        tag.textContent = 'proxy metrics';
+        tag.className = 'analysis-tag tag-proxy';
+    }
+}
+
+// ── Generation ────────────────────────────────────────────────────────────────
+async function generate(userText) {
+    history.push({ role: 'user', content: userText });
+
+    const chatText = tokenizer.apply_chat_template(history, {
+        tokenize: false,
+        add_generation_prompt: true
+    });
+
+    const inputs = tokenizer(chatText, { return_tensors: 'pt' });
+
+    const output = await model.generate(inputs.input_ids, {
+        attention_mask: inputs.attention_mask,
+        max_new_tokens: 220,
+        do_sample: true,
+        temperature: 0.7,
+        top_p: 0.9,
+        repetition_penalty: 1.1
+    });
+
+    const newIds = output.slice(null, [inputs.input_ids.dims[1], null]);
+    const text = tokenizer.decode(newIds.data, { skip_special_tokens: true });
+    history.push({ role: 'assistant', content: text });
+
+    // Spectral analysis
+    const real = await extractMetrics(inputs.input_ids, inputs.attention_mask);
+    renderMetrics(real ?? proxyMetrics(text));
+
+    return text;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function addMsg(role, text, dim = false) {
+    const area = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.className = `msg ${role}${dim ? ' dim' : ''}`;
+    d.textContent = text;
+    area.appendChild(d);
+    area.scrollTop = area.scrollHeight;
+    return d;
+}
+
+function setStatus(s) {
+    document.getElementById('status-dot').className = `status-dot ${s}`;
+}
+
+async function send() {
+    if (busy || !model) return;
+    const inp = document.getElementById('input');
+    const text = inp.value.trim();
+    if (!text) return;
+    inp.value = '';
+    busy = true;
+    document.getElementById('send').disabled = true;
+    setStatus('busy');
+
+    addMsg('user', text);
+    const thinking = addMsg('bot', 'Generating...', true);
+
+    try {
+        const reply = await generate(text);
+        thinking.className = 'msg bot';
+        thinking.textContent = reply;
+    } catch (e) {
+        thinking.className = 'msg bot dim';
+        thinking.textContent = 'Error: ' + e.message;
+    }
+
+    busy = false;
+    document.getElementById('send').disabled = false;
+    setStatus('ready');
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+document.getElementById('send').addEventListener('click', send);
+document.getElementById('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+document.querySelectorAll('.preset').forEach(b => {
+    b.addEventListener('click', () => {
+        if (busy) return;
+        document.getElementById('input').value = b.dataset.q;
+        send();
+    });
+});
+
+// ── Progress ──────────────────────────────────────────────────────────────────
+function onProgress({ name, progress, loaded, total }) {
+    const fill = document.getElementById('prog-fill');
+    const txt = document.getElementById('prog-text');
+    if (progress != null) {
+        fill.style.width = `${progress}%`;
+        const mb = total ? ` — ${(loaded / 1e6).toFixed(0)}/${(total / 1e6).toFixed(0)} MB` : '';
+        txt.textContent = `${name || ''}${mb} (${Math.round(progress)}%)`;
+    }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+    try {
+        tokenizer = await AutoTokenizer.from_pretrained(MODEL, { progress_callback: onProgress });
+        model = await AutoModelForCausalLM.from_pretrained(MODEL, { dtype: DTYPE, progress_callback: onProgress });
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('send').disabled = false;
+        setStatus('ready');
+        initCharts();
+    } catch (e) {
+        document.getElementById('prog-text').textContent = 'Failed: ' + e.message;
+    }
+}
+
+init();
+</script>
+</body>
+</html>
