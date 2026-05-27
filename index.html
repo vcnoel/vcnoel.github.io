@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Valentin Noël, PhD – Research Scientist in Mechanistic Interpretability & AI Safety. Spectral graph methods for transformer circuits, hallucination detection, and safety-relevant failure modes in LLMs.">
+        content="Valentin Noël, PhD. Research Scientist in Mechanistic Interpretability and AI Safety. Spectral graph methods for transformer circuits, hallucination detection, and safety relevant failure modes in LLMs.">
     <meta name="keywords"
         content="Mechanistic Interpretability, AI Safety, Alignment, Spectral Graph Theory, Transformers, Hallucination Detection, Circuit Analysis">
     <meta name="author" content="Valentin Noël">
@@ -52,7 +52,7 @@
             font-size: 1rem;
         }
 
-        /* --- Navigation --- */
+        /* Navigation */
         nav {
             position: sticky;
             top: 0;
@@ -96,7 +96,7 @@
 
         .nav-links a:hover { color: var(--accent); }
 
-        /* --- Main layout --- */
+        /* Main layout */
         main {
             max-width: var(--max-width);
             margin: 0 auto;
@@ -105,7 +105,7 @@
 
         section + section { margin-top: var(--section-gap); }
 
-        /* --- Hero --- */
+        /* Hero */
         .hero { padding-top: 1rem; }
 
         .hero h1 {
@@ -167,7 +167,7 @@
 
         .hero-link.primary:hover { background: var(--link-hover); border-color: var(--link-hover); }
 
-        /* --- Section headings --- */
+        /* Section headings */
         h2 {
             font-family: 'EB Garamond', serif;
             font-size: 1.55rem;
@@ -179,13 +179,25 @@
             letter-spacing: 0.005em;
         }
 
-        /* --- Research interests --- */
+        .subsection-heading {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        .subsection-heading:first-of-type { margin-top: 0; }
+
+        /* Research interests */
         .research-body { color: var(--text-mid); font-size: 0.95rem; line-height: 1.85; }
         .research-body p + p { margin-top: 0.85rem; }
         .research-body strong { color: var(--text); font-weight: 600; }
         .research-body em { font-style: italic; }
 
-        /* --- Publications --- */
+        /* Publications */
         .pub-list { display: flex; flex-direction: column; gap: 1rem; }
 
         .pub {
@@ -231,16 +243,11 @@
         .badge-award { background: var(--badge-award-bg); color: var(--badge-award-color); }
         .badge-review { background: var(--badge-review-bg); color: var(--badge-review-color); }
 
-        .scholar-link {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 0.85rem;
-        }
-
+        .scholar-link { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.85rem; }
         .scholar-link a { color: var(--link); text-decoration: none; }
         .scholar-link a:hover { text-decoration: underline; }
 
-        /* --- Writing / Blog --- */
+        /* Writing / Blog */
         .writing-header-row {
             display: flex;
             justify-content: space-between;
@@ -277,20 +284,11 @@
             margin-bottom: 0.3rem;
         }
 
-        .post-title {
-            font-size: 0.95rem;
-            font-weight: 500;
-            line-height: 1.45;
-        }
-
+        .post-title { font-size: 0.95rem; font-weight: 500; line-height: 1.45; }
         .post-title a { color: var(--text); text-decoration: none; }
         .post-title a:hover { color: var(--accent); text-decoration: underline; }
 
-        .repost-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-style: italic;
-        }
+        .repost-label { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
 
         .post-date {
             font-size: 0.78rem;
@@ -300,12 +298,7 @@
             padding-top: 0.15rem;
         }
 
-        .post-excerpt {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            line-height: 1.65;
-            margin-bottom: 0.4rem;
-        }
+        .post-excerpt { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.4rem; }
 
         .post-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
@@ -319,7 +312,7 @@
             font-weight: 500;
         }
 
-        /* --- Talks --- */
+        /* Talks */
         .talks-list { display: flex; flex-direction: column; }
 
         .talk-item {
@@ -332,13 +325,10 @@
         }
 
         .talk-item:last-child { border-bottom: none; }
-
         .talk-left { flex: 1; }
-
         .talk-name { font-size: 0.925rem; font-weight: 500; }
         .talk-name a { color: var(--text); text-decoration: none; }
         .talk-name a:hover { color: var(--accent); }
-
         .talk-sub { font-size: 0.835rem; color: var(--text-muted); margin-top: 0.1rem; }
 
         .talk-year {
@@ -348,17 +338,90 @@
             white-space: nowrap;
         }
 
-        /* --- Open Source & Demos --- */
-        .work-grid { display: flex; flex-direction: column; gap: 1rem; }
+        /* Projects & Demos */
+        .demos-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
 
-        .work-item {
+        .demo-card {
+            padding: 1rem 1.1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            text-decoration: none;
+            display: block;
+            transition: border-color 0.2s;
+        }
+
+        .demo-card:hover { border-color: var(--accent-light); }
+
+        .demo-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .demo-card-title i { color: var(--accent-light); font-size: 0.8rem; }
+        .demo-card-desc { font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; }
+
+        /* Research project list */
+        .project-list { display: flex; flex-direction: column; gap: 0; }
+
+        .project-item {
+            padding: 1.1rem 0;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .project-item:last-child { border-bottom: none; }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .project-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
+        .project-title a { color: var(--link); text-decoration: none; }
+        .project-title a:hover { text-decoration: underline; }
+
+        .project-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; padding-top: 0.15rem; }
+
+        .project-tag {
+            display: inline-block;
+            padding: 0.1rem 0.45rem;
+            background: var(--bg-soft);
+            color: var(--text-muted);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
+        }
+
+        .project-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.35rem; }
+
+        .project-result {
+            font-size: 0.825rem;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Open source card */
+        .os-card {
             padding: 1.2rem 1.35rem;
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 7px;
         }
 
-        .work-item-header {
+        .os-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -367,36 +430,12 @@
             gap: 0.5rem;
         }
 
-        .work-item-title { font-size: 0.95rem; font-weight: 600; }
-        .work-item-title a { color: var(--link); text-decoration: none; }
-        .work-item-title a:hover { text-decoration: underline; }
+        .os-card-title { font-size: 0.95rem; font-weight: 600; }
+        .os-card-title a { color: var(--link); text-decoration: none; }
+        .os-card-title a:hover { text-decoration: underline; }
+        .os-card-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
 
-        .work-item-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
-
-        .demos-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.85rem;
-        }
-
-        .demo-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.35rem 0.85rem;
-            background: var(--bg-soft);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: var(--text-mid);
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .demo-pill:hover { border-color: var(--accent); color: var(--accent); }
-
-        /* --- Experience --- */
+        /* Experience */
         .exp-list { display: flex; flex-direction: column; gap: 1.75rem; }
 
         .exp-header {
@@ -430,27 +469,17 @@
 
         .exp-bullets li { margin-bottom: 0.25rem; }
 
-        /* --- Skills --- */
+        /* Skills */
         .skills-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem 3rem;
         }
 
-        .skill-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 0.2rem;
-        }
+        .skill-label { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+        .skill-value { font-size: 0.85rem; color: var(--text-muted); line-height: 1.65; }
 
-        .skill-value {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.65;
-        }
-
-        /* --- Awards --- */
+        /* Awards */
         .awards-list { display: flex; flex-direction: column; }
 
         .award-item {
@@ -467,17 +496,12 @@
         .award-sub { font-size: 0.835rem; color: var(--text-muted); margin-top: 0.1rem; }
         .award-year { font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
 
-        /* --- Contact --- */
-        .contact-body {
-            color: var(--text-mid);
-            font-size: 0.95rem;
-            line-height: 1.85;
-        }
-
+        /* Contact */
+        .contact-body { color: var(--text-mid); font-size: 0.95rem; line-height: 1.85; }
         .contact-body a { color: var(--link); }
         .contact-body a:hover { color: var(--link-hover); }
 
-        /* --- Footer --- */
+        /* Footer */
         footer {
             max-width: var(--max-width);
             margin: 0 auto;
@@ -502,7 +526,7 @@
         .footer-icons a:hover { color: var(--accent); }
         .footer-text { font-size: 0.8rem; color: var(--text-muted); }
 
-        /* --- Responsive --- */
+        /* Responsive */
         @media (max-width: 640px) {
             .hero h1 { font-size: 2rem; }
             .nav-links { display: none; }
@@ -510,6 +534,7 @@
             .talk-item { flex-direction: column; gap: 0.15rem; }
             .award-item { flex-direction: column; gap: 0.15rem; }
             .exp-header { flex-direction: column; gap: 0.1rem; }
+            .demos-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -523,7 +548,7 @@
                 <li><a href="#publications">Publications</a></li>
                 <li><a href="#writing">Writing</a></li>
                 <li><a href="#talks">Talks</a></li>
-                <li><a href="#work">Work</a></li>
+                <li><a href="#work">Projects</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
         </div>
@@ -534,19 +559,19 @@
         <!-- Hero -->
         <section class="hero" id="about">
             <h1>Valentin Noël, PhD</h1>
-            <p class="role">Research Scientist · Mechanistic Interpretability & AI Safety · Devoteam, Paris</p>
+            <p class="role">Research Scientist · Mechanistic Interpretability and AI Safety · Devoteam, Paris</p>
 
             <p class="hero-bio">
-                I study how transformer models reason, fail, and can be made safer — from the inside. My work applies
-                <strong>spectral graph signal processing</strong> to transformer attention circuits: identifying
-                load-bearing structures, detecting safety-relevant failure modes, and asking whether the geometry of
-                high-dimensional representations is causally informative about model behavior.
+                I study how transformer models reason, fail, and can be made safer from the inside. My work applies
+                spectral graph signal processing to transformer attention circuits: identifying load bearing structures,
+                detecting safety relevant failure modes, and asking whether the geometry of high dimensional
+                representations is causally informative about model behavior.
             </p>
             <p class="hero-bio">
-                PhD from <a href="https://ens-paris-saclay.fr/" target="_blank">ENS Paris-Saclay</a>
-                & <a href="https://www.centralesupelec.fr/" target="_blank">CentraleSupélec</a> (Bayesian deep
-                learning, inverse problems). Now at Devoteam as a Research Scientist. PI/co-PI on a
-                Large-Scale AI Research Consortium Grant (joint with a leading university and a CAC40 industrial
+                PhD from <a href="https://ens-paris-saclay.fr/" target="_blank">ENS Paris Saclay</a>
+                and <a href="https://www.centralesupelec.fr/" target="_blank">CentraleSupélec</a> (Bayesian deep
+                learning, inverse problems). Now at Devoteam as a Research Scientist. PI and co-PI on a
+                Large Scale AI Research Consortium Grant (joint with a leading university and a CAC40 industrial
                 partner). Active member of the <a href="https://www.oxai.org/" target="_blank">Oxford AI Society</a>.
             </p>
 
@@ -565,12 +590,12 @@
                     <i class="fab fa-linkedin"></i> LinkedIn
                 </a>
                 <a href="https://pypi.org/project/spectral-trust/" target="_blank" class="hero-link">
-                    <i class="fab fa-python"></i> spectral-trust
+                    <i class="fab fa-python"></i> spectral trust
                 </a>
             </div>
         </section>
 
-        <!-- Research Interests -->
+        <!-- Research -->
         <section id="research">
             <h2>Research</h2>
             <div class="research-body">
@@ -578,19 +603,19 @@
                     My core research area is <strong>mechanistic interpretability</strong> — understanding what
                     transformer circuits actually compute, how they fail, and how failures propagate. I approach this
                     through spectral graph signal processing: treating transformer attention matrices as graphs and
-                    analyzing their spectral properties to reveal structure invisible to activation-level inspection.
+                    analyzing their spectral properties to reveal structure invisible to activation level inspection.
                 </p>
                 <p>
                     Current threads: (1) spectral signatures of valid mathematical reasoning across model families;
-                    (2) the causal topology of model evolution across training checkpoints — predicting capability
-                    emergence from circuit formation; (3) scale-dependent shifts in hallucination detector topology
-                    across 1B–70B models; (4) reward modelling for grounded legal reasoning (with OxAI and
-                    collaborators at Oxford).
+                    (2) the causal topology of model evolution across training checkpoints, predicting capability
+                    emergence from circuit formation; (3) scale dependent shifts in hallucination detector topology
+                    across 1B to 70B models; (4) reward modelling for grounded legal reasoning with OxAI and
+                    collaborators at Oxford.
                 </p>
                 <p>
                     I care about whether interpretability findings are <em>causal</em> and
-                    <em>cross-architecture</em>, not merely correlational or model-specific. All tools are released
-                    under open-source licenses.
+                    <em>cross architecture</em>, not merely correlational or model specific. All tools are released
+                    under open source licenses.
                 </p>
             </div>
         </section>
@@ -702,7 +727,6 @@
                 <a href="posts/">All posts →</a>
             </div>
             <div class="post-list" id="posts-container">
-                <!-- Posts loaded from posts/posts.json -->
                 <noscript>
                     <p style="color: var(--text-muted); font-size: 0.9rem;">
                         <a href="posts/" style="color: var(--link);">Browse all posts →</a>
@@ -713,12 +737,12 @@
 
         <!-- Talks -->
         <section id="talks">
-            <h2>Talks & Presentations</h2>
+            <h2>Talks &amp; Presentations</h2>
             <div class="talks-list">
                 <div class="talk-item">
                     <div class="talk-left">
                         <div class="talk-name">
-                            <a href="https://www.icms.org.uk/" target="_blank">AI × Mathematics Residency —
+                            <a href="https://www.icms.org.uk/" target="_blank">AI and Mathematics Residency —
                                 International Centre for Mathematical Sciences</a>
                         </div>
                         <div class="talk-sub">Edinburgh, UK · Invited Speaker</div>
@@ -758,44 +782,149 @@
             </div>
         </section>
 
-        <!-- Open Source & Demos -->
+        <!-- Projects & Demos -->
         <section id="work">
-            <h2>Open Source & Demos</h2>
-            <div class="work-grid">
-                <div class="work-item">
-                    <div class="work-item-header">
-                        <div class="work-item-title">
-                            <a href="https://pypi.org/project/spectral-trust/" target="_blank">spectral-trust</a>
+            <h2>Projects &amp; Demos</h2>
+
+            <p class="subsection-heading">Run in your browser</p>
+            <div class="demos-grid">
+                <a href="rega-demo/" class="demo-card">
+                    <div class="demo-card-title">
+                        <i class="fas fa-project-diagram"></i> ReGA: Graph RAG Verification
+                    </div>
+                    <div class="demo-card-desc">Hallucination detection via graph alignment and Sinkhorn normalization. Runs entirely in browser with Transformers.js.</div>
+                </a>
+                <a href="spectral-demo.html" class="demo-card">
+                    <div class="demo-card-title">
+                        <i class="fas fa-wave-square"></i> Geometry of Reason
+                    </div>
+                    <div class="demo-card-desc">Interactive spectral proof playground. Visualize the geometric properties of reasoning traces and inspect trust metrics.</div>
+                </a>
+                <a href="hallugraph-demo/" class="demo-card">
+                    <div class="demo-card-title">
+                        <i class="fas fa-gavel"></i> HalluGraph: Legal RAG
+                    </div>
+                    <div class="demo-card-desc">Knowledge graph alignment for legal AI. Detect hallucinations through entity grounding and relation preservation with full audit trails.</div>
+                </a>
+                <a href="solar-demo/index.html" class="demo-card">
+                    <div class="demo-card-title">
+                        <i class="fas fa-sun"></i> Solar Irradiance Simulator
+                    </div>
+                    <div class="demo-card-desc">Physics based GHI, DNI and DHI calculations for any location worldwide using Kasten Young and Cooper models.</div>
+                </a>
+            </div>
+
+            <p class="subsection-heading">Research projects</p>
+            <div class="project-list">
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Spectral Glaive: Tool Call Hallucination Detection</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Safety</span>
+                            <span class="project-tag">Agentic AI</span>
                         </div>
-                        <span class="badge badge-accepted">PyPI · Lead Maintainer · 2025–Present</span>
                     </div>
-                    <div class="work-item-desc">
-                        Open-source transformer interpretability library. Real-time spectral graph diagnostics for
-                        LLMs: logical fallacy detection, connectivity collapse monitoring, circuit-level trust metrics.
-                        Python / PyTorch.
-                    </div>
+                    <div class="project-desc">Training free detection of LLM tool call hallucinations via topological collapse in transformer attention graphs. Benchmarked on the full Glaive function calling corpus across 1B to 70B models.</div>
+                    <div class="project-result">0.856 to 0.971 AUC · 177× speedup via Fast Fiedler GPU Lanczos · 80% recall at 90% precision</div>
                 </div>
-                <div class="work-item">
-                    <div class="work-item-header">
-                        <div class="work-item-title">Interactive Research Demos</div>
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Spectral Conjecture: The Shape of Mathematical Truth</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Interpretability</span>
+                            <span class="project-tag">Formal Math</span>
+                        </div>
                     </div>
-                    <div class="work-item-desc">
-                        Browser-based implementations of research tools — runs entirely in-browser, no installation.
+                    <div class="project-desc">Valid and invalid mathematical proofs leave distinct spectral fingerprints in transformer attention. Discovered "Memory of Refutation": historically disproven conjectures occupy a third, separate region in fingerprint space. Signal is orthogonal to perplexity — hard adversarials are more probable but spectrally anomalous.</div>
+                    <div class="project-result">267 labeled proofs · 60 hard adversarials · signal concentrated in late layers ("Platonic Gate")</div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Spectral Steering: Data Free LLM Alignment</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Alignment</span>
+                            <span class="project-tag">Inference Time</span>
+                        </div>
                     </div>
-                    <div class="demos-row">
-                        <a href="rega-demo/" class="demo-pill">
-                            <i class="fas fa-project-diagram"></i> ReGA: Graph RAG Verification
-                        </a>
-                        <a href="spectral-demo.html" class="demo-pill">
-                            <i class="fas fa-wave-square"></i> Geometry of Reason
-                        </a>
-                        <a href="hallugraph-demo/" class="demo-pill">
-                            <i class="fas fa-gavel"></i> HalluGraph: Legal RAG
-                        </a>
-                        <a href="solar-demo/index.html" class="demo-pill">
-                            <i class="fas fa-sun"></i> Solar Irradiance
-                        </a>
+                    <div class="project-desc">Precise LLM behavior adjustment via singular value spectrum modification of MLP weights. Zero gradient updates, zero training data — operates entirely on the existing model weights at inference time. Achieves a Pareto improvement on the safety capability tradeoff.</div>
+                    <div class="project-result">Llama 3.2 3B: +2.4% sycophancy safety AND +1.4% GSM8K · Phi 3 Mini: 27% sycophancy reduction with +1% math</div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Agent Safety: Prompt Injection via Latent Probing</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Safety</span>
+                            <span class="project-tag">Adversarial</span>
+                        </div>
                     </div>
+                    <div class="project-desc">Comparative study of activation probing vs spectral trust methods for prompt injection detection across GPT 2, Llama 3B, TinyLlama and Llama 1B. Probing achieves perfect in domain AUC but collapses cross domain; spectral methods generalize robustly.</div>
+                    <div class="project-result">Spectral: 0.86 to 0.90 AUC cross dataset · 0.757 to 0.804 F1 at 80%+ recall on mixed multi dataset</div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Spectral Extremism: Training Free Radicalization Detection</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Safety</span>
+                            <span class="project-tag">Content Moderation</span>
+                        </div>
+                    </div>
+                    <div class="project-desc">Detects radicalized text via spectral analysis of transformer attention, no fine tuning required. Discovered a critical "register confound" where models detect formality rather than ideology. Genuine within source extremism signal confirmed after register control.</div>
+                    <div class="project-result">0.75 to 0.82 AUROC across 5 models · Cohen's d 0.3 to 0.8 after register correction</div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Spectral Fingerprints: Voice Processing Across 20 Languages</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Interpretability</span>
+                            <span class="project-tag">Linguistics</span>
+                        </div>
+                    </div>
+                    <div class="project-desc">Training free spectral fingerprints of active vs passive voice in transformer attention across 20 typologically diverse languages. Attention heads in Layers 2 to 5 form distinct spectral signatures for syntactic structures, suggesting universal attention patterns across languages.</div>
+                    <div class="project-result">20 languages · cross lingual spectral consistency · submitted to ICASSP</div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Spectral Fold: Protein Language Model Interpretability</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Bio AI</span>
+                            <span class="project-tag">Interpretability</span>
+                        </div>
+                    </div>
+                    <div class="project-desc">Extends spectral graph analysis to protein language model embeddings (ESM 2, ProtT5, Ankh). Investigates whether the spectral interpretability methods developed for LLMs transfer to biological sequence models.</div>
+                    <div class="project-result">ESM 2, ProtT5, Ankh · Phase A: 50 proteins · scaling in progress</div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-header">
+                        <div class="project-title">Spectral Prior: Geometric Tabular Data Generation</div>
+                        <div class="project-tags">
+                            <span class="project-tag">Generative</span>
+                            <span class="project-tag">Tabular</span>
+                        </div>
+                    </div>
+                    <div class="project-desc">Generates synthetic tabular data with controllable spectral entropy. A 1.1M parameter NanoTabPFN, trained with spectral geometric priors, competes with commercial models 100× its size on TabArena benchmarks.</div>
+                    <div class="project-result">Matches or exceeds NeuralK on Blood Transfusion and Australian datasets at 1% of the parameter count</div>
+                </div>
+
+            </div>
+
+            <p class="subsection-heading">Open source</p>
+            <div class="os-card">
+                <div class="os-card-header">
+                    <div class="os-card-title">
+                        <a href="https://pypi.org/project/spectral-trust/" target="_blank">spectral trust</a>
+                    </div>
+                    <span class="badge badge-accepted">PyPI · Lead Maintainer · 2025 to Present</span>
+                </div>
+                <div class="os-card-desc">
+                    Open source transformer interpretability library. Real time spectral graph diagnostics for LLMs: logical fallacy detection, connectivity collapse monitoring, and circuit level trust metrics. Powers all spectral research projects above. Python and PyTorch.
                 </div>
             </div>
         </section>
@@ -808,53 +937,53 @@
                     <div class="exp-header">
                         <div class="exp-title">Research Scientist — <a href="https://www.devoteam.com/"
                                 target="_blank">Devoteam</a></div>
-                        <div class="exp-date">Oct 2024 – Present</div>
+                        <div class="exp-date">Oct 2024 to Present</div>
                     </div>
                     <div class="exp-role">Mechanistic Interpretability, AI Safety, Trustworthy AI · Paris, France</div>
                     <ul class="exp-bullets">
-                        <li>Spectral circuit analysis of transformer attention matrices; identified load-bearing circuits and
+                        <li>Spectral circuit analysis of transformer attention matrices; identified load bearing circuits and
                             demonstrated logical coherence encoded as macroscopic topological properties (95.6% verification
                             accuracy, d = 3.30).</li>
-                        <li>Discovered Passive-Triggered Connectivity Collapse (PTCC) as a developmental failure mode;
+                        <li>Discovered Passive Triggered Connectivity Collapse (PTCC) as a developmental failure mode;
                             causally localized to Layer 2 induction heads; demonstrated targeted repair via activation
                             steering.</li>
-                        <li>Cross-architecture validation across 5+ model families (Llama, Qwen, Phi, Mistral, Gemma).</li>
-                        <li>Agentic safety: spectral kill switches for real-time contamination detection; scale-dependent
-                            shifts in optimal detector topology across 1B–70B models.</li>
-                        <li>PI/co-PI — Large-Scale AI Research Consortium Grant (joint with a leading university and CAC40
-                            industrial partner, 2025–Present).</li>
+                        <li>Cross architecture validation across 5+ model families (Llama, Qwen, Phi, Mistral, Gemma).</li>
+                        <li>Agentic safety: spectral kill switches for real time contamination detection; scale dependent
+                            shifts in optimal detector topology across 1B to 70B models.</li>
+                        <li>PI and co-PI on Large Scale AI Research Consortium Grant (joint with a leading university and CAC40
+                            industrial partner, 2025 to Present).</li>
                     </ul>
                 </div>
                 <div class="exp-item">
                     <div class="exp-header">
                         <div class="exp-title">PhD Researcher — <a href="https://ens-paris-saclay.fr/"
-                                target="_blank">ENS Paris-Saclay</a> & <a href="https://www.centralesupelec.fr/"
+                                target="_blank">ENS Paris Saclay</a> and <a href="https://www.centralesupelec.fr/"
                                 target="_blank">CentraleSupélec</a></div>
-                        <div class="exp-date">Oct 2021 – Sept 2024</div>
+                        <div class="exp-date">Oct 2021 to Sept 2024</div>
                     </div>
-                    <div class="exp-role">Deep Learning, Inverse Problems & Bayesian Methods · Supervisors: T. Rodet & D.
+                    <div class="exp-role">Deep Learning, Inverse Problems and Bayesian Methods · Supervisors: T. Rodet and D.
                         Lesselier</div>
                     <ul class="exp-bullets">
-                        <li>Bayesian deep learning for uncertainty quantification in multimodal inverse problems (EM &
+                        <li>Bayesian deep learning for uncertainty quantification in multimodal inverse problems (EM and
                             ultrasound).</li>
-                        <li>Transfer learning for latent structure recovery — conceptually linked to circuit analysis in
+                        <li>Transfer learning for latent structure recovery, conceptually linked to circuit analysis in
                             foundation models.</li>
                         <li>HPC training on national supercomputers (SLURM); three years of university teaching in AI,
-                            Signal Processing, and Algorithms (ENS Paris-Saclay / Université Paris-Saclay).</li>
+                            Signal Processing, and Algorithms (ENS Paris Saclay and Université Paris Saclay).</li>
                     </ul>
                 </div>
                 <div class="exp-item">
                     <div class="exp-header">
                         <div class="exp-title">Research Intern — <a
-                                href="https://www.airbus.com/en/products-services/space" target="_blank">Airbus Defence &
-                                Space</a> & <a href="https://www.irap.omp.eu/en/homepage-en/"
+                                href="https://www.airbus.com/en/products-services/space" target="_blank">Airbus Defence and
+                                Space</a> and <a href="https://www.irap.omp.eu/en/homepage-en/"
                                 target="_blank">IRAP</a></div>
-                        <div class="exp-date">Feb – July 2021</div>
+                        <div class="exp-date">Feb to July 2021</div>
                     </div>
                     <div class="exp-role">Hyperspectral Imaging · Toulouse, France · Supervisor: H. Carfantan</div>
                     <ul class="exp-bullets">
-                        <li>Forward/inverse simulation pipeline for DD-CASSI hyperspectral imaging; ADMM/FISTA
-                            reconstruction; CUDA/cuPy acceleration.</li>
+                        <li>Forward and inverse simulation pipeline for DD CASSI hyperspectral imaging; ADMM and FISTA
+                            reconstruction; CUDA and cuPy GPU acceleration.</li>
                     </ul>
                 </div>
             </div>
@@ -867,17 +996,17 @@
                 <div class="exp-item">
                     <div class="exp-header">
                         <div class="exp-title">PhD in Deep Learning — <a href="https://ens-paris-saclay.fr/"
-                                target="_blank">ENS Paris-Saclay</a> & <a href="https://www.centralesupelec.fr/"
+                                target="_blank">ENS Paris Saclay</a> and <a href="https://www.centralesupelec.fr/"
                                 target="_blank">CentraleSupélec</a></div>
-                        <div class="exp-date">Oct 2021 – Sept 2024</div>
+                        <div class="exp-date">Oct 2021 to Sept 2024</div>
                     </div>
                     <div class="exp-role">Paris, France</div>
                 </div>
                 <div class="exp-item">
                     <div class="exp-header">
-                        <div class="exp-title">Master in Control & Robotics (Signal Processing & AI) — <a
+                        <div class="exp-title">Master in Control and Robotics (Signal Processing and AI) — <a
                                 href="https://www.ec-nantes.fr/" target="_blank">Ecole Centrale de Nantes</a></div>
-                        <div class="exp-date">Sept 2019 – July 2021</div>
+                        <div class="exp-date">Sept 2019 to July 2021</div>
                     </div>
                     <div class="exp-role">Nantes, France · Graduated 2nd in class</div>
                 </div>
@@ -898,7 +1027,7 @@
                 <div class="award-item">
                     <div>
                         <div class="award-name">Best Student Paper Award — PIERS</div>
-                        <div class="award-sub">PhotonIcs & Electromagnetics Research Symposium · Prague, Czechia</div>
+                        <div class="award-sub">PhotonIcs and Electromagnetics Research Symposium · Prague, Czechia</div>
                     </div>
                     <div class="award-year">2023</div>
                 </div>
@@ -910,28 +1039,28 @@
             <h2>Technical Skills</h2>
             <div class="skills-grid">
                 <div>
-                    <div class="skill-label">Interpretability & Analysis</div>
-                    <div class="skill-value">Mechanistic Interpretability, Activation Patching/Steering, Circuit Analysis,
+                    <div class="skill-label">Interpretability and Analysis</div>
+                    <div class="skill-value">Mechanistic Interpretability, Activation Patching and Steering, Circuit Analysis,
                         Graph Signal Processing, Spectral Methods, Causal Inference, Probing Classifiers, Attention Head
                         Decomposition</div>
                 </div>
                 <div>
-                    <div class="skill-label">Modeling & Training</div>
-                    <div class="skill-value">PyTorch, JAX, Hugging Face Transformers, PEFT/LoRA, CUDA/cuPy, DeepSpeed
-                        (DDP/FSDP/ZeRO), Hugging Face Accelerate, SLURM, Bayesian Neural Networks</div>
+                    <div class="skill-label">Modeling and Training</div>
+                    <div class="skill-value">PyTorch, JAX, Hugging Face Transformers, PEFT and LoRA, CUDA and cuPy, DeepSpeed
+                        (DDP, FSDP, ZeRO), Hugging Face Accelerate, SLURM, Bayesian Neural Networks</div>
                 </div>
                 <div>
-                    <div class="skill-label">Evaluation & Safety</div>
-                    <div class="skill-value">Activation Steering, Red-Teaming, lm-eval, Sycophancy & Faithfulness
+                    <div class="skill-label">Evaluation and Safety</div>
+                    <div class="skill-value">Activation Steering, Red Teaming, lm eval, Sycophancy and Faithfulness
                         Benchmarks, Statistical Testing (bootstrap CIs, FDR correction, effect sizes)</div>
                 </div>
                 <div>
-                    <div class="skill-label">Graph & Data</div>
+                    <div class="skill-label">Graph and Data</div>
                     <div class="skill-value">PyTorch Geometric, DGL, NetworkX, Neo4j, FAISS, Milvus, pandas, Polars</div>
                 </div>
                 <div>
                     <div class="skill-label">Languages</div>
-                    <div class="skill-value">French (native), English (C2), German (B2–C1)</div>
+                    <div class="skill-value">French (native), English (C2), German (B2 to C1)</div>
                 </div>
             </div>
         </section>
@@ -940,7 +1069,7 @@
         <section id="contact">
             <h2>Contact</h2>
             <p class="contact-body">
-                I'm open to conversations about mechanistic interpretability, AI safety research, and collaboration.
+                I am open to conversations about mechanistic interpretability, AI safety research, and collaboration.
                 Best reached by <a href="mailto:val.noel@proton.me">email (val.noel@proton.me)</a>.
                 Also on <a href="https://www.linkedin.com/in/valnoelphd/" target="_blank">LinkedIn</a> and
                 <a href="https://github.com/vcnoel" target="_blank">GitHub</a>.
@@ -986,7 +1115,7 @@
                     <div class="post-item">
                         <div class="post-header">
                             <div class="post-title">
-                                <a href="${post.url}">${post.title}</a>${post.type === 'repost' ? `<span class="repost-label"> — via ${post.source}</span>` : ''}
+                                <a href="${post.url}">${post.title}</a>${post.type === 'repost' ? `<span class="repost-label"> via ${post.source}</span>` : ''}
                             </div>
                             <div class="post-date">${fmtDate(post.date)}</div>
                         </div>
