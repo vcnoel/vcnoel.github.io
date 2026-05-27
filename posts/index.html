@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Writing by Valentin Noël — notes on mechanistic interpretability, AI safety, and research.">
+    <title>Writing — Valentin Noël</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f9f7f4;
+            --bg-card: #ffffff;
+            --text: #1c1917;
+            --text-mid: #44403c;
+            --text-muted: #78716c;
+            --accent: #92400e;
+            --link: #92400e;
+            --link-hover: #78350f;
+            --border: #e7dfd5;
+            --border-soft: #ede8e0;
+            --tag-bg: #fef3c7;
+            --tag-text: #92400e;
+            --max-width: 720px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(249, 247, 244, 0.96);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 0 2rem;
+        }
+
+        .nav-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 3.5rem;
+        }
+
+        .nav-brand {
+            font-family: 'EB Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .back-link {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .back-link:hover { color: var(--accent); }
+
+        main {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 3rem 2rem 6rem;
+        }
+
+        h1 {
+            font-family: 'EB Garamond', serif;
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+
+        .page-sub {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .filter-btn {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .posts-list { display: flex; flex-direction: column; }
+
+        .post-item {
+            padding: 1.1rem 0;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .post-item:last-child { border-bottom: none; }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .post-title {
+            font-size: 0.975rem;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .post-title a { color: var(--text); text-decoration: none; }
+        .post-title a:hover { color: var(--accent); text-decoration: underline; }
+
+        .repost-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .post-date {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
+            padding-top: 0.15rem;
+        }
+
+        .post-excerpt {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.65;
+            margin-bottom: 0.4rem;
+        }
+
+        .post-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+        .post-tag {
+            display: inline-block;
+            padding: 0.12rem 0.5rem;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .empty-msg {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 2rem 0;
+        }
+
+        footer {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-inner">
+            <a href="../" class="nav-brand">Valentin Noël</a>
+            <a href="../" class="back-link">← Back to site</a>
+        </div>
+    </nav>
+
+    <main>
+        <h1>Writing</h1>
+        <p class="page-sub">Notes on mechanistic interpretability, AI safety, and research. Includes original posts and annotated reposts.</p>
+
+        <div class="filter-row" id="filter-row"></div>
+
+        <div class="posts-list" id="posts-list">
+            <p class="empty-msg">Loading posts…</p>
+        </div>
+    </main>
+
+    <footer>© 2026 Valentin Noël</footer>
+
+    <script>
+        let allPosts = [];
+        let activeTag = null;
+
+        async function init() {
+            try {
+                const res = await fetch('posts.json');
+                if (!res.ok) throw new Error();
+                allPosts = await res.json();
+                buildFilters();
+                render();
+            } catch {
+                document.getElementById('posts-list').innerHTML =
+                    '<p class="empty-msg">Posts coming soon.</p>';
+            }
+        }
+
+        function buildFilters() {
+            const tags = [...new Set(allPosts.flatMap(p => p.tags || []))];
+            if (!tags.length) return;
+
+            const row = document.getElementById('filter-row');
+            const allBtn = makeBtn('All', null);
+            allBtn.classList.add('active');
+            row.appendChild(allBtn);
+            tags.forEach(t => row.appendChild(makeBtn(t, t)));
+        }
+
+        function makeBtn(label, tag) {
+            const b = document.createElement('button');
+            b.className = 'filter-btn';
+            b.textContent = label;
+            b.addEventListener('click', () => {
+                activeTag = tag;
+                document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                render();
+            });
+            return b;
+        }
+
+        function render() {
+            const list = document.getElementById('posts-list');
+            const posts = activeTag ? allPosts.filter(p => p.tags && p.tags.includes(activeTag)) : allPosts;
+
+            if (!posts.length) {
+                list.innerHTML = '<p class="empty-msg">No posts in this category yet.</p>';
+                return;
+            }
+
+            list.innerHTML = posts.map(post => `
+                <div class="post-item" data-tags="${(post.tags || []).join(',')}">
+                    <div class="post-header">
+                        <div class="post-title">
+                            <a href="${post.url.replace('posts/', '')}">${post.title}</a>${post.type === 'repost' ? `<span class="repost-label"> — via ${post.source}</span>` : ''}
+                        </div>
+                        <div class="post-date">${fmtDate(post.date)}</div>
+                    </div>
+                    ${post.excerpt ? `<div class="post-excerpt">${post.excerpt}</div>` : ''}
+                    ${post.tags && post.tags.length ? `<div class="post-tags">${post.tags.map(t => `<span class="post-tag">${t}</span>`).join('')}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function fmtDate(s) {
+            return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
