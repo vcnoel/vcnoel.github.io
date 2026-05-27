@@ -334,7 +334,7 @@
 <div id="overlay">
     <div class="load-card">
         <h3>Spectral Chat</h3>
-        <p>Loading SmolLM2 360M entirely into your browser. One time download around 200 MB, fully cached after that. No data leaves your device.</p>
+        <p>Loading Qwen2.5 0.5B entirely into your browser. One time download around 400 MB, fully cached after that. No data leaves your device.</p>
         <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
         <div id="prog-text">Initializing...</div>
     </div>
@@ -344,7 +344,7 @@
     <div class="nav-inner">
         <a href="./" class="nav-brand">Valentin Noël</a>
         <div class="nav-right">
-            <span class="model-pill">SmolLM2 360M · In Browser</span>
+            <span class="model-pill">Qwen2.5 0.5B · In Browser</span>
             <div class="status-dot" id="status-dot"></div>
             <a href="./" class="back-link">← Back</a>
         </div>
@@ -355,7 +355,7 @@
 
     <div class="chat-panel">
         <div class="messages" id="messages">
-            <div class="msg bot">Hello. I am SmolLM2, running entirely in your browser with no server and no API calls. Ask me anything and watch the spectral analysis of my attention patterns update on the right.</div>
+            <div class="msg bot">Hello. I am Qwen2.5 0.5B, running entirely in your browser with no server and no API calls. Ask me anything and watch the spectral analysis of my attention patterns update on the right.</div>
         </div>
 
         <div class="presets">
@@ -428,7 +428,7 @@ import { AutoTokenizer, AutoModelForCausalLM, env } from
 
 env.useBrowserCache = true;
 
-const MODEL = 'onnx-community/SmolLM2-360M-Instruct';
+const MODEL = 'onnx-community/Qwen2.5-0.5B-Instruct';
 const DTYPE = 'q4';
 
 let tokenizer, model, busy = false;
