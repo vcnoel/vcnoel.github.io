@@ -512,7 +512,7 @@ function setStatus(s) {
 }
 
 // ── Web Worker ────────────────────────────────────────────────────────────────
-const worker = new Worker('./spectral-worker.js', { type: 'module' });
+const worker = new Worker('./spectral-worker.js?v=3', { type: 'module' });
 
 worker.addEventListener('message', ({ data }) => {
     const { type } = data;

@@ -46,15 +46,16 @@ function proxyMetrics(text) {
     const lower = text.toLowerCase();
     const div = new Set(words).size / Math.max(words.length, 1);
 
-    // Semantic signals that correlate with real attention diffuseness
-    const hedges = (lower.match(/\b(maybe|possibly|perhaps|might|could be|i think|i believe|seems|appears|roughly|approximately|probably|likely|i suppose)\b/g) || []).length;
-    const confident = (lower.match(/\b(definitely|certainly|clearly|obviously|absolutely|confirmed|accurate|correct|precise|confident|without doubt|i am sure|i know)\b/g) || []).length;
-    const selfDoubt = (lower.match(/\b(i don't know|don't know|not sure|no idea|hard to say|beyond my|i'm uncertain|i cannot)\b/g) || []).length;
+    // Semantic signals — hedges increase simulated Dirichlet energy, confidence decreases it
+    // "i believe" excluded: assertive use ("I believe we should") vs epistemic hedge are indistinct
+    const hedges = (lower.match(/\b(maybe|possibly|perhaps|might|could be|i think|seems|appears|roughly|approximately|probably|likely|i suppose|not certain|unclear)\b/g) || []).length;
+    const confident = (lower.match(/\b(definitely|certainly|clearly|obviously|absolutely|confirmed|accurate|correct|precise|confident|confidence|certain|assuredly|without doubt|i am sure|i know|high confidence|remains high)\b/g) || []).length;
+    const selfDoubt = (lower.match(/\b(i don't know|don't know|not sure|no idea|hard to say|beyond my|i'm uncertain|i cannot|i have no|cannot say)\b/g) || []).length;
 
-    // Tuned so neutral diverse text → avgD≈0.09, avgE≈1.7 → trust≈70
-    const baseD = 0.12, baseE = 2.1;
-    const semD = hedges * 0.025 - confident * 0.018 + selfDoubt * 0.045;
-    const semE = hedges * 0.18  - confident * 0.12  + selfDoubt * 0.30;
+    // Baseline tuned: neutral text (div≈0.82) → avgD≈0.088, avgE≈1.68 → trust≈71
+    const baseD = 0.11, baseE = 2.0;
+    const semD = hedges * 0.028 - confident * 0.020 + selfDoubt * 0.065;
+    const semE = hedges * 0.20  - confident * 0.14  + selfDoubt * 0.45;
 
     const n = 28;
     const dV = [], eV = [], lV = [];
