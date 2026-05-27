@@ -599,28 +599,30 @@ function renderMetrics({ dV, eV, lV, real }) {
 async function generate(userText) {
     history.push({ role: 'user', content: userText });
 
-    const chatText = tokenizer.apply_chat_template(history, {
-        tokenize: false,
-        add_generation_prompt: true
+    // v3 API: apply_chat_template with return_dict:true gives tensors directly
+    const inputs = tokenizer.apply_chat_template(history, {
+        add_generation_prompt: true,
+        return_dict: true,
     });
 
-    const inputs = tokenizer(chatText, { return_tensors: 'pt' });
+    const inputLength = inputs.input_ids.dims[1];
 
-    const output = await model.generate({
+    const { sequences } = await model.generate({
         ...inputs,
         max_new_tokens: 220,
         do_sample: true,
         temperature: 0.7,
         top_p: 0.9,
-        repetition_penalty: 1.1
+        repetition_penalty: 1.1,
+        return_dict_in_generate: true,
     });
 
-    const inputLength = inputs.input_ids.dims[1];
-    const newTokenIds = Array.from(output.data).slice(inputLength);
+    // Slice out only the newly generated tokens
+    const newTokenIds = Array.from(sequences.data).slice(inputLength);
     const text = tokenizer.decode(newTokenIds, { skip_special_tokens: true });
     history.push({ role: 'assistant', content: text });
 
-    // Spectral analysis
+    // Spectral analysis (falls back to proxy metrics if attention not available)
     const real = await extractMetrics(inputs.input_ids, inputs.attention_mask);
     renderMetrics(real ?? proxyMetrics(text));
 
