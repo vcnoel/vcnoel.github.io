@@ -74,7 +74,7 @@
             }
         });
         if (window.matchMedia) {
-            var wide = window.matchMedia('(min-width: 1180px)');
+            var wide = window.matchMedia('(min-width: 1024px)');
             var onWide = function () { if (wide.matches) set(false); };
             if (wide.addEventListener) wide.addEventListener('change', onWide);
             else if (wide.addListener) wide.addListener(onWide);
@@ -141,31 +141,147 @@
             if (n === 0 && tag !== 'all') b.hidden = true;
         });
 
+        /* With no topic selected, only the featured entries show until the toggle expands the list. */
+        var toggle = document.getElementById(bar.getAttribute('data-filter-toggle') || '');
+        var featured = items.filter(function (i) { return i.hasAttribute('data-featured'); });
+        var canCollapse = !!toggle && featured.length > 0 && featured.length < items.length;
+        var expanded = !canCollapse;
+        var current = 'all';
+
         function apply(tag, announce) {
+            current = tag;
             var shown = 0;
             items.forEach(function (i) {
-                var match = tag === 'all' || tagsOf(i).indexOf(tag) !== -1;
+                var match = tag === 'all' ? (expanded || i.hasAttribute('data-featured')) : tagsOf(i).indexOf(tag) !== -1;
                 i.hidden = !match;
                 if (match) shown += 1;
             });
             buttons.forEach(function (b) {
                 b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === tag));
             });
+            if (canCollapse) {
+                toggle.hidden = tag !== 'all';
+                toggle.setAttribute('aria-expanded', String(expanded));
+                var label = toggle.querySelector('.label');
+                if (label) label.textContent = expanded ? 'Show selected only' : 'Show all ' + items.length;
+            }
             if (status && announce) {
-                var label = '';
+                var name = '';
                 buttons.forEach(function (b) {
-                    if (b.getAttribute('data-filter') === tag) label = b.getAttribute('data-label') || '';
+                    if (b.getAttribute('data-filter') === tag) name = b.getAttribute('data-label') || '';
                 });
                 status.textContent = tag === 'all'
-                    ? 'Showing all ' + items.length + ' publications.'
-                    : 'Showing ' + shown + ' of ' + items.length + ' publications tagged ' + label + '.';
+                    ? 'Showing ' + shown + ' of ' + items.length + ' publications.'
+                    : 'Showing ' + shown + ' of ' + items.length + ' publications tagged ' + name + '.';
             }
         }
 
         buttons.forEach(function (b) {
             b.addEventListener('click', function () { apply(b.getAttribute('data-filter'), true); });
         });
+        if (canCollapse) {
+            toggle.addEventListener('click', function () {
+                expanded = !expanded;
+                apply(current, true);
+            });
+        }
+        /* A link to a hidden entry (from the news list) expands the list first. */
+        function revealTarget() {
+            var id = window.location.hash.slice(1);
+            var target = id ? document.getElementById(id) : null;
+            if (target && target.hidden && items.indexOf(target) !== -1) {
+                expanded = true;
+                apply('all', false);
+                target.scrollIntoView();
+            }
+        }
+        window.addEventListener('hashchange', revealTarget);
         apply('all', false);
+        revealTarget();
+    }
+
+    /* Code demo: types the snippet once when it comes into view, then shows the output.
+       Without motion (or without this script) the panel stays in its final state. */
+    function initDemo() {
+        var panel = document.querySelector('[data-demo]');
+        if (!panel || !('IntersectionObserver' in window)) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var pre = panel.querySelector('.demo-code');
+        var code = pre ? pre.querySelector('code') : null;
+        var replay = panel.querySelector('.demo-replay');
+        if (!code) return;
+
+        var nodes = [];
+        var walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) nodes.push({ node: walker.currentNode, text: walker.currentNode.nodeValue });
+        var timer = null;
+
+        function finish() {
+            clearTimeout(timer);
+            nodes.forEach(function (n) { n.node.nodeValue = n.text; });
+            panel.classList.remove('is-typing', 'is-running');
+            if (replay) replay.hidden = false;
+        }
+
+        function play() {
+            clearTimeout(timer);
+            pre.style.minHeight = pre.offsetHeight + 'px';
+            nodes.forEach(function (n) { n.node.nodeValue = ''; });
+            panel.classList.remove('is-running');
+            panel.classList.add('is-typing');
+            if (replay) replay.hidden = true;
+            var i = 0, pos = 0;
+            (function step() {
+                var budget = 5;
+                while (budget > 0 && i < nodes.length) {
+                    var n = nodes[i];
+                    var take = Math.min(budget, n.text.length - pos);
+                    pos += take;
+                    budget -= take;
+                    n.node.nodeValue = n.text.slice(0, pos);
+                    if (pos >= n.text.length) { i += 1; pos = 0; }
+                }
+                if (i < nodes.length) {
+                    timer = setTimeout(step, 20);
+                } else {
+                    panel.classList.remove('is-typing');
+                    panel.classList.add('is-running');
+                    timer = setTimeout(finish, 600);
+                }
+            })();
+        }
+
+        if (replay) replay.addEventListener('click', play);
+        pre.addEventListener('click', function () { if (panel.classList.contains('is-typing')) finish(); });
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) { io.disconnect(); play(); }
+            });
+        }, { threshold: 0.25 });
+        io.observe(pre);
+    }
+
+    /* Looping figures in posts: play only while visible, and never under reduced motion. */
+    function initVideos() {
+        var videos = Array.prototype.slice.call(document.querySelectorAll('video[data-loop]'));
+        if (!videos.length) return;
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce || !('IntersectionObserver' in window)) {
+            videos.forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; });
+            return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                var v = entry.target;
+                if (entry.isIntersecting) {
+                    var p = v.play();
+                    if (p && p.catch) p.catch(function () { v.controls = true; });
+                } else {
+                    v.pause();
+                }
+            });
+        }, { threshold: 0.2 });
+        videos.forEach(function (v) { io.observe(v); });
     }
 
     /* Copy to clipboard */
@@ -310,6 +426,8 @@
         initSectionHighlight();
         initReveal();
         initPubFilter();
+        initDemo();
+        initVideos();
         initCopy();
         initPosts();
     }

@@ -144,7 +144,7 @@ class Page(html.parser.HTMLParser):
             if k in {"alt", "title", "aria-label", "placeholder"}:
                 self.attr_text.append((tag, f"{k}={v}", line))
             if k in {"aria-controls", "aria-labelledby", "aria-describedby", "for", "data-filter-for",
-                     "data-filter-status", "data-copy-status"}:
+                     "data-filter-status", "data-filter-toggle", "data-copy-status"}:
                 for ref in v.split():
                     self.aria_refs.append((k, ref, line))
             if k == "data-posts":

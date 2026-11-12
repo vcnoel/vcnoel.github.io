@@ -1,14 +1,16 @@
 // Browser check for the redesigned pages, run from the repository root:
 //
-//     node tools/browser_check.mjs [--chrome PATH] [--out DIR]
+//     node tools/browser_check.mjs [--chrome PATH] [--out DIR] [--widths 360,390,414,768,1280]
 //
 // Needs Node 22 or later (built-in WebSocket) and a local Chrome or Edge. The
-// script serves the repository on a local port, opens each page in headless
-// Chrome at 360, 768 and 1280 px in light and dark themes, and reports console
-// errors, uncaught exceptions, failed requests and horizontal overflow. It also
-// clicks the publication filter, the theme toggle and the mobile menu, and saves
-// full-page screenshots to DIR (default: a folder in the system temp directory).
-// Exit status is 1 when any error is found.
+// script serves the repository on a local port and opens each page in headless
+// Chrome at every width, in light and dark themes. It reports console errors,
+// uncaught exceptions, failed requests, images that did not load and horizontal
+// overflow. At widths up to 820 px it also checks that no visible text is under
+// 14 px and that buttons, toggles and standalone links are at least 44 px, and
+// it operates the menu, the toggles and the filter with touch events. One
+// full-page screenshot per page, width and theme goes to DIR (default
+// tools/screens, which is not tracked). Exit status is 1 when any error is found.
 
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -18,13 +20,12 @@ import { join, extname, resolve, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const PAGES = ['index.html', 'posts/index.html', 'posts/site-relaunch.html', 'posts/template.html'];
-const WIDTHS = [360, 768, 1280];
-const THEMES = ['light', 'dark'];
-
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
-const OUT = resolve(opt('--out', join(tmpdir(), 'site-shots')));
+const PAGES = opt('--pages', 'index.html,posts/index.html,posts/site-relaunch.html,posts/template.html').split(',');
+const WIDTHS = opt('--widths', '360,390,414,768,1280').split(',').map(Number);
+const THEMES = ['light', 'dark'];
+const OUT = resolve(opt('--out', join(ROOT, 'tools', 'screens')));
 const CANDIDATES = [
     opt('--chrome', ''),
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -38,6 +39,7 @@ if (!CHROME) { console.error('No Chrome or Edge found. Pass --chrome PATH.'); pr
 const TYPES = {
     '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript',
     '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
+    '.gif': 'image/gif', '.webm': 'video/webm', '.mp4': 'video/mp4',
     '.pdf': 'application/pdf', '.ico': 'image/x-icon', '.txt': 'text/plain',
 };
 
@@ -112,18 +114,44 @@ class CDP {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const OVERFLOW_JS = `(() => {
+const LAYOUT_JS = `(() => {
     const de = document.documentElement, w = de.clientWidth;
-    const offenders = [...document.querySelectorAll('body *')].filter((e) => {
-        const r = e.getBoundingClientRect();
-        if (r.width === 0 || r.right <= w + 1) return false;
+    const visible = (e) => e.getClientRects().length > 0 && (e.checkVisibility ? e.checkVisibility({ visibilityProperty: true }) : true);
+    const name = (e) => e.tagName.toLowerCase() + (e.className && e.className.baseVal === undefined ? '.' + String(e.className).trim().replace(/\\s+/g, '.') : '');
+    const clipped = (e) => {
         for (let p = e.parentElement; p; p = p.parentElement) {
             const s = getComputedStyle(p);
-            if (s.overflowX === 'auto' || s.overflowX === 'hidden' || s.overflowX === 'scroll') return false;
+            if (s.overflowX === 'auto' || s.overflowX === 'hidden' || s.overflowX === 'scroll') return true;
         }
-        return true;
-    }).slice(0, 6).map((e) => e.tagName.toLowerCase() + '.' + String(e.className || '').trim().replace(/\\s+/g, '.') + ' right=' + Math.round(e.getBoundingClientRect().right));
-    return JSON.stringify({ scrollWidth: de.scrollWidth, clientWidth: w, offenders });
+        return false;
+    };
+    const offenders = [...document.querySelectorAll('body *')].filter((e) => {
+        const r = e.getBoundingClientRect();
+        return r.width > 0 && r.right > w + 1 && !clipped(e);
+    }).slice(0, 6).map((e) => name(e) + ' right=' + Math.round(e.getBoundingClientRect().right));
+    const small = new Set();
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+        const n = walker.currentNode, e = n.parentElement;
+        if (!n.nodeValue.trim() || !e || !visible(e) || e.closest('.visually-hidden, svg, script, style')) continue;
+        const fs = parseFloat(getComputedStyle(e).fontSize);
+        if (fs < 13.99) small.add(name(e) + ' ' + fs.toFixed(1) + 'px "' + n.nodeValue.trim().slice(0, 24) + '"');
+    }
+    const taps = [];
+    document.querySelectorAll('button, summary, a[href]').forEach((e) => {
+        if (!visible(e) || e.closest('.visually-hidden')) return;
+        if (e.tagName === 'A' && getComputedStyle(e).display === 'inline') return;
+        const r = e.getBoundingClientRect();
+        if (r.height < 43.5 || r.width < 43.5) taps.push(name(e) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+    });
+    const fig = document.querySelector('.demo-out img');
+    const code = document.querySelector('.demo-code');
+    return JSON.stringify({
+        scrollWidth: de.scrollWidth, clientWidth: w, height: de.scrollHeight, offenders,
+        small: [...small].slice(0, 8), taps: taps.slice(0, 8),
+        demo: code ? { codeScrolls: code.scrollWidth > code.clientWidth, codeWidth: Math.round(code.getBoundingClientRect().width),
+            imgWidth: fig ? Math.round(fig.getBoundingClientRect().width) : 0 } : null,
+    });
 })()`;
 
 async function main() {
@@ -163,14 +191,33 @@ async function main() {
         const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }, s);
         return r.result.value;
     };
+    // Tap an element with touch events, as a phone would.
+    const tap = async (selector) => {
+        const pt = JSON.parse(await evaluate(`(() => {
+            const e = document.querySelector(${JSON.stringify(selector)});
+            if (!e) return 'null';
+            e.scrollIntoView({ block: 'center', behavior: 'instant' });
+            const r = e.getBoundingClientRect();
+            return JSON.stringify({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+        })()`));
+        if (!pt) return false;
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: pt.x, y: pt.y }] }, s);
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, s);
+        await sleep(250);
+        return true;
+    };
 
     const errors = [];
     const report = [];
+    const shots = [];
     for (const page of PAGES) {
         for (const width of WIDTHS) {
+            const mobile = width <= 820;
             for (const theme of THEMES) {
                 bucket = [];
-                await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 800 }, s);
+                const label = `${page} @${width}px ${theme}`;
+                await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile }, s);
+                await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: mobile }, s);
                 await cdp.send('Emulation.setEmulatedMedia', { features: [
                     { name: 'prefers-color-scheme', value: theme },
                     { name: 'prefers-reduced-motion', value: 'reduce' },
@@ -179,94 +226,117 @@ async function main() {
                 const loaded = cdp.waitFor('Page.loadEventFired', s);
                 await cdp.send('Page.navigate', { url: `${base}/${page}` }, s);
                 await loaded;
-                await sleep(1200);
-                const ov = JSON.parse(await evaluate(OVERFLOW_JS));
-                const eff = await evaluate("document.documentElement.getAttribute('data-theme-effective')");
-                const line = `${page} @${width}px ${theme}: scrollWidth ${ov.scrollWidth}/${ov.clientWidth}, theme ${eff}`;
-                report.push(line);
-                if (ov.scrollWidth > ov.clientWidth) errors.push(`${line}: horizontal overflow ${JSON.stringify(ov.offenders)}`);
-                if (eff !== theme) errors.push(`${line}: effective theme is ${eff}, expected ${theme}`);
-
-                if (page === 'index.html' && width === 1280 && theme === 'light') {
-                    const res = JSON.parse(await evaluate(`(() => {
-                        const all = document.querySelectorAll('#pub-list > li').length;
-                        document.querySelector('[data-filter="agents"]').click();
-                        const agents = document.querySelectorAll('#pub-list > li:not([hidden])').length;
-                        const status = document.getElementById('pub-status').textContent;
-                        document.querySelector('[data-filter="all"]').click();
-                        const back = document.querySelectorAll('#pub-list > li:not([hidden])').length;
-                        document.querySelector('[data-theme-toggle]').click();
-                        const toggled = document.documentElement.getAttribute('data-theme-effective');
-                        document.querySelector('[data-theme-toggle]').click();
-                        const posts = document.querySelectorAll('[data-posts] .post-item').length;
-                        return JSON.stringify({ all, agents, status, back, toggled, posts });
-                    })()`));
-                    report.push('  interactions: ' + JSON.stringify(res));
-                    if (!(res.agents > 0 && res.agents < res.all && res.back === res.all)) errors.push('publication filter did not filter: ' + JSON.stringify(res));
-                    if (res.toggled !== 'dark') errors.push('theme toggle did not switch to dark');
-                    if (res.posts < 1) errors.push('posts list is empty');
-                }
-                if (width === 360 && theme === 'light') {
-                    const menu = JSON.parse(await evaluate(`(() => {
-                        const b = document.querySelector('.menu-toggle');
-                        const before = getComputedStyle(document.getElementById('site-nav')).display;
-                        b.click();
-                        const after = getComputedStyle(document.getElementById('site-nav')).display;
-                        const expanded = b.getAttribute('aria-expanded');
-                        b.click();
-                        return JSON.stringify({ before, after, expanded });
-                    })()`));
-                    report.push('  menu: ' + JSON.stringify(menu));
-                    if (!(menu.before === 'none' && menu.after !== 'none' && menu.expanded === 'true')) errors.push(`${page}: mobile menu did not open: ${JSON.stringify(menu)}`);
-                }
-
+                await sleep(1000);
                 await evaluate(`Promise.all([...document.querySelectorAll('img[loading="lazy"]')].map((i) => {
                     i.loading = 'eager';
                     return i.complete ? null : new Promise((r) => { i.onload = () => r(); i.onerror = () => r(); });
                 })).then(() => true)`);
                 const broken = await evaluate(`[...document.images].filter((i) => !i.naturalWidth).map((i) => i.getAttribute('src'))`);
-                for (const b of broken) errors.push(`${page} @${width}px ${theme}: image did not load: ${b}`);
-                const metrics = await cdp.send('Page.getLayoutMetrics', {}, s);
-                const height = Math.ceil(metrics.cssContentSize.height);
-                const TILE = 8000;
-                const stem = `${page.replace(/[\\/]/g, '_').replace('.html', '')}-${width}-${theme}`;
-                for (let y = 0, part = 0; y < height; y += TILE, part += 1) {
-                    const shot = await cdp.send('Page.captureScreenshot', {
-                        format: 'png', captureBeyondViewport: true,
-                        clip: { x: 0, y, width, height: Math.min(TILE, height - y), scale: 1 },
-                    }, s);
-                    const name = height > TILE ? `${stem}-part${part}.png` : `${stem}.png`;
-                    writeFileSync(join(OUT, name), Buffer.from(shot.data, 'base64'));
+                for (const b of broken) errors.push(`${label}: image did not load: ${b}`);
+
+                const lay = JSON.parse(await evaluate(LAYOUT_JS));
+                const eff = await evaluate("document.documentElement.getAttribute('data-theme-effective')");
+                report.push(`${label}: height ${lay.height} px, scrollWidth ${lay.scrollWidth}/${lay.clientWidth}`);
+                if (lay.scrollWidth > lay.clientWidth) errors.push(`${label}: horizontal overflow ${JSON.stringify(lay.offenders)}`);
+                if (eff !== theme) errors.push(`${label}: effective theme is ${eff}, expected ${theme}`);
+                if (mobile) {
+                    if (lay.small.length) errors.push(`${label}: text under 14 px: ${lay.small.join(' | ')}`);
+                    if (lay.taps.length) errors.push(`${label}: tap targets under 44 px: ${lay.taps.join(' | ')}`);
+                    if (lay.demo && lay.demo.imgWidth > lay.demo.codeWidth) errors.push(`${label}: demo image wider than its panel`);
                 }
 
-                for (const b of bucket) errors.push(`${page} @${width}px ${theme}: ${b}`);
+                const height = Math.min(lay.height, 16000);
+                const shot = await cdp.send('Page.captureScreenshot', {
+                    format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height, scale: 1 },
+                }, s);
+                const file = `${page.replace(/[\\/]/g, '_').replace('.html', '')}-${width}-${theme}.png`;
+                writeFileSync(join(OUT, file), Buffer.from(shot.data, 'base64'));
+                shots.push(file);
+
+                // Interactions, once per width, after the screenshot.
+                if (theme === 'light') {
+                    if (mobile) {
+                        await tap('.menu-toggle');
+                        const open = await evaluate("getComputedStyle(document.getElementById('site-nav')).display + ' ' + document.querySelector('.menu-toggle').getAttribute('aria-expanded')");
+                        if (open !== 'block true') errors.push(`${label}: the menu did not open by touch (${open})`);
+                        await tap('.menu-toggle');
+                        await tap('[data-theme-toggle]');
+                        const t = await evaluate("document.documentElement.getAttribute('data-theme-effective')");
+                        if (t !== 'dark') errors.push(`${label}: the theme toggle did not respond to touch`);
+                        await tap('[data-theme-toggle]');
+                    }
+                    if (page === 'index.html') {
+                        const before = JSON.parse(await evaluate(`JSON.stringify({
+                            all: document.querySelectorAll('#pub-list > li').length,
+                            shown: document.querySelectorAll('#pub-list > li:not([hidden])').length,
+                            news: document.querySelectorAll('#news .news-item').length,
+                            newsShown: [...document.querySelectorAll('#news .news-item')].filter((e) => e.checkVisibility()).length,
+                        })`));
+                        const press = mobile ? tap : async (sel) => { await evaluate(`document.querySelector(${JSON.stringify(sel)}).click()`); };
+                        await press('#pub-toggle');
+                        const expanded = await evaluate("document.querySelectorAll('#pub-list > li:not([hidden])').length");
+                        await press('[data-filter="agents"]');
+                        const agents = await evaluate("document.querySelectorAll('#pub-list > li:not([hidden])').length");
+                        await press('[data-filter="all"]');
+                        await press('#pub-toggle');
+                        const collapsed = await evaluate("document.querySelectorAll('#pub-list > li:not([hidden])').length");
+                        await press('#news details summary');
+                        const newsOpen = await evaluate("[...document.querySelectorAll('#news .news-item')].filter((e) => e.checkVisibility()).length");
+                        await press('#news details summary');
+                        await press('#skills summary');
+                        const skillsOpen = await evaluate("document.getElementById('skills').open");
+                        await press('#skills summary');
+                        const posts = await evaluate("document.querySelectorAll('[data-posts] .post-item').length");
+                        const res = { ...before, expanded, agents, collapsed, newsOpen, skillsOpen, posts };
+                        report.push('  interactions: ' + JSON.stringify(res));
+                        if (!(res.shown === 5 && res.expanded === res.all && res.agents === 4 && res.collapsed === 5)) errors.push(`${label}: publication toggle or filter failed: ${JSON.stringify(res)}`);
+                        if (!(res.newsShown === 3 && res.newsOpen === res.news)) errors.push(`${label}: news toggle failed: ${JSON.stringify(res)}`);
+                        if (!res.skillsOpen) errors.push(`${label}: skills toggle failed`);
+                        if (res.posts < 1) errors.push(`${label}: posts list is empty`);
+                        if (mobile && lay.demo) report.push('  demo: ' + JSON.stringify(lay.demo));
+                    }
+                }
+                for (const b of bucket) errors.push(`${label}: ${b}`);
             }
         }
     }
 
-    // Reveal on scroll, with motion allowed: blocks below the fold start pending and are all shown after a scroll.
-    {
+    // With motion allowed: the code demo types once and ends in its final state, and blocks
+    // below the fold are revealed by scrolling.
+    if (PAGES.includes('index.html')) {
         bucket = [];
         await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, s);
+        await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }, s);
         await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, s);
         const loaded = cdp.waitFor('Page.loadEventFired', s);
         await cdp.send('Page.navigate', { url: `${base}/index.html` }, s);
         await loaded;
-        await sleep(800);
-        const before = await evaluate("document.querySelectorAll('.reveal.is-pending').length");
+        await sleep(300);
+        const typing = await evaluate("document.querySelector('[data-demo]').classList.contains('is-typing')");
+        const pending = await evaluate("document.querySelectorAll('.reveal.is-pending').length");
+        await sleep(6500);
+        const demo = JSON.parse(await evaluate(`(() => {
+            const p = document.querySelector('[data-demo]');
+            const text = p.querySelector('.demo-code').textContent;
+            return JSON.stringify({
+                done: !p.classList.contains('is-typing') && !p.classList.contains('is-running'),
+                complete: text.includes('per_head_metrics_all_layers(out.attentions)') && text.trim().endsWith('heads 0 to 7'),
+                output: getComputedStyle(p.querySelector('.demo-out')).opacity,
+                replay: !p.querySelector('.demo-replay').hidden,
+            });
+        })()`));
         const after = await evaluate(`(async () => {
             for (let y = 0; y < document.documentElement.scrollHeight; y += 400) {
                 window.scrollTo({ top: y, behavior: 'instant' });
                 await new Promise((r) => setTimeout(r, 60));
             }
             await new Promise((r) => setTimeout(r, 400));
-            const firstVisible = !document.querySelector('.hero').classList.contains('is-pending');
-            return JSON.stringify({ pending: document.querySelectorAll('.reveal.is-pending').length, firstVisible });
+            return document.querySelectorAll('.reveal.is-pending').length;
         })()`);
-        const res = JSON.parse(after);
-        report.push(`reveal: ${before} pending at load, ${res.pending} after scrolling`);
-        if (!(before > 0 && res.pending === 0)) errors.push(`reveal on scroll: ${before} pending at load, ${res.pending} after scrolling`);
-        for (const b of bucket) errors.push(`index.html reveal pass: ${b}`);
+        report.push(`motion pass: demo typing at load ${typing}, final ${JSON.stringify(demo)}, reveal ${pending} pending then ${after}`);
+        if (!typing || !demo.done || !demo.complete || !demo.replay) errors.push(`code demo did not play to its final state: ${JSON.stringify(demo)}`);
+        if (!(pending > 0 && after === 0)) errors.push(`reveal on scroll: ${pending} pending at load, ${after} after scrolling`);
+        for (const b of bucket) errors.push(`index.html motion pass: ${b}`);
     }
 
     await cdp.send('Browser.close').catch(() => {});
@@ -275,7 +345,7 @@ async function main() {
     try { rmSync(profile, { recursive: true, force: true }); } catch { /* profile still locked */ }
 
     report.forEach((l) => console.log(l));
-    console.log(`Screenshots: ${OUT}`);
+    console.log(`Screenshots (${shots.length}): ${OUT}`);
     errors.forEach((e) => console.log('ERROR ' + e));
     console.log(errors.length ? `${errors.length} error(s)` : 'OK');
     process.exit(errors.length ? 1 : 0);
