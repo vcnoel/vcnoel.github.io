@@ -19,13 +19,16 @@ import { tmpdir } from 'node:os';
 import { join, extname, resolve, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const REPO = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
+// --root serves another folder, for example a built docs site, with the same checks.
+const ROOT = resolve(opt('--root', REPO));
+const PREFIX = opt('--prefix', '');
 const PAGES = opt('--pages', 'index.html,posts/index.html,posts/site-relaunch.html,posts/template.html').split(',');
 const WIDTHS = opt('--widths', '360,390,414,768,1280').split(',').map(Number);
 const THEMES = ['light', 'dark'];
-const OUT = resolve(opt('--out', join(ROOT, 'tools', 'screens')));
+const OUT = resolve(opt('--out', join(REPO, 'tools', 'screens')));
 const CANDIDATES = [
     opt('--chrome', ''),
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -116,7 +119,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const LAYOUT_JS = `(() => {
     const de = document.documentElement, w = de.clientWidth;
-    const visible = (e) => e.getClientRects().length > 0 && (e.checkVisibility ? e.checkVisibility({ visibilityProperty: true }) : true);
+    const visible = (e) => e.getClientRects().length > 0 && (e.checkVisibility ? e.checkVisibility({ visibilityProperty: true, opacityProperty: true }) : true);
     const name = (e) => e.tagName.toLowerCase() + (e.className && e.className.baseVal === undefined ? '.' + String(e.className).trim().replace(/\\s+/g, '.') : '');
     const clipped = (e) => {
         for (let p = e.parentElement; p; p = p.parentElement) {
@@ -251,23 +254,32 @@ async function main() {
                 const shot = await cdp.send('Page.captureScreenshot', {
                     format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height, scale: 1 },
                 }, s);
-                const file = `${page.replace(/[\\/]/g, '_').replace('.html', '')}-${width}-${theme}.png`;
+                const file = `${PREFIX}${page.replace(/[\\/]/g, '_').replace('.html', '')}-${width}-${theme}.png`;
                 writeFileSync(join(OUT, file), Buffer.from(shot.data, 'base64'));
                 shots.push(file);
 
                 // Interactions, once per width, after the screenshot.
                 if (theme === 'light') {
-                    if (mobile) {
+                    if (mobile && await evaluate("!!document.querySelector('.menu-toggle')")) {
                         await tap('.menu-toggle');
                         const open = await evaluate("getComputedStyle(document.getElementById('site-nav')).display + ' ' + document.querySelector('.menu-toggle').getAttribute('aria-expanded')");
                         if (open !== 'block true') errors.push(`${label}: the menu did not open by touch (${open})`);
                         await tap('.menu-toggle');
+                    }
+                    if (mobile && await evaluate("!!document.querySelector('label[for=\"__drawer\"].st-drawer-btn')")) {
+                        // The docs: the drawer opens by touch and holds the site's links.
+                        await tap('label[for="__drawer"].st-drawer-btn');
+                        const drawer = await evaluate("document.getElementById('__drawer').checked && document.querySelector('.st-drawer-site').checkVisibility()");
+                        if (!drawer) errors.push(`${label}: the docs drawer did not open by touch`);
+                        await evaluate("document.getElementById('__drawer').checked = false");
+                    }
+                    if (mobile && await evaluate("!!document.querySelector('[data-theme-toggle]')")) {
                         await tap('[data-theme-toggle]');
                         const t = await evaluate("document.documentElement.getAttribute('data-theme-effective')");
                         if (t !== 'dark') errors.push(`${label}: the theme toggle did not respond to touch`);
                         await tap('[data-theme-toggle]');
                     }
-                    if (page === 'index.html') {
+                    if (page === 'index.html' && ROOT === REPO) {
                         const before = JSON.parse(await evaluate(`JSON.stringify({
                             all: document.querySelectorAll('#pub-list > li').length,
                             shown: document.querySelectorAll('#pub-list > li:not([hidden])').length,
@@ -305,7 +317,7 @@ async function main() {
 
     // With motion allowed: the film strip lights up once when it scrolls into view, and blocks
     // below the fold are revealed by scrolling.
-    if (PAGES.includes('index.html')) {
+    if (PAGES.includes('index.html') && ROOT === REPO) {
         bucket = [];
         await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, s);
         await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }, s);
