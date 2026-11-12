@@ -74,7 +74,7 @@
             }
         });
         if (window.matchMedia) {
-            var wide = window.matchMedia('(min-width: 1024px)');
+            var wide = window.matchMedia('(min-width: 960px)');
             var onWide = function () { if (wide.matches) set(false); };
             if (wide.addEventListener) wide.addEventListener('change', onWide);
             else if (wide.addListener) wide.addListener(onWide);
@@ -160,10 +160,10 @@
                 b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === tag));
             });
             if (canCollapse) {
-                toggle.hidden = tag !== 'all';
+                bar.hidden = !expanded;
                 toggle.setAttribute('aria-expanded', String(expanded));
                 var label = toggle.querySelector('.label');
-                if (label) label.textContent = expanded ? 'Show selected only' : 'Show all ' + items.length;
+                if (label) label.textContent = expanded ? 'Selected publications only' : 'All ' + items.length + ' publications';
             }
             if (status && announce) {
                 var name = '';
@@ -180,9 +180,10 @@
             b.addEventListener('click', function () { apply(b.getAttribute('data-filter'), true); });
         });
         if (canCollapse) {
+            toggle.hidden = false;
             toggle.addEventListener('click', function () {
                 expanded = !expanded;
-                apply(current, true);
+                apply(expanded ? current : 'all', true);
             });
         }
         /* A link to a hidden entry (from the news list) expands the list first. */
@@ -200,65 +201,23 @@
         revealTarget();
     }
 
-    /* Code demo: types the snippet once when it comes into view, then shows the output.
-       Without motion (or without this script) the panel stays in its final state. */
-    function initDemo() {
-        var panel = document.querySelector('[data-demo]');
-        if (!panel || !('IntersectionObserver' in window)) return;
+    /* Film strip: the graphs light up layer by layer once, when the strip scrolls into view.
+       Without motion, or without this script, the strip is shown in its final state. */
+    function initStrip() {
+        var strip = document.querySelector('[data-strip]');
+        if (!strip || !('IntersectionObserver' in window)) return;
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        var pre = panel.querySelector('.demo-code');
-        var code = pre ? pre.querySelector('code') : null;
-        var replay = panel.querySelector('.demo-replay');
-        if (!code) return;
-
-        var nodes = [];
-        var walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
-        while (walker.nextNode()) nodes.push({ node: walker.currentNode, text: walker.currentNode.nodeValue });
-        var timer = null;
-
-        function finish() {
-            clearTimeout(timer);
-            nodes.forEach(function (n) { n.node.nodeValue = n.text; });
-            panel.classList.remove('is-typing', 'is-running');
-            if (replay) replay.hidden = false;
-        }
-
-        function play() {
-            clearTimeout(timer);
-            pre.style.minHeight = pre.offsetHeight + 'px';
-            nodes.forEach(function (n) { n.node.nodeValue = ''; });
-            panel.classList.remove('is-running');
-            panel.classList.add('is-typing');
-            if (replay) replay.hidden = true;
-            var i = 0, pos = 0;
-            (function step() {
-                var budget = 5;
-                while (budget > 0 && i < nodes.length) {
-                    var n = nodes[i];
-                    var take = Math.min(budget, n.text.length - pos);
-                    pos += take;
-                    budget -= take;
-                    n.node.nodeValue = n.text.slice(0, pos);
-                    if (pos >= n.text.length) { i += 1; pos = 0; }
-                }
-                if (i < nodes.length) {
-                    timer = setTimeout(step, 20);
-                } else {
-                    panel.classList.remove('is-typing');
-                    panel.classList.add('is-running');
-                    timer = setTimeout(finish, 600);
-                }
-            })();
-        }
-
-        if (replay) replay.addEventListener('click', play);
-        pre.addEventListener('click', function () { if (panel.classList.contains('is-typing')) finish(); });
+        if (strip.getBoundingClientRect().top < window.innerHeight * 0.8) return;
+        strip.classList.add('is-ready');
         var io = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
-                if (entry.isIntersecting) { io.disconnect(); play(); }
+                if (entry.isIntersecting) {
+                    io.disconnect();
+                    requestAnimationFrame(function () { strip.classList.add('is-played'); });
+                }
             });
-        }, { threshold: 0.25 });
-        io.observe(pre);
+        }, { threshold: 0.35 });
+        io.observe(strip);
     }
 
     /* Looping figures in posts: play only while visible, and never under reduced motion. */
@@ -426,7 +385,7 @@
         initSectionHighlight();
         initReveal();
         initPubFilter();
-        initDemo();
+        initStrip();
         initVideos();
         initCopy();
         initPosts();
