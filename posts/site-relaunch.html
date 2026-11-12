@@ -2,207 +2,133 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Site relaunch — Valentin Noël">
-    <title>Site relaunch — what this space is for · Valentin Noël</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Site relaunch: what this space is for · Valentin Noël</title>
+    <meta name="description" content="Site relaunch: why I am starting to write here, what I will cover, and how to follow along. Valentin Noël.">
+    <meta name="author" content="Valentin Noël">
+    <link rel="canonical" href="https://vcnoel.github.io/posts/site-relaunch.html">
+    <meta name="theme-color" content="#fbfaf7">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Valentin Noël">
+    <meta property="og:url" content="https://vcnoel.github.io/posts/site-relaunch.html">
+    <meta property="og:title" content="Site relaunch: what this space is for">
+    <meta property="og:description" content="A quick note on why I'm starting to write here, what I'll cover, and how to follow along.">
+    <meta property="og:image" content="https://vcnoel.github.io/assets/img/og-image.png">
+    <meta property="article:published_time" content="2026-05-27">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.className += ' js';
+            try { t = localStorage.getItem('theme'); } catch (e) { t = null; }
+            if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            var dark = (t === 'light' || t === 'dark') ? t === 'dark'
+                : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            d.setAttribute('data-theme-effective', dark ? 'dark' : 'light');
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        :root {
-            --bg: #f9f7f4;
-            --text: #1c1917;
-            --text-mid: #44403c;
-            --text-muted: #78716c;
-            --accent: #92400e;
-            --link: #92400e;
-            --link-hover: #78350f;
-            --border: #e7dfd5;
-            --max-width: 660px;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.7;
-        }
-
-        nav {
-            position: sticky;
-            top: 0;
-            background: rgba(249, 247, 244, 0.96);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid var(--border);
-            z-index: 100;
-            padding: 0 2rem;
-        }
-
-        .nav-inner {
-            max-width: var(--max-width);
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 3.5rem;
-        }
-
-        .nav-brand {
-            font-family: 'EB Garamond', serif;
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--text);
-            text-decoration: none;
-        }
-
-        .back-link {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-decoration: none;
-        }
-
-        .back-link:hover { color: var(--accent); }
-
-        article {
-            max-width: var(--max-width);
-            margin: 0 auto;
-            padding: 3.5rem 2rem 6rem;
-        }
-
-        .post-meta {
-            font-size: 0.825rem;
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .post-tag {
-            padding: 0.12rem 0.5rem;
-            background: #fef3c7;
-            color: #92400e;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-
-        h1 {
-            font-family: 'EB Garamond', serif;
-            font-size: 2.1rem;
-            font-weight: 500;
-            line-height: 1.2;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.01em;
-        }
-
-        .post-body {
-            font-size: 1rem;
-            line-height: 1.85;
-            color: var(--text-mid);
-        }
-
-        .post-body p + p { margin-top: 1.1rem; }
-
-        .post-body h2 {
-            font-family: 'EB Garamond', serif;
-            font-size: 1.4rem;
-            font-weight: 500;
-            color: var(--text);
-            margin: 2rem 0 0.75rem;
-            border: none;
-            padding: 0;
-        }
-
-        .post-body a { color: var(--link); }
-        .post-body a:hover { color: var(--link-hover); }
-
-        .post-body em { font-style: italic; }
-        .post-body strong { font-weight: 600; color: var(--text); }
-
-        .post-body ul {
-            padding-left: 1.4rem;
-            margin: 0.75rem 0;
-        }
-
-        .post-body ul li { margin-bottom: 0.3rem; }
-
-        footer {
-            max-width: var(--max-width);
-            margin: 0 auto;
-            padding: 1.5rem 2rem;
-            border-top: 1px solid var(--border);
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        footer a { color: var(--link); text-decoration: none; }
-        footer a:hover { text-decoration: underline; }
-    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
+    <link rel="stylesheet" href="../assets/css/site.css">
+    <script src="../assets/js/site.js" defer></script>
 </head>
 
 <body>
-    <nav>
-        <div class="nav-inner">
-            <a href="../" class="nav-brand">Valentin Noël</a>
-            <a href="./" class="back-link">← All posts</a>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+        <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 19l-7-7 7-7"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="../index.html">
+                <img src="../favicon.svg" alt="" width="26" height="26">
+                <span>Valentin Noël</span>
+            </a>
+            <nav class="site-nav" id="site-nav" aria-label="Site">
+                <ul>
+                    <li><a href="../index.html#research">Research</a></li>
+                    <li><a href="../index.html#publications">Publications</a></li>
+                    <li><a href="../index.html#open-source">Open source</a></li>
+                    <li><a href="../index.html#demos">Demos</a></li>
+                    <li><a href="index.html">Writing</a></li>
+                    <li><a href="../index.html#contact">Contact</a></li>
+                </ul>
+            </nav>
+            <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+                <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+                <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
         </div>
-    </nav>
+    </header>
 
-    <article>
-        <h1>Site relaunch — what this space is for</h1>
-        <div class="post-meta">
-            <span>27 May 2026</span>
-            <span class="post-tag">meta</span>
+    <main id="main" class="wrap narrow">
+        <article class="article">
+            <h1>Site relaunch: what this space is for</h1>
+            <div class="article-meta">
+                <time datetime="2026-05-27">27 May 2026</time>
+                <ul class="tag-list" role="list"><li class="tag">meta</li></ul>
+            </div>
+
+            <div class="prose">
+                <p>
+                    I've rebuilt the site. The old version was dark and busy: fine for a portfolio, wrong for a research
+                    homepage. This one is quieter. The goal is to make the research easier to find and to give myself
+                    a place to write.
+                </p>
+
+                <h2>What I'll write about</h2>
+                <p>
+                    Mostly interpretability and AI safety. More specifically: the things I notice while doing research that
+                    don't fit neatly into a paper, such as partial results, open questions, things I'm confused about and things I
+                    think are underrated. Occasionally I'll repost something from the Alignment Forum or elsewhere with
+                    brief notes on why I found it worth reading.
+                </p>
+                <p>
+                    I won't try to be comprehensive or fast. I'd rather write one good post a month than ten rushed ones.
+                </p>
+
+                <h2>What's new on the site</h2>
+                <ul>
+                    <li><strong>Publications</strong> are updated: ICML 2026 (main track), ACL 2026, two AAAI 2026 papers,
+                        and several under review.</li>
+                    <li><strong>Talks</strong> now includes the AI × Mathematics Residency at ICMS Edinburgh.</li>
+                    <li><strong>spectral-trust</strong> is on PyPI and actively maintained.</li>
+                    <li>The interactive demos are still there, just quieter in the hierarchy now.</li>
+                </ul>
+
+                <h2>How to follow</h2>
+                <p>
+                    The simplest option: bookmark <a href="index.html">the writing page</a>. No newsletter, no social feed, just a list
+                    of posts. If you want to reach me about any of the research, the best way is
+                    <a href="mailto:val.noel@proton.me">email</a>.
+                </p>
+            </div>
+
+            <div class="article-foot">
+                <a class="more-link" href="index.html"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg> All posts</a>
+                <a class="more-link" href="../index.html">Home page</a>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <p>© 2026 Valentin Noël</p>
         </div>
-
-        <div class="post-body">
-            <p>
-                I've rebuilt the site. The old version was dark and busy — fine for a portfolio, wrong for a research
-                homepage. This one is quieter. The goal is to make the research easier to find and to give myself
-                a place to write.
-            </p>
-
-            <h2>What I'll write about</h2>
-            <p>
-                Mostly interpretability and AI safety. More specifically: the things I notice while doing research that
-                don't fit neatly into a paper — partial results, open questions, things I'm confused about, things I
-                think are underrated. Occasionally I'll repost something from the Alignment Forum or elsewhere with
-                brief notes on why I found it worth reading.
-            </p>
-            <p>
-                I won't try to be comprehensive or fast. I'd rather write one good post a month than ten rushed ones.
-            </p>
-
-            <h2>What's new on the site</h2>
-            <ul>
-                <li><strong>Publications</strong> are updated — ICML 2026 (main track), ACL 2026, two AAAI 2026 papers,
-                    and several under review.</li>
-                <li><strong>Talks</strong> now includes the AI × Mathematics Residency at ICMS Edinburgh.</li>
-                <li><strong>spectral-trust</strong> is on PyPI and actively maintained.</li>
-                <li>The interactive demos are still there — just quieter in the hierarchy now.</li>
-            </ul>
-
-            <h2>How to follow</h2>
-            <p>
-                The simplest option: bookmark <a href="./">this page</a>. No newsletter, no social feed — just a list
-                of posts. If you want to reach me about any of the research, the best way is
-                <a href="mailto:val.noel@proton.me">email</a>.
-            </p>
-        </div>
-    </article>
-
-    <footer>
-        <span>© 2026 Valentin Noël</span>
-        <a href="./">← All posts</a>
     </footer>
 </body>
 
