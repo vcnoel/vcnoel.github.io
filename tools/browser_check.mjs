@@ -244,6 +244,31 @@ async function main() {
         }
     }
 
+    // Reveal on scroll, with motion allowed: blocks below the fold start pending and are all shown after a scroll.
+    {
+        bucket = [];
+        await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, s);
+        await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, s);
+        const loaded = cdp.waitFor('Page.loadEventFired', s);
+        await cdp.send('Page.navigate', { url: `${base}/index.html` }, s);
+        await loaded;
+        await sleep(800);
+        const before = await evaluate("document.querySelectorAll('.reveal.is-pending').length");
+        const after = await evaluate(`(async () => {
+            for (let y = 0; y < document.documentElement.scrollHeight; y += 400) {
+                window.scrollTo({ top: y, behavior: 'instant' });
+                await new Promise((r) => setTimeout(r, 60));
+            }
+            await new Promise((r) => setTimeout(r, 400));
+            const firstVisible = !document.querySelector('.hero').classList.contains('is-pending');
+            return JSON.stringify({ pending: document.querySelectorAll('.reveal.is-pending').length, firstVisible });
+        })()`);
+        const res = JSON.parse(after);
+        report.push(`reveal: ${before} pending at load, ${res.pending} after scrolling`);
+        if (!(before > 0 && res.pending === 0)) errors.push(`reveal on scroll: ${before} pending at load, ${res.pending} after scrolling`);
+        for (const b of bucket) errors.push(`index.html reveal pass: ${b}`);
+    }
+
     await cdp.send('Browser.close').catch(() => {});
     proc.kill();
     server.close();
