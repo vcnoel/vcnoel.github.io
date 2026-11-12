@@ -569,6 +569,8 @@ a.card:hover, .card.is-link:hover { border-color: var(--line-strong); box-shadow
 .news-more summary .icon { transition: transform 0.2s; }
 .news-more[open] summary .icon { transform: rotate(180deg); }
 .news-more[open] summary { margin-bottom: 0.25rem; }
+.news-more .when-open, .news-more[open] .when-closed { display: none; }
+.news-more[open] .when-open { display: inline; }
 .news-more .news-item:first-child { border-top: 0; }
 
 @media (max-width: 559px) {
