@@ -144,13 +144,15 @@ const LAYOUT_JS = `(() => {
         const r = e.getBoundingClientRect();
         if (r.height < 43.5 || r.width < 43.5) taps.push(name(e) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
     });
-    const fig = document.querySelector('.demo-out img');
-    const code = document.querySelector('.demo-code');
+    const panel = document.querySelector('.code-panel');
+    const code = document.querySelector('.code-panel pre[aria-label="Python example"]');
+    const strip = document.querySelector('.strip');
     return JSON.stringify({
         scrollWidth: de.scrollWidth, clientWidth: w, height: de.scrollHeight, offenders,
         small: [...small].slice(0, 8), taps: taps.slice(0, 8),
         demo: code ? { codeScrolls: code.scrollWidth > code.clientWidth, codeWidth: Math.round(code.getBoundingClientRect().width),
-            imgWidth: fig ? Math.round(fig.getBoundingClientRect().width) : 0 } : null,
+            panelWidth: Math.round(panel.getBoundingClientRect().width),
+            stripWidth: strip ? Math.round(strip.getBoundingClientRect().width) : 0 } : null,
     });
 })()`;
 
@@ -242,7 +244,7 @@ async function main() {
                 if (mobile) {
                     if (lay.small.length) errors.push(`${label}: text under 14 px: ${lay.small.join(' | ')}`);
                     if (lay.taps.length) errors.push(`${label}: tap targets under 44 px: ${lay.taps.join(' | ')}`);
-                    if (lay.demo && lay.demo.imgWidth > lay.demo.codeWidth) errors.push(`${label}: demo image wider than its panel`);
+                    if (lay.demo && lay.demo.stripWidth > width) errors.push(`${label}: the film strip is wider than the page`);
                 }
 
                 const height = Math.min(lay.height, 16000);
@@ -273,8 +275,10 @@ async function main() {
                             newsShown: [...document.querySelectorAll('#news .news-item')].filter((e) => e.checkVisibility()).length,
                         })`));
                         const press = mobile ? tap : async (sel) => { await evaluate(`document.querySelector(${JSON.stringify(sel)}).click()`); };
+                        const filterHidden = await evaluate("document.querySelector('[data-filter-for]').hidden");
                         await press('#pub-toggle');
                         const expanded = await evaluate("document.querySelectorAll('#pub-list > li:not([hidden])').length");
+                        const filterShown = await evaluate("!document.querySelector('[data-filter-for]').hidden");
                         await press('[data-filter="agents"]');
                         const agents = await evaluate("document.querySelectorAll('#pub-list > li:not([hidden])').length");
                         await press('[data-filter="all"]');
@@ -283,16 +287,14 @@ async function main() {
                         await press('#news details summary');
                         const newsOpen = await evaluate("[...document.querySelectorAll('#news .news-item')].filter((e) => e.checkVisibility()).length");
                         await press('#news details summary');
-                        await press('#skills summary');
-                        const skillsOpen = await evaluate("document.getElementById('skills').open");
-                        await press('#skills summary');
-                        const posts = await evaluate("document.querySelectorAll('[data-posts] .post-item').length");
-                        const res = { ...before, expanded, agents, collapsed, newsOpen, skillsOpen, posts };
+                        await press('#details summary');
+                        const skillsOpen = await evaluate("document.getElementById('details').open && document.getElementById('skills').checkVisibility()");
+                        await press('#details summary');
+                        const res = { ...before, filterHidden, expanded, filterShown, agents, collapsed, newsOpen, skillsOpen };
                         report.push('  interactions: ' + JSON.stringify(res));
-                        if (!(res.shown === 5 && res.expanded === res.all && res.agents === 4 && res.collapsed === 5)) errors.push(`${label}: publication toggle or filter failed: ${JSON.stringify(res)}`);
+                        if (!(res.shown === 5 && res.filterHidden && res.expanded === res.all && res.filterShown && res.agents === 4 && res.collapsed === 5)) errors.push(`${label}: publication toggle or filter failed: ${JSON.stringify(res)}`);
                         if (!(res.newsShown === 3 && res.newsOpen === res.news)) errors.push(`${label}: news toggle failed: ${JSON.stringify(res)}`);
-                        if (!res.skillsOpen) errors.push(`${label}: skills toggle failed`);
-                        if (res.posts < 1) errors.push(`${label}: posts list is empty`);
+                        if (!res.skillsOpen) errors.push(`${label}: details toggle failed`);
                         if (mobile && lay.demo) report.push('  demo: ' + JSON.stringify(lay.demo));
                     }
                 }
@@ -301,7 +303,7 @@ async function main() {
         }
     }
 
-    // With motion allowed: the code demo types once and ends in its final state, and blocks
+    // With motion allowed: the film strip lights up once when it scrolls into view, and blocks
     // below the fold are revealed by scrolling.
     if (PAGES.includes('index.html')) {
         bucket = [];
@@ -312,19 +314,8 @@ async function main() {
         await cdp.send('Page.navigate', { url: `${base}/index.html` }, s);
         await loaded;
         await sleep(300);
-        const typing = await evaluate("document.querySelector('[data-demo]').classList.contains('is-typing')");
+        const ready = await evaluate("document.querySelector('[data-strip]').classList.contains('is-ready')");
         const pending = await evaluate("document.querySelectorAll('.reveal.is-pending').length");
-        await sleep(6500);
-        const demo = JSON.parse(await evaluate(`(() => {
-            const p = document.querySelector('[data-demo]');
-            const text = p.querySelector('.demo-code').textContent;
-            return JSON.stringify({
-                done: !p.classList.contains('is-typing') && !p.classList.contains('is-running'),
-                complete: text.includes('per_head_metrics_all_layers(out.attentions)') && text.trim().endsWith('heads 0 to 7'),
-                output: getComputedStyle(p.querySelector('.demo-out')).opacity,
-                replay: !p.querySelector('.demo-replay').hidden,
-            });
-        })()`));
         const after = await evaluate(`(async () => {
             for (let y = 0; y < document.documentElement.scrollHeight; y += 400) {
                 window.scrollTo({ top: y, behavior: 'instant' });
@@ -333,8 +324,15 @@ async function main() {
             await new Promise((r) => setTimeout(r, 400));
             return document.querySelectorAll('.reveal.is-pending').length;
         })()`);
-        report.push(`motion pass: demo typing at load ${typing}, final ${JSON.stringify(demo)}, reveal ${pending} pending then ${after}`);
-        if (!typing || !demo.done || !demo.complete || !demo.replay) errors.push(`code demo did not play to its final state: ${JSON.stringify(demo)}`);
+        await evaluate("document.querySelector('[data-strip]').scrollIntoView({ block: 'center', behavior: 'instant' })");
+        await sleep(3500);
+        const played = JSON.parse(await evaluate(`(() => {
+            const st = document.querySelector('[data-strip]');
+            const cells = [...st.querySelectorAll('.strip-cell')].map((c) => getComputedStyle(c).opacity);
+            return JSON.stringify({ played: st.classList.contains('is-played'), cells });
+        })()`));
+        report.push(`motion pass: strip ready ${ready}, ${JSON.stringify(played)}, reveal ${pending} pending then ${after}`);
+        if (!ready || !played.played || played.cells.some((o) => o !== '1')) errors.push(`film strip did not play to its final state: ${JSON.stringify(played)}`);
         if (!(pending > 0 && after === 0)) errors.push(`reveal on scroll: ${pending} pending at load, ${after} after scrolling`);
         for (const b of bucket) errors.push(`index.html motion pass: ${b}`);
     }

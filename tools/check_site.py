@@ -15,7 +15,13 @@ HTML page, and checks that:
     ARIA references, one h1, no skipped heading levels, valid JSON-LD, and no
     em dash, en dash or semicolon in the visible text;
   * the home page, its stylesheet and its script stay under the 300 KB budget;
-  * no excluded topic appears on the redesigned pages.
+  * no excluded topic appears on the redesigned pages;
+  * every draft in posts/drafts/ carries a robots noindex tag, is missing from
+    posts.json and is linked from no published page, and no published page
+    except the template carries noindex.
+
+Links to https://vcnoel.github.io/spectral-trust/ go to the library's own
+project site, which is served from its repository, so they count as external.
 
 The demo pages are fetched and their local assets are checked, but their markup
 is left as it is. Exit status is 1 when any error is found.
@@ -38,7 +44,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE_ORIGIN = "https://vcnoel.github.io"
-REDESIGNED = ["index.html", "posts/index.html", "posts/site-relaunch.html", "posts/template.html"]
+# The redesigned pages: the home page, the writing pages and the drafts (filled in by main).
+REDESIGNED: list[str] = []
+PROJECT_SITES = ("spectral-trust/",)   # served by other repositories under the same domain
+DRAFT_FORBIDDEN = ["under review", "rebuttal", "reviewer", "camera-ready", "double-blind", "anonymous review"]
 ALLOWED_ASSET_HOSTS = {"fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"}
 BUDGET_FILES = ["index.html", "assets/css/site.css", "assets/js/site.js"]
 BUDGET_BYTES = 300 * 1024
@@ -264,10 +273,13 @@ def main() -> int:
 
     errors: list[str] = []
     warnings: list[str] = []
-    excluded: list[tuple[int, str]] = []
+    # One phrase per line. A line that starts with "!" applies to the drafts as well.
+    excluded: list[tuple[int, str, bool]] = []
     if EXCLUDED_FILE.is_file():
-        excluded = [(n, ln.strip()) for n, ln in enumerate(EXCLUDED_FILE.read_text(encoding="utf-8").splitlines(), 1)
-                    if ln.strip() and not ln.startswith("#")]
+        for n, ln in enumerate(EXCLUDED_FILE.read_text(encoding="utf-8").splitlines(), 1):
+            ln = ln.strip()
+            if ln and not ln.startswith("#"):
+                excluded.append((n, ln.lstrip("!").strip(), ln.startswith("!")))
     else:
         warnings.append("tools/excluded-topics.txt not found, excluded-topic check skipped")
     httpd, base = serve(ROOT)
@@ -275,8 +287,10 @@ def main() -> int:
     pages = sorted(
         p.relative_to(ROOT).as_posix()
         for p in ROOT.rglob("*.html")
-        if ".git" not in p.parts and "node_modules" not in p.parts
+        if not any(part.startswith((".", "_")) or part == "node_modules" for part in p.relative_to(ROOT).parts)
     )
+    REDESIGNED[:] = ["index.html"] + [r for r in pages if r.startswith("posts/")]
+    drafts = [r for r in pages if r.startswith("posts/drafts/")]
     parsed: dict[str, Page] = {}
     for rel in pages:
         status, body = fetch(f"{base}/{rel}")
@@ -331,11 +345,16 @@ def main() -> int:
                 if problem:
                     errors.append(f"{rel}: {where} -> {raw}: {problem}")
                     continue
+                if sp.netloc == "vcnoel.github.io" and sp.path.lstrip("/").startswith(PROJECT_SITES):
+                    external.add(raw)
+                    continue
                 if sp.netloc == "vcnoel.github.io":
                     local = sp.path.lstrip("/")
                     if attr == "og:url" or not local or local.endswith("/"):
                         local = (local or "") + ("index.html" if not local or local.endswith("/") else "")
-                    if not (ROOT / urllib.parse.unquote(local)).is_file():
+                    # A draft's canonical address is where it will live once published.
+                    published_home = rel in drafts and local == "posts/" + rel.rsplit("/", 1)[-1]
+                    if not (ROOT / urllib.parse.unquote(local)).is_file() and not published_home:
                         if "your-post-id" not in local:
                             errors.append(f"{rel}: {where} -> {raw}: no such file in the repository")
                     continue
@@ -438,9 +457,34 @@ def main() -> int:
                 if ch in text:
                     errors.append(f"{rel}: line {line}: <{tag}> {text[:80]!r} contains {ch!r}")
         raw_html = (ROOT / rel).read_text(encoding="utf-8")
-        for n, topic in excluded:
-            if topic.lower() in raw_html.lower():
+        is_draft = rel in drafts
+        for n, topic, everywhere in excluded:
+            if (everywhere or not is_draft) and topic.lower() in raw_html.lower():
                 errors.append(f"{rel}: contains the excluded phrase on line {n} of tools/excluded-topics.txt")
+        robots = pg.meta.get("robots", "")
+        if is_draft:
+            if "noindex" not in robots:
+                errors.append(f"{rel}: a draft without <meta name=\"robots\" content=\"noindex\">")
+            low = raw_html.lower()
+            for word in DRAFT_FORBIDDEN:
+                if word in low:
+                    errors.append(f"{rel}: a draft mentions {word!r}")
+        elif "noindex" in robots and rel != "posts/template.html":
+            errors.append(f"{rel}: a published page with a noindex tag")
+
+    # Drafts stay unlisted: not in posts.json and not linked from a published page
+    listed = json.loads((ROOT / "posts" / "posts.json").read_text(encoding="utf-8"))
+    listed_urls = {post.get("url", "") for post in listed}
+    for d in drafts:
+        if d in listed_urls:
+            errors.append(f"posts/posts.json lists the draft {d}")
+        name = d.rsplit("/", 1)[-1]
+        for rel, pg in parsed.items():
+            if rel in drafts:
+                continue
+            for _tag, _attr, raw in pg.urls:
+                if "drafts/" in raw and raw.split("#")[0].endswith(name):
+                    errors.append(f"{rel} links to the draft {d}")
 
     # Budget
     total = sum((ROOT / f).stat().st_size for f in BUDGET_FILES)
@@ -461,7 +505,7 @@ def main() -> int:
                 warnings.append(f"{pdf.relative_to(ROOT).as_posix()}: no PDF reader installed, contents not checked")
                 continue
         flat = " ".join(text.split()).lower()
-        hits = [n for n, t in excluded if t.lower() in flat]
+        hits = [n for n, t, _ in excluded if t.lower() in flat]
         if hits:
             warnings.append(f"{pdf.relative_to(ROOT).as_posix()}: the PDF contains excluded phrases "
                             f"(lines {hits} of tools/excluded-topics.txt)")

@@ -2,3 +2,6 @@ spectral-proof/
 tools/excluded-topics.txt
 tools/__pycache__/
 tools/screens/
+tools/blog_figures/.venv030/
+tools/blog_figures/.venv040/
+tools/blog_figures/_src040/
