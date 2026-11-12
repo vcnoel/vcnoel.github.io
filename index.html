@@ -2,1148 +2,1022 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Valentin Noël, PhD. Research Scientist in Mechanistic Interpretability and AI Safety. Spectral graph methods for transformer circuits, hallucination detection, and safety relevant failure modes in LLMs.">
-    <meta name="keywords"
-        content="Mechanistic Interpretability, AI Safety, Alignment, Spectral Graph Theory, Transformers, Hallucination Detection, Circuit Analysis">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Valentin Noël, PhD · Research Scientist, Interpretability and AI Safety</title>
+    <meta name="description" content="Valentin Noël, PhD. Research Scientist in interpretability and AI safety: spectral methods for transformer circuits, hallucination detection and agent safety.">
     <meta name="author" content="Valentin Noël">
-    <title>Valentin Noël, PhD</title>
+    <link rel="canonical" href="https://vcnoel.github.io/">
+    <meta name="theme-color" content="#fbfaf7">
+
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="Valentin Noël">
+    <meta property="og:url" content="https://vcnoel.github.io/">
+    <meta property="og:title" content="Valentin Noël, PhD · Interpretability and AI Safety">
+    <meta property="og:description" content="Research Scientist and Research Programme Lead. Spectral methods for transformer circuits, hallucination detection and agent safety. Author of the spectral-trust library.">
+    <meta property="og:image" content="https://vcnoel.github.io/assets/img/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Valentin Noël, PhD, with a spectral-trust figure of one attention layer of Qwen3-0.6B: the attention graph over the tokens, its Laplacian spectrum, and the Fiedler value and HFER across layers.">
+    <meta property="profile:first_name" content="Valentin">
+    <meta property="profile:last_name" content="Noël">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Valentin Noël, PhD · Interpretability and AI Safety">
+    <meta name="twitter:description" content="Research Scientist and Research Programme Lead. Spectral methods for transformer circuits, hallucination detection and agent safety.">
+    <meta name="twitter:image" content="https://vcnoel.github.io/assets/img/og-image.png">
+    <meta name="twitter:image:alt" content="Valentin Noël, PhD, with a spectral-trust figure of one attention layer of Qwen3-0.6B.">
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.className += ' js';
+            try { t = localStorage.getItem('theme'); } catch (e) { t = null; }
+            if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            var dark = (t === 'light' || t === 'dark') ? t === 'dark'
+                : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            d.setAttribute('data-theme-effective', dark ? 'dark' : 'light');
+        })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        :root {
-            --bg: #f9f7f4;
-            --bg-card: #ffffff;
-            --bg-soft: #f1ece3;
-            --text: #1c1917;
-            --text-mid: #44403c;
-            --text-muted: #78716c;
-            --accent: #92400e;
-            --accent-light: #b45309;
-            --link: #92400e;
-            --link-hover: #78350f;
-            --border: #e7dfd5;
-            --border-soft: #ede8e0;
-            --tag-bg: #fef3c7;
-            --tag-text: #92400e;
-            --badge-accepted-color: #14532d;
-            --badge-accepted-bg: #dcfce7;
-            --badge-award-bg: #fef9c3;
-            --badge-award-color: #713f12;
-            --badge-review-color: #1e3a5f;
-            --badge-review-bg: #dbeafe;
-            --max-width: 800px;
-            --section-gap: 4rem;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.7;
-            font-size: 1rem;
-        }
-
-        /* Navigation */
-        nav {
-            position: sticky;
-            top: 0;
-            background: rgba(249, 247, 244, 0.96);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid var(--border);
-            z-index: 100;
-            padding: 0 2rem;
-        }
-
-        .nav-inner {
-            max-width: var(--max-width);
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 3.5rem;
-        }
-
-        .nav-brand {
-            font-family: 'EB Garamond', serif;
-            font-size: 1.15rem;
-            font-weight: 500;
-            color: var(--text);
-            text-decoration: none;
-            letter-spacing: 0.01em;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.25rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.875rem;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover { color: var(--accent); }
-
-        /* Main layout */
-        main {
-            max-width: var(--max-width);
-            margin: 0 auto;
-            padding: 3.5rem 2rem 6rem;
-        }
-
-        section + section { margin-top: var(--section-gap); }
-
-        /* Hero */
-        .hero { padding-top: 1rem; }
-
-        .hero h1 {
-            font-family: 'EB Garamond', serif;
-            font-size: 2.6rem;
-            font-weight: 500;
-            line-height: 1.15;
-            margin-bottom: 0.4rem;
-            letter-spacing: -0.01em;
-        }
-
-        .hero .role {
-            font-size: 0.975rem;
-            color: var(--text-muted);
-            margin-bottom: 1.75rem;
-            font-style: italic;
-        }
-
-        .hero-bio {
-            color: var(--text-mid);
-            font-size: 0.975rem;
-            line-height: 1.85;
-            margin-bottom: 1rem;
-            max-width: 660px;
-        }
-
-        .hero-bio a { color: var(--link); }
-        .hero-bio a:hover { color: var(--link-hover); }
-
-        .hero-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            margin-top: 1.75rem;
-        }
-
-        .hero-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.45rem 1rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s;
-            border: 1px solid var(--border);
-            color: var(--text-mid);
-            background: var(--bg-card);
-        }
-
-        .hero-link:hover { border-color: var(--accent); color: var(--accent); }
-
-        .hero-link.primary {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-        }
-
-        .hero-link.primary:hover { background: var(--link-hover); border-color: var(--link-hover); }
-
-        /* Section headings */
-        h2 {
-            font-family: 'EB Garamond', serif;
-            font-size: 1.55rem;
-            font-weight: 500;
-            color: var(--text);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
-            letter-spacing: 0.005em;
-        }
-
-        .subsection-heading {
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-            margin-top: 2rem;
-        }
-
-        .subsection-heading:first-of-type { margin-top: 0; }
-
-        /* Research interests */
-        .research-body { color: var(--text-mid); font-size: 0.95rem; line-height: 1.85; }
-        .research-body p + p { margin-top: 0.85rem; }
-        .research-body strong { color: var(--text); font-weight: 600; }
-        .research-body em { font-style: italic; }
-
-        /* Publications */
-        .pub-list { display: flex; flex-direction: column; gap: 1rem; }
-
-        .pub {
-            padding: 1.1rem 1.35rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            transition: border-color 0.2s;
-        }
-
-        .pub:hover { border-color: var(--accent-light); }
-
-        .pub-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 0.35rem;
-            line-height: 1.45;
-        }
-
-        .pub-title a { color: var(--link); text-decoration: none; }
-        .pub-title a:hover { text-decoration: underline; }
-
-        .pub-meta {
-            font-size: 0.825rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            flex-wrap: wrap;
-            line-height: 1.5;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 0.12rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .badge-accepted { background: var(--badge-accepted-bg); color: var(--badge-accepted-color); }
-        .badge-award { background: var(--badge-award-bg); color: var(--badge-award-color); }
-        .badge-review { background: var(--badge-review-bg); color: var(--badge-review-color); }
-
-        .scholar-link { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.85rem; }
-        .scholar-link a { color: var(--link); text-decoration: none; }
-        .scholar-link a:hover { text-decoration: underline; }
-
-        /* Writing / Blog */
-        .writing-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .writing-header-row h2 { border: none; padding: 0; margin: 0; }
-
-        .writing-header-row a {
-            font-size: 0.85rem;
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        .writing-header-row a:hover { text-decoration: underline; }
-
-        .post-list { display: flex; flex-direction: column; }
-
-        .post-item {
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .post-item:last-child { border-bottom: none; }
-
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .post-title { font-size: 0.95rem; font-weight: 500; line-height: 1.45; }
-        .post-title a { color: var(--text); text-decoration: none; }
-        .post-title a:hover { color: var(--accent); text-decoration: underline; }
-
-        .repost-label { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
-
-        .post-date {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-            font-family: 'JetBrains Mono', monospace;
-            padding-top: 0.15rem;
-        }
-
-        .post-excerpt { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.4rem; }
-
-        .post-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
-
-        .post-tag {
-            display: inline-block;
-            padding: 0.12rem 0.5rem;
-            background: var(--tag-bg);
-            color: var(--tag-text);
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-
-        /* Talks */
-        .talks-list { display: flex; flex-direction: column; }
-
-        .talk-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 1.5rem;
-            padding: 0.85rem 0;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .talk-item:last-child { border-bottom: none; }
-        .talk-left { flex: 1; }
-        .talk-name { font-size: 0.925rem; font-weight: 500; }
-        .talk-name a { color: var(--text); text-decoration: none; }
-        .talk-name a:hover { color: var(--accent); }
-        .talk-sub { font-size: 0.835rem; color: var(--text-muted); margin-top: 0.1rem; }
-
-        .talk-year {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
-            white-space: nowrap;
-        }
-
-        /* Projects & Demos */
-        .demos-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-        }
-
-        .demo-card {
-            padding: 1rem 1.1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            text-decoration: none;
-            display: block;
-            transition: border-color 0.2s;
-        }
-
-        .demo-card:hover { border-color: var(--accent-light); }
-
-        .demo-card-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .demo-card-title i { color: var(--accent-light); font-size: 0.8rem; }
-        .demo-card-desc { font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; }
-
-        /* Research project list */
-        .project-list { display: flex; flex-direction: column; gap: 0; }
-
-        .project-item {
-            padding: 1.1rem 0;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .project-item:last-child { border-bottom: none; }
-
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .project-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
-        .project-title a { color: var(--link); text-decoration: none; }
-        .project-title a:hover { text-decoration: underline; }
-
-        .project-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; padding-top: 0.15rem; }
-
-        .project-tag {
-            display: inline-block;
-            padding: 0.1rem 0.45rem;
-            background: var(--bg-soft);
-            color: var(--text-muted);
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            border: 1px solid var(--border);
-        }
-
-        .project-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.35rem; }
-
-        .project-result {
-            font-size: 0.825rem;
-            color: var(--accent);
-            font-weight: 500;
-        }
-
-        /* Open source card */
-        .os-card {
-            padding: 1.2rem 1.35rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 7px;
-        }
-
-        .os-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.45rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .os-card-title { font-size: 0.95rem; font-weight: 600; }
-        .os-card-title a { color: var(--link); text-decoration: none; }
-        .os-card-title a:hover { text-decoration: underline; }
-        .os-card-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
-
-        /* Experience */
-        .exp-list { display: flex; flex-direction: column; gap: 1.75rem; }
-
-        .exp-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 0.2rem;
-        }
-
-        .exp-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
-        .exp-title a { color: var(--link); text-decoration: none; }
-        .exp-title a:hover { text-decoration: underline; }
-
-        .exp-date {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
-            white-space: nowrap;
-            padding-top: 0.15rem;
-        }
-
-        .exp-role { font-size: 0.875rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.65rem; }
-
-        .exp-bullets {
-            padding-left: 1.2rem;
-            font-size: 0.9rem;
-            color: var(--text-mid);
-            line-height: 1.75;
-        }
-
-        .exp-bullets li { margin-bottom: 0.25rem; }
-
-        /* Skills */
-        .skills-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem 3rem;
-        }
-
-        .skill-label { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
-        .skill-value { font-size: 0.85rem; color: var(--text-muted); line-height: 1.65; }
-
-        /* Awards */
-        .awards-list { display: flex; flex-direction: column; }
-
-        .award-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 1.5rem;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .award-item:last-child { border-bottom: none; }
-        .award-name { font-size: 0.925rem; font-weight: 500; }
-        .award-sub { font-size: 0.835rem; color: var(--text-muted); margin-top: 0.1rem; }
-        .award-year { font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-
-        /* Contact */
-        .contact-body { color: var(--text-mid); font-size: 0.95rem; line-height: 1.85; }
-        .contact-body a { color: var(--link); }
-        .contact-body a:hover { color: var(--link-hover); }
-
-        /* Footer */
-        footer {
-            max-width: var(--max-width);
-            margin: 0 auto;
-            padding: 2rem;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .footer-icons { display: flex; gap: 1.25rem; }
-
-        .footer-icons a {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            transition: color 0.2s;
-            text-decoration: none;
-        }
-
-        .footer-icons a:hover { color: var(--accent); }
-        .footer-text { font-size: 0.8rem; color: var(--text-muted); }
-
-        /* Responsive */
-        @media (max-width: 640px) {
-            .hero h1 { font-size: 2rem; }
-            .nav-links { display: none; }
-            .skills-grid { grid-template-columns: 1fr; }
-            .talk-item { flex-direction: column; gap: 0.15rem; }
-            .award-item { flex-direction: column; gap: 0.15rem; }
-            .exp-header { flex-direction: column; gap: 0.1rem; }
-            .demos-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
+    <link rel="stylesheet" href="assets/css/site.css">
+    <script src="assets/js/site.js" defer></script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Valentin Noël",
+        "honorificSuffix": "PhD",
+        "jobTitle": "Research Scientist and Research Programme Lead",
+        "description": "Research Scientist in interpretability and AI safety. Spectral graph methods for transformer circuits, hallucination detection and the safety of agent pipelines.",
+        "url": "https://vcnoel.github.io/",
+        "image": "https://vcnoel.github.io/assets/img/portrait.jpg",
+        "email": "mailto:val.noel@proton.me",
+        "worksFor": {
+            "@type": "Organization",
+            "name": "Devoteam",
+            "url": "https://www.devoteam.com/"
+        },
+        "workLocation": {
+            "@type": "Place",
+            "name": "Paris, France"
+        },
+        "alumniOf": [
+            { "@type": "CollegeOrUniversity", "name": "ENS Paris-Saclay", "url": "https://ens-paris-saclay.fr/" },
+            { "@type": "CollegeOrUniversity", "name": "CentraleSupélec", "url": "https://www.centralesupelec.fr/" },
+            { "@type": "CollegeOrUniversity", "name": "École Centrale de Nantes", "url": "https://www.ec-nantes.fr/" }
+        ],
+        "knowsAbout": [
+            "Mechanistic interpretability",
+            "AI safety",
+            "Graph signal processing",
+            "Spectral graph theory",
+            "Hallucination detection",
+            "Agent safety",
+            "Transformers"
+        ],
+        "knowsLanguage": ["fr", "en", "de"],
+        "award": [
+            "Best Presentation Award, AAAI 2026 AILaw Bridge",
+            "Best Student Paper Award, PIERS 2023"
+        ],
+        "sameAs": [
+            "https://scholar.google.com/citations?user=aKSfszkAAAAJ&hl=fr",
+            "https://github.com/vcnoel",
+            "https://www.linkedin.com/in/valnoelphd/"
+        ]
+    }
+    </script>
 </head>
 
 <body>
-    <nav>
-        <div class="nav-inner">
-            <a href="#" class="nav-brand">Valentin Noël</a>
-            <ul class="nav-links">
-                <li><a href="#research">Research</a></li>
-                <li><a href="#publications">Publications</a></li>
-                <li><a href="#writing">Writing</a></li>
-                <li><a href="#talks">Talks</a></li>
-                <li><a href="#work">Projects</a></li>
-                <li><a href="spectral-chat.html" style="color:var(--accent);font-weight:500;">Live Demo</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </div>
-    </nav>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+        <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5M22 10v6"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+        <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+        <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+        <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+        <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+        <symbol id="i-package" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+        <symbol id="i-network" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/></symbol>
+        <symbol id="i-wave" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+        <symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+        <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82"/></symbol>
+        <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></symbol>
+        <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol>
+        <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></symbol>
+        <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
+        <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+        <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></symbol>
+        <symbol id="i-spectrum" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16v-3M11 16V8M15 16v-5M19 16V5"/></symbol>
+        <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65M22 12.65l-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    </svg>
 
-    <main>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="#top">
+                <img src="favicon.svg" alt="" width="26" height="26">
+                <span>Valentin Noël</span>
+            </a>
+            <nav class="site-nav" id="site-nav" aria-label="Sections">
+                <ul>
+                    <li><a href="#research">Research</a></li>
+                    <li><a href="#deployment">Deployment</a></li>
+                    <li><a href="#publications">Publications</a></li>
+                    <li><a href="#open-source">Open source</a></li>
+                    <li><a href="#demos">Demos</a></li>
+                    <li><a href="#experience">Experience</a></li>
+                    <li><a href="#writing">Writing</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+            <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+                <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+                <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="main">
 
         <!-- Hero -->
-        <section class="hero" id="about">
-            <h1>Valentin Noël, PhD</h1>
-            <p class="role">Research Scientist · Mechanistic Interpretability and AI Safety · Devoteam, Paris</p>
+        <section class="hero" id="top" aria-labelledby="hero-name">
+            <div class="wrap">
+                <div class="hero-top">
+                <div class="hero-text">
+                    <p class="eyebrow">Devoteam · Paris, France</p>
+                    <h1 id="hero-name">Valentin Noël, PhD</h1>
+                    <p class="hero-role">Research Scientist and Research Programme Lead, Interpretability and AI Safety</p>
 
-            <p class="hero-bio">
-                I study how transformer models reason, fail, and can be made safer from the inside. My work applies
-                spectral graph signal processing to transformer attention circuits: identifying load bearing structures,
-                detecting safety relevant failure modes, and asking whether the geometry of high dimensional
-                representations is causally informative about model behavior.
-            </p>
-            <p class="hero-bio">
-                PhD from <a href="https://ens-paris-saclay.fr/" target="_blank">ENS Paris Saclay</a>
-                and <a href="https://www.centralesupelec.fr/" target="_blank">CentraleSupélec</a> (Bayesian deep
-                learning, inverse problems). Now at Devoteam as a Research Scientist. PI and co-PI on a
-                Large Scale AI Research Consortium Grant (joint with a leading university and a CAC40 industrial
-                partner). Active member of the <a href="https://www.oxai.org/" target="_blank">Oxford AI Society</a>.
-            </p>
+                    <p class="hero-lede">I work on understanding what happens inside large language models and on turning that understanding into things people can use.</p>
 
-            <div class="hero-links">
-                <a href="mailto:val.noel@proton.me" class="hero-link primary">
-                    <i class="fas fa-envelope"></i> Email
-                </a>
-                <a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&hl=fr" target="_blank"
-                    class="hero-link">
-                    <i class="fab fa-google-scholar"></i> Google Scholar
-                </a>
-                <a href="https://github.com/vcnoel" target="_blank" class="hero-link">
-                    <i class="fab fa-github"></i> GitHub
-                </a>
-                <a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" class="hero-link">
-                    <i class="fab fa-linkedin"></i> LinkedIn
-                </a>
-                <a href="https://pypi.org/project/spectral-trust/" target="_blank" class="hero-link">
-                    <i class="fab fa-python"></i> spectral trust
-                </a>
-                <a href="spectral-chat.html" class="hero-link" style="color:var(--accent);border-color:var(--accent);">
-                    <i class="fas fa-comments"></i> Spectral Chat
-                </a>
+                    <ul class="chip-list" role="list" aria-label="Highlights">
+                        <li class="chip is-key">ICML 2026 main track</li>
+                        <li class="chip">Workshops at NeurIPS, ICML, ACL and AAAI 2026</li>
+                        <li class="chip is-key">Best Presentation Award, AAAI 2026</li>
+                        <li class="chip">Two Silico Research Grants, Goodfire</li>
+                        <li><a class="chip" href="#open-source">spectral-trust, used in work by researchers at 4 organisations</a></li>
+                    </ul>
+
+                    <div class="btn-row">
+                        <a class="btn btn-primary" href="mailto:val.noel@proton.me">
+                            <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg> Email
+                        </a>
+                        <a class="btn" href="assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">
+                            <svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> CV (PDF)
+                        </a>
+                        <a class="btn" href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg> Google Scholar
+                        </a>
+                        <a class="btn" href="https://github.com/vcnoel" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg> GitHub
+                        </a>
+                        <a class="btn" href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg> LinkedIn
+                        </a>
+                    </div>
+                </div>
+                <div class="portrait">
+                    <img src="assets/img/portrait.jpg" alt="Portrait of Valentin Noël" width="320" height="480" fetchpriority="high">
+                </div>
+                </div>
+
+                <figure class="figure-card hero-figure">
+                    <div class="figure-media">
+                        <img src="assets/img/spectral-trust-layer.png" width="900" height="400"
+                            alt="Qwen3-0.6B reading 'The cat sat on the mat because it was warm.' at layer 14: the attention graph over the tokens with nodes coloured by the Fiedler vector, the layer's Laplacian spectrum, and the Fiedler value and HFER across layers.">
+                    </div>
+                    <figcaption>
+                        <span class="fig-label">spectral-trust</span>
+                        Qwen3-0.6B reads one sentence. At layer 14: the attention graph over the tokens (node colour: Fiedler vector), its Laplacian spectrum, and <code>fiedler_value</code> and <code>hfer</code> by layer.
+                        <a class="more-link" href="#open-source">The library <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+                    </figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- News -->
+        <section class="section" id="news" aria-labelledby="news-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">News</span>
+                    <h2 id="news-title">Recent news</h2>
+                </div>
+                <!-- Newest first. Show at most five items here and put older ones in the details block below.
+                     When the month of an item is known, add <time datetime="YYYY-MM">Mon YYYY</time> inside its news-kind span. -->
+                <ol class="news-list" role="list">
+                    <li class="news-item">
+                        <span class="news-kind">Conference</span>
+                        <p class="news-text">I will be at NeurIPS 2026 in Paris.</p>
+                    </li>
+                    <li class="news-item">
+                        <span class="news-kind">Paper</span>
+                        <p class="news-text"><a href="#pub-error-contagion">An Error in the Context Is a Demonstration</a> accepted at the NeurIPS 2026 SLM-Agent Workshop.</p>
+                    </li>
+                    <li class="news-item">
+                        <span class="news-kind">Open source</span>
+                        <p class="news-text"><a href="#open-source">spectral-trust</a> is used in work by researchers at Cornell, Goodfire AI, Imperial College London and École Polytechnique (<a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener">arXiv:2608.03015</a>, <a href="https://arxiv.org/abs/2610.16709" target="_blank" rel="noopener">arXiv:2610.16709</a>).</p>
+                    </li>
+                    <li class="news-item">
+                        <span class="news-kind">Grant</span>
+                        <p class="news-text">Two Silico Research Grants from Goodfire, 2026.</p>
+                    </li>
+                    <li class="news-item">
+                        <span class="news-kind">Paper</span>
+                        <p class="news-text"><a href="#pub-geometry-of-reason">Geometry of Reason</a> at ICML 2026, main track.</p>
+                    </li>
+                </ol>
+                <details class="news-more">
+                    <summary>Show 1 more <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                    <ol class="news-list" role="list">
+                        <li class="news-item">
+                            <span class="news-kind">Award</span>
+                            <p class="news-text">Best Presentation Award at AAAI 2026 (AILaw Bridge) for <a href="#pub-hallugraph">HalluGraph</a>.</p>
+                        </li>
+                    </ol>
+                </details>
             </div>
         </section>
 
         <!-- Research -->
-        <section id="research">
-            <h2>Research</h2>
-            <div class="research-body">
-                <p>
-                    My core research area is <strong>mechanistic interpretability</strong> — understanding what
-                    transformer circuits actually compute, how they fail, and how failures propagate. I approach this
-                    through spectral graph signal processing: treating transformer attention matrices as graphs and
-                    analyzing their spectral properties to reveal structure invisible to activation level inspection.
-                </p>
-                <p>
-                    Current threads: (1) spectral signatures of valid mathematical reasoning across model families;
-                    (2) the causal topology of model evolution across training checkpoints, predicting capability
-                    emergence from circuit formation; (3) scale dependent shifts in hallucination detector topology
-                    across 1B to 70B models; (4) reward modelling for grounded legal reasoning with OxAI and
-                    collaborators at Oxford.
-                </p>
-                <p>
-                    I care about whether interpretability findings are <em>causal</em> and
-                    <em>cross architecture</em>, not merely correlational or model specific. All tools are released
-                    under open source licenses.
-                </p>
+        <section class="section" id="research" aria-labelledby="research-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Research</span>
+                    <h2 id="research-title">Reading the routing inside language models</h2>
+                    <p class="lede">I lead research programmes across several entities of a consulting group, and I have shipped a compliance product built on that research. My published work covers reasoning, sycophancy, hallucination detection and the safety of agent pipelines.</p>
+                </div>
+
+                <div class="grid grid-3 statement">
+                    <article class="card">
+                        <h3>What I study</h3>
+                        <p>How transformers route information and where that routing breaks. I treat each attention layer as a graph over the tokens and read its Laplacian spectrum and the graph frequency content of the residual stream. The same instrument covers reasoning, sycophancy, hallucination and agent failures.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Why it matters</h3>
+                        <p>Safety and reliability in deployment need signals that are cheap, need no labels and hold across domains. Spectral diagnostics need no training and run alongside the model. I care whether a finding is causal and whether it holds across architectures, not merely whether it correlates in one model.</p>
+                    </article>
+                    <article class="card">
+                        <h3>What I build</h3>
+                        <p>Tools that run where models are used: the open-source spectral-trust library, the HalluGraph verifier for legal RAG, the Compliance Checker for European AI Act compliance, spectral kill switches for agents, and demos that run in the browser.</p>
+                    </article>
+                </div>
+
+                <h3 class="sub-head">Selected results</h3>
+                <ul class="stats" role="list">
+                    <li class="stat">
+                        <span class="stat-value">95.6%</span>
+                        <p class="stat-text">Accuracy of a training-free reasoning probe built on load-bearing attention circuits located from weights alone (ICML 2026, main track).</p>
+                    </li>
+                    <li class="stat">
+                        <span class="stat-value">0.874 AUC</span>
+                        <p class="stat-text">HalluGraph at detecting evidence that does not support the answer in legal RAG. Its blind spots were measured and documented before integration.</p>
+                    </li>
+                    <li class="stat">
+                        <span class="stat-value">39.5% <span aria-hidden="true">→</span><span class="visually-hidden">to</span> 14.8%</span>
+                        <p class="stat-text">Sycophancy on a thousand-item benchmark after a closed-form, reversible weight edit, with no retraining and no inference overhead. The cost on arithmetic reasoning was measured.</p>
+                    </li>
+                    <li class="stat">
+                        <span class="stat-value">About 7 points</span>
+                        <p class="stat-text">Rise in the failure rate of later, logically unrelated agent steps when one wrong step is left in context. A stronger model is no more resistant.</p>
+                    </li>
+                    <li class="stat">
+                        <span class="stat-value">5 model families</span>
+                        <p class="stat-text">From one to fourteen billion parameters, used to validate these methods.</p>
+                    </li>
+                    <li class="stat">
+                        <span class="stat-value">USD 18,000</span>
+                        <p class="stat-text">In compute credits from two Silico Research Grants awarded by Goodfire in 2026.</p>
+                    </li>
+                </ul>
+
+                <h3 class="sub-head">Themes</h3>
+                <div class="grid grid-3">
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-spectrum"/></svg></span>
+                        <h4>Spectral circuits and reasoning</h4>
+                        <p>Attention spectra locate load-bearing circuits. Logical coherence shows up as a macroscopic topological property of attention, and valid reasoning leaves a measurable spectral signature.</p>
+                        <p class="result">95.6% verification accuracy · d&nbsp;=&nbsp;3.30 · ICML 2026 main track</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></span>
+                        <h4>Hallucination detection and provenance</h4>
+                        <p>Graph signal processing on attention, and knowledge-graph alignment between an answer and its sources, flag claims that the evidence does not support, with an audit trail for each one.</p>
+                        <p class="result">HalluGraph: 0.874 AUC · Best Presentation Award, AAAI 2026</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-cpu"/></svg></span>
+                        <h4>Safety of agent pipelines</h4>
+                        <p>Errors and injected instructions spread through agent pipelines. I measure how far they spread and build monitors that catch contamination before the next call.</p>
+                        <p class="result">Spectral kill switches · AAAI 2026 TrustAgent · NeurIPS 2026 SLM-Agent</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg></span>
+                        <h4>Sycophancy and weight edits</h4>
+                        <p>Sycophancy is often carried by a single layer, and a closed-form, reversible weight edit suppresses it. Related work builds reward models for grounded legal reasoning with OxAI and collaborators at Oxford.</p>
+                        <p class="result">39.5% to 14.8% · ICML 2026 MechInterp and AI for Law workshops</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon is-orange"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg></span>
+                        <h4>Open-weight model security</h4>
+                        <p>Spectral methods for tamper resistance of open weights, backdoor screening from weights alone, and checking a reward model for exploitable shortcuts before it is trained against.</p>
+                        <p class="result">Two Silico Research Grants, Goodfire, 2026</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg></span>
+                        <h4>Training dynamics and other modalities</h4>
+                        <p>The same instruments read training checkpoints, where circuit formation tracks capability emergence, and models beyond text: voice processing across 20 languages, protein language models and tabular priors.</p>
+                        <p class="result">Spectral Archaeology · ACL 2026 workshop</p>
+                    </article>
+                </div>
+
+                <h3 class="sub-head">Projects</h3>
+                <div class="grid grid-2">
+                    <article class="card">
+                        <h4>Spectral Conjecture: the shape of mathematical truth</h4>
+                        <p>Valid and invalid mathematical proofs leave distinct spectral fingerprints in transformer attention. Historically disproven conjectures occupy a third, separate region of fingerprint space, which I call the memory of refutation. The signal is orthogonal to perplexity: hard adversarial proofs are more probable but spectrally anomalous.</p>
+                        <p class="result">267 labelled proofs · 60 hard adversarials · signal concentrated in late layers</p>
+                        <ul class="tag-list" role="list"><li class="tag">interpretability</li><li class="tag">formal math</li></ul>
+                    </article>
+                    <article class="card">
+                        <h4>Prompt injection: latent probing against spectral methods</h4>
+                        <p>A comparison of activation probing and spectral trust methods for prompt injection detection on GPT-2, TinyLlama, Llama 1B and Llama 3B. Probing reaches perfect in-domain AUC but collapses across domains, while the spectral methods generalise.</p>
+                        <p class="result">0.86 to 0.90 AUC across datasets · 0.757 to 0.804 F1 at 80%+ recall on a mixed set</p>
+                        <ul class="tag-list" role="list"><li class="tag">safety</li><li class="tag">adversarial</li></ul>
+                    </article>
+                    <article class="card">
+                        <h4>Spectral Extremism: training-free radicalisation detection</h4>
+                        <p>Detects radicalised text from the spectra of transformer attention, with no fine-tuning. The work uncovered a register confound: models detected formality rather than ideology. A genuine within-source signal remains after controlling for register.</p>
+                        <p class="result">0.75 to 0.82 AUROC across 5 models · Cohen's d 0.3 to 0.8 after register correction</p>
+                        <ul class="tag-list" role="list"><li class="tag">safety</li><li class="tag">content moderation</li></ul>
+                    </article>
+                    <article class="card">
+                        <h4>Spectral Fingerprints: voice processing across 20 languages</h4>
+                        <p>Training-free spectral fingerprints of active and passive voice across 20 typologically diverse languages. Attention heads in layers 2 to 5 form distinct spectral signatures for these syntactic structures. <a href="https://arxiv.org/abs/2510.19131" target="_blank" rel="noopener">Paper on arXiv</a>.</p>
+                        <p class="result">20 languages · cross-lingual spectral consistency</p>
+                        <ul class="tag-list" role="list"><li class="tag">interpretability</li><li class="tag">linguistics</li></ul>
+                    </article>
+                    <article class="card">
+                        <h4>Spectral Fold: protein language model interpretability</h4>
+                        <p>Tests whether the spectral interpretability methods developed for LLMs transfer to protein language model embeddings.</p>
+                        <p class="result">ESM 2, ProtT5, Ankh · Phase A on 50 proteins</p>
+                        <ul class="tag-list" role="list"><li class="tag">bio AI</li><li class="tag">interpretability</li></ul>
+                    </article>
+                    <article class="card">
+                        <h4>Spectral Prior: geometric tabular data generation</h4>
+                        <p>Generates synthetic tabular data with controllable spectral entropy. A 1.1M-parameter NanoTabPFN trained with spectral geometric priors competes with commercial models 100 times its size on TabArena benchmarks.</p>
+                        <p class="result">Matches or exceeds NeuralK on Blood Transfusion and Australian at 1% of the parameter count</p>
+                        <ul class="tag-list" role="list"><li class="tag">generative</li><li class="tag">tabular</li></ul>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Research to deployment -->
+        <section class="section" id="deployment" aria-labelledby="deployment-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Research to deployment</span>
+                    <h2 id="deployment-title">Where the research runs</h2>
+                    <p class="lede">The methods leave the paper as a shipped product, an internal service, monitors for agents and public demos.</p>
+                </div>
+                <div class="grid grid-3">
+                    <article class="card">
+                        <span class="card-icon is-orange"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
+                        <h3>Compliance Checker</h3>
+                        <p>Designed and shipped at Devoteam, now a group asset for European AI Act compliance. It applies the prompt injection and hallucination detection research to verify that generated output is grounded in the documents it cites and has not been steered by injected instructions.</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-scale"/></svg></span>
+                        <h3>HalluGraph for legal RAG</h3>
+                        <p>A knowledge-graph provenance verifier for legal retrieval-augmented generation that runs as an internal microservice, with an AUC of 0.874 at detecting evidence that does not support the answer.</p>
+                        <p class="pub-meta"><a class="pub-link" href="https://arxiv.org/abs/2512.01659" target="_blank" rel="noopener">Paper</a> <a class="pub-link" href="hallugraph-demo/index.html">Demo</a></p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-cpu"/></svg></span>
+                        <h3>Monitors for agents</h3>
+                        <p>Spectral kill switches detect contamination before the next call. Spectral guardrails detect tool-use hallucinations from attention topology.</p>
+                        <p class="pub-meta"><a class="pub-link" href="https://arxiv.org/abs/2511.05804" target="_blank" rel="noopener">Kill switches</a> <a class="pub-link" href="https://arxiv.org/abs/2602.08082" target="_blank" rel="noopener">Guardrails</a></p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></span>
+                        <h3>Research programmes</h3>
+                        <p>I lead research programmes across several Devoteam entities, setting the research direction and coordinating the teams that deliver it. I supervise 8 interns and work with a consulting organisation of about ninety people.</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-coins"/></svg></span>
+                        <h3>Funding</h3>
+                        <p>Two Silico Research Grants from Goodfire (2026, USD 18,000 in compute credits). PI and co-PI on a Large Scale AI Research Consortium Grant, joint with a leading university and a CAC40 industrial partner (2025 to present).</p>
+                    </article>
+                    <article class="card">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg></span>
+                        <h3>Demos and talks</h3>
+                        <p>Five demos that run in the browser with no server, one of them a language model with live spectral analysis. Talks at NVIDIA GTC Paris and the International Centre for Mathematical Sciences in Edinburgh.</p>
+                        <p class="pub-meta"><a class="pub-link" href="#demos">Demos</a> <a class="pub-link" href="#talks">Talks</a></p>
+                    </article>
+                </div>
             </div>
         </section>
 
         <!-- Publications -->
-        <section id="publications">
-            <h2>Selected Publications</h2>
-            <div class="pub-list">
-
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="#" target="_blank">Geometry of Reason: Spectral Signatures of Valid Mathematical
-                            Reasoning</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël &ensp;·&ensp;
-                        <span class="badge badge-accepted">ICML 2026 · main track</span>
-                    </div>
+        <section class="section" id="publications" aria-labelledby="publications-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Publications</span>
+                    <h2 id="publications-title">Selected publications</h2>
                 </div>
 
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="#" target="_blank">Building Reward Models for Grounded Legal Reasoning</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël*, R. Franzone*, P. Wang, P. Torr, F. J. Fehr &ensp;·&ensp; *Equal Contribution
-                        &ensp;·&ensp;
-                        <span class="badge badge-review">Submitted EMNLP 2026 · Under Review ICML 2026 AILaw</span>
-                    </div>
+                <div class="filter-bar" role="group" aria-label="Filter publications by topic" data-filter-for="pub-list" data-filter-status="pub-status">
+                    <button class="filter-btn" type="button" data-filter="all" data-label="all" aria-pressed="true">All <span class="count"></span></button>
+                    <button class="filter-btn" type="button" data-filter="interpretability" data-label="interpretability" aria-pressed="false">Interpretability <span class="count"></span></button>
+                    <button class="filter-btn" type="button" data-filter="hallucination" data-label="hallucination" aria-pressed="false">Hallucination <span class="count"></span></button>
+                    <button class="filter-btn" type="button" data-filter="agents" data-label="agents" aria-pressed="false">Agents <span class="count"></span></button>
+                    <button class="filter-btn" type="button" data-filter="safety" data-label="safety" aria-pressed="false">Safety <span class="count"></span></button>
+                    <button class="filter-btn" type="button" data-filter="alignment" data-label="alignment" aria-pressed="false">Alignment <span class="count"></span></button>
+                    <button class="filter-btn" type="button" data-filter="legal" data-label="legal AI" aria-pressed="false">Legal AI <span class="count"></span></button>
+                    <button class="filter-btn" type="button" data-filter="imaging" data-label="imaging" aria-pressed="false">Imaging <span class="count"></span></button>
                 </div>
+                <p class="filter-status" id="pub-status" aria-live="polite"></p>
 
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="#" target="_blank">Does the Optimal Hallucination Detector for Agentic Tool Calls
-                            Depend on Model Scale?</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël, K. Healy, V. Madathil, B. Srinivasan &ensp;·&ensp;
-                        <span class="badge badge-accepted">ICML 2026 · AIWILD Workshop</span>
-                    </div>
-                </div>
-
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="#" target="_blank">Spectral Archaeology: The Causal Topology of Model Evolution</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël &ensp;·&ensp;
-                        <span class="badge badge-accepted">ACL 2026 · Computational Developmental Linguistics</span>
-                    </div>
-                </div>
-
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="http://arxiv.org/abs/2511.05804" target="_blank">Catching Contamination Before
-                            Generation: Spectral Kill Switches for Agents</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël &ensp;·&ensp;
-                        <span class="badge badge-accepted">AAAI 2026 · TrustAgent</span>
-                    </div>
-                </div>
-
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="https://arxiv.org/abs/2512.01659" target="_blank">HalluGraph: Auditable Hallucination
-                            Detection for Legal RAG Systems via Knowledge Graph Alignment</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël &ensp;·&ensp;
-                        <span class="badge badge-accepted">AAAI 2026 · AILaw</span>
-                        <span class="badge badge-award">Best Presentation Award</span>
-                    </div>
-                </div>
-
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="https://ieeexplore.ieee.org/abstract/document/10908587" target="_blank">Transfer
-                            Learning for Data Fusion for Electromagnetic and Ultrasound Breast Imaging</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël, T. Rodet, D. Lesselier &ensp;·&ensp; IEEE Transactions on Computational Imaging (2024)
-                    </div>
-                </div>
-
-                <div class="pub">
-                    <div class="pub-title">
-                        <a href="#" target="_blank">Electromagnetic Breast Imaging and Uncertainty Quantification with
-                            Bayesian Neural Networks</a>
-                    </div>
-                    <div class="pub-meta">
-                        V. Noël, T. Rodet, D. Lesselier &ensp;·&ensp;
-                        <span class="badge badge-accepted">PIERS 2023</span>
-                        <span class="badge badge-award">Best Student Paper Award</span>
-                    </div>
-                </div>
-
+                <ol class="pub-list" id="pub-list" role="list">
+                    <li class="pub" id="pub-error-contagion" data-tags="agents safety">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">An Error in the Context Is a Demonstration: Measuring Error Contagion in Small-Model Agents</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge">NeurIPS 2026, SLM-Agent Workshop</span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">agents</li><li class="tag">safety</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub is-featured" id="pub-geometry-of-reason" data-tags="interpretability">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">Geometry of Reason: Spectral Signatures of Valid Mathematical Reasoning</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge is-main">ICML 2026, main track</span>
+                                <span class="pub-links">
+                                    <a class="pub-link" href="spectral-demo.html"><svg class="icon" aria-hidden="true"><use href="#i-wave"/></svg> Demo</a>
+                                </span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">interpretability</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="interpretability alignment safety">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">Sycophancy Is Often a Single-Layer Phenomenon: Spectral Diagnosis and Training-Free Weight Surgery in LLMs</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge">ICML 2026, MechInterp Workshop</span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">interpretability</li><li class="tag">alignment</li><li class="tag">safety</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="alignment legal">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">Building Reward Models for Grounded Legal Reasoning</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span>*, R. Franzone*, P. Wang, P. Torr, F. J. Fehr · *equal contribution</p>
+                            <div class="pub-meta">
+                                <span class="badge">ICML 2026, AI for Law Workshop</span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">alignment</li><li class="tag">legal</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="hallucination agents">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">Does the Optimal Hallucination Detector for Agentic Tool Calls Depend on Model Scale?</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span>, K. Healy, V. Madathil, B. Srinivasan</p>
+                            <div class="pub-meta">
+                                <span class="badge">ICML 2026, AIWILD Workshop</span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">hallucination</li><li class="tag">agents</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="interpretability">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">Spectral Archaeology: The Causal Topology of Model Evolution</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge">ACL 2026, Computational Developmental Linguistics Workshop</span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">interpretability</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="agents hallucination safety">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">Spectral Guardrails for Agents in the Wild: Detecting Tool Use Hallucinations via Attention Topology</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge is-preprint">arXiv preprint</span>
+                                <span class="pub-links">
+                                    <a class="pub-link" href="https://arxiv.org/abs/2602.08082" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> Paper</a>
+                                </span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">agents</li><li class="tag">hallucination</li><li class="tag">safety</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="agents safety">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">Catching Contamination Before Generation: Spectral Kill Switches for Agents</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge">AAAI 2026, TrustAgent Workshop</span>
+                                <span class="pub-links">
+                                    <a class="pub-link" href="https://arxiv.org/abs/2511.05804" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> Paper</a>
+                                </span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">agents</li><li class="tag">safety</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub is-featured" id="pub-hallugraph" data-tags="hallucination legal">
+                        <div class="pub-year">2026</div>
+                        <div>
+                            <h3 class="pub-title">HalluGraph: Auditable Hallucination Detection for Legal RAG Systems via Knowledge Graph Alignment</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span>, E. Y. Seidou, C. K. Capo-Chichi, G. Amari</p>
+                            <div class="pub-meta">
+                                <span class="badge">AAAI 2026, AILaw Bridge</span>
+                                <span class="badge is-award">Best Presentation Award</span>
+                                <span class="pub-links">
+                                    <a class="pub-link" href="https://arxiv.org/abs/2512.01659" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> Paper</a>
+                                    <a class="pub-link" href="hallugraph-demo/index.html"><svg class="icon" aria-hidden="true"><use href="#i-wave"/></svg> Demo</a>
+                                </span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">hallucination</li><li class="tag">legal</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="hallucination interpretability">
+                        <div class="pub-year">2025</div>
+                        <div>
+                            <h3 class="pub-title">A Graph Signal Processing Framework for Hallucination Detection in Large Language Models</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge is-preprint">arXiv preprint</span>
+                                <span class="pub-links">
+                                    <a class="pub-link" href="https://arxiv.org/abs/2510.19117" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> Paper</a>
+                                    <a class="pub-link" href="https://github.com/vcnoel/spectral-trust" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-code"/></svg> Code</a>
+                                    <a class="pub-link" href="rega-demo/index.html"><svg class="icon" aria-hidden="true"><use href="#i-wave"/></svg> Demo</a>
+                                </span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">hallucination</li><li class="tag">interpretability</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="interpretability">
+                        <div class="pub-year">2025</div>
+                        <div>
+                            <h3 class="pub-title">Training-Free Spectral Fingerprints of Voice Processing in Transformers</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span></p>
+                            <div class="pub-meta">
+                                <span class="badge is-preprint">arXiv preprint</span>
+                                <span class="pub-links">
+                                    <a class="pub-link" href="https://arxiv.org/abs/2510.19131" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> Paper</a>
+                                </span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">interpretability</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="imaging">
+                        <div class="pub-year">2024</div>
+                        <div>
+                            <h3 class="pub-title">Transfer Learning for Data Fusion for Electromagnetic and Ultrasound Breast Imaging</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span>, T. Rodet, D. Lesselier</p>
+                            <div class="pub-meta">
+                                <span class="badge is-journal">IEEE Transactions on Computational Imaging</span>
+                                <span class="pub-links">
+                                    <a class="pub-link" href="https://ieeexplore.ieee.org/abstract/document/10908587" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> Paper</a>
+                                </span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">imaging</li></ul>
+                        </div>
+                    </li>
+                    <li class="pub" data-tags="imaging">
+                        <div class="pub-year">2023</div>
+                        <div>
+                            <h3 class="pub-title">Electromagnetic Breast Imaging and Uncertainty Quantification with Bayesian Neural Networks</h3>
+                            <p class="pub-authors"><span class="me">V. Noël</span>, T. Rodet, D. Lesselier</p>
+                            <div class="pub-meta">
+                                <span class="badge">PIERS 2023</span>
+                                <span class="badge is-award">Best Student Paper Award</span>
+                            </div>
+                            <ul class="tag-list" role="list"><li class="tag">imaging</li></ul>
+                        </div>
+                    </li>
+                </ol>
+                <p class="note">Full list on <a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener">Google Scholar</a>.</p>
             </div>
-            <p class="scholar-link">
-                Full list on <a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&hl=fr"
-                    target="_blank">Google Scholar</a>.
-            </p>
         </section>
 
-        <!-- Writing / Blog -->
-        <section id="writing">
-            <div class="writing-header-row">
-                <h2>Writing</h2>
-                <a href="posts/">All posts →</a>
-            </div>
-            <div class="post-list" id="posts-container">
-                <noscript>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">
-                        <a href="posts/" style="color: var(--link);">Browse all posts →</a>
-                    </p>
-                </noscript>
-            </div>
-        </section>
+        <!-- Open source and adoption -->
+        <section class="section" id="open-source" aria-labelledby="oss-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Open source</span>
+                    <h2 id="oss-title">Open source and adoption</h2>
+                </div>
+                <div class="oss">
+                    <div>
+                        <p class="oss-name"><a href="https://github.com/vcnoel/spectral-trust" target="_blank" rel="noopener">spectral-trust</a></p>
+                        <div class="badge-row">
+                            <a class="shield" href="https://pypi.org/project/spectral-trust/" target="_blank" rel="noopener"><span class="k"><svg class="icon" aria-hidden="true"><use href="#i-package"/></svg> PyPI</span><span class="v">spectral-trust</span></a>
+                            <a class="shield" href="https://github.com/vcnoel/spectral-trust" target="_blank" rel="noopener"><span class="k"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg> GitHub</span><span class="v">vcnoel/spectral-trust</span></a>
+                            <a class="shield" href="https://github.com/vcnoel/spectral-trust/blob/main/LICENSE" target="_blank" rel="noopener"><span class="k">license</span><span class="v">AGPL-3.0</span></a>
+                            <span class="shield"><span class="k">python</span><span class="v">3.9+</span></span>
+                            <span class="shield is-orange"><span class="k">0.4.0</span><span class="v">in release preparation</span></span>
+                        </div>
+                        <p>Graph-spectral diagnostics for transformer attention. Each layer's attention becomes a graph over the tokens, and spectral-trust reports its Laplacian spectrum and the frequency content of the residual stream on it, per layer or per head. I am its lead maintainer, from 2025 to present.</p>
+                        <ul class="feature-list">
+                            <li>Attention graphs per layer from any Hugging Face causal LM that returns attention weights, with a choice of symmetrisation, head aggregation and Laplacian.</li>
+                            <li>Two metric families tagged in every result: attention-only metrics such as the Fiedler value and spectral radius, and hybrid metrics that also read the residual stream, such as Dirichlet energy, spectral entropy and HFER.</li>
+                            <li>Per-head diagnostics from one batched eigendecomposition, with head subsets and token spans.</li>
+                            <li>Fast diagnostics for long contexts: row-anchored energies, exact top-band HFER, random projection and Chebyshev band energies.</li>
+                            <li>A command line tool, <code>gsp-cli</code>, that analyses one text or compares two.</li>
+                        </ul>
+                        <div class="code">
+                            <pre><code><span class="prompt">$ </span>pip install spectral-trust</code></pre>
+                            <button class="copy-btn" type="button" data-copy="pip install spectral-trust" data-copy-status="copy-status">
+                                <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>
+                                <span class="copy-label">Copy</span>
+                            </button>
+                        </div>
+                        <p class="visually-hidden" id="copy-status" aria-live="polite"></p>
 
-        <!-- Talks -->
-        <section id="talks">
-            <h2>Talks &amp; Presentations</h2>
-            <div class="talks-list">
-                <div class="talk-item">
-                    <div class="talk-left">
-                        <div class="talk-name">
-                            <a href="https://www.icms.org.uk/" target="_blank">AI and Mathematics Residency —
-                                International Centre for Mathematical Sciences</a>
+                        <div class="adoption">
+                            <h3>spectral-trust is used in work by researchers at</h3>
+                            <ul>
+                                <li>Cornell University, Goodfire AI and Imperial College London: Bao et al. 2026, <a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener">arXiv:2608.03015</a>, which adapts its Fiedler, HFER and spectral entropy diagnostics.</li>
+                                <li>École Polytechnique: Kim, Lutzeyer and Guo 2026, <a href="https://arxiv.org/abs/2610.16709" target="_blank" rel="noopener">arXiv:2610.16709</a>, NeurIPS 2026 MATH-AI workshop, whose spectral module is ported from spectral-trust.</li>
+                            </ul>
                         </div>
-                        <div class="talk-sub">Edinburgh, UK · Invited Speaker</div>
                     </div>
-                    <div class="talk-year">2026</div>
-                </div>
-                <div class="talk-item">
-                    <div class="talk-left">
-                        <div class="talk-name">
-                            <a href="https://www.nvidia.com/gtc/" target="_blank">NVIDIA GPU Technology Conference
-                                (GTC)</a>
+                    <figure class="figure-card">
+                        <div class="figure-media">
+                            <img src="assets/img/spectral-trust-heads.png" width="1800" height="860" loading="lazy" decoding="async"
+                                alt="Heatmaps of per-head fiedler_value, spectral_radius and hfer over the 28 layers and 16 heads of Qwen3-0.6B for one two-sentence prompt.">
                         </div>
-                        <div class="talk-sub">Paris, France · Speaker</div>
-                    </div>
-                    <div class="talk-year">2025</div>
-                </div>
-                <div class="talk-item">
-                    <div class="talk-left">
-                        <div class="talk-name">
-                            <a href="https://www.esilv.fr/" target="_blank">École Supérieure d'Ingénieurs Léonard de
-                                Vinci (ESILV)</a>
-                        </div>
-                        <div class="talk-sub">Paris, France · Guest Talk</div>
-                    </div>
-                    <div class="talk-year">2025</div>
-                </div>
-                <div class="talk-item">
-                    <div class="talk-left">
-                        <div class="talk-name">
-                            <a href="https://en.uestc.edu.cn/" target="_blank">University of Electronic Science and
-                                Technology of China (UESTC)</a>
-                        </div>
-                        <div class="talk-sub">Chengdu, China · Guest Lecture</div>
-                    </div>
-                    <div class="talk-year">2025</div>
+                        <figcaption>Every head of Qwen3-0.6B on one two-sentence prompt: <code>fiedler_value</code>, <code>spectral_radius</code> and <code>hfer</code> for each layer and head, all heads decomposed in one batched call.</figcaption>
+                    </figure>
                 </div>
             </div>
         </section>
 
-        <!-- Projects & Demos -->
-        <section id="work">
-            <h2>Projects &amp; Demos</h2>
-
-            <p class="subsection-heading">Run in your browser</p>
-            <div class="demos-grid">
-                <a href="spectral-chat.html" class="demo-card" style="border-color:var(--accent-light);background:var(--bg-soft);">
-                    <div class="demo-card-title">
-                        <i class="fas fa-comments"></i> Spectral Chat ✦
-                    </div>
-                    <div class="demo-card-desc">Chat with SmolLM2 running fully in your browser. Real-time Dirichlet energy, spectral entropy, and trust score computed from actual attention matrices — the metrics from the papers.</div>
-                </a>
-                <a href="rega-demo/" class="demo-card">
-                    <div class="demo-card-title">
-                        <i class="fas fa-project-diagram"></i> ReGA: Graph RAG Verification
-                    </div>
-                    <div class="demo-card-desc">Hallucination detection via graph alignment and Sinkhorn normalization. Runs entirely in browser with Transformers.js.</div>
-                </a>
-                <a href="spectral-demo.html" class="demo-card">
-                    <div class="demo-card-title">
-                        <i class="fas fa-wave-square"></i> Geometry of Reason
-                    </div>
-                    <div class="demo-card-desc">Interactive spectral proof playground. Visualize the geometric properties of reasoning traces and inspect trust metrics.</div>
-                </a>
-                <a href="hallugraph-demo/" class="demo-card">
-                    <div class="demo-card-title">
-                        <i class="fas fa-gavel"></i> HalluGraph: Legal RAG
-                    </div>
-                    <div class="demo-card-desc">Knowledge graph alignment for legal AI. Detect hallucinations through entity grounding and relation preservation with full audit trails.</div>
-                </a>
-                <a href="solar-demo/index.html" class="demo-card">
-                    <div class="demo-card-title">
-                        <i class="fas fa-sun"></i> Solar Irradiance Simulator
-                    </div>
-                    <div class="demo-card-desc">Physics based GHI, DNI and DHI calculations for any location worldwide using Kasten Young and Cooper models.</div>
-                </a>
-            </div>
-
-            <p class="subsection-heading">Research projects</p>
-            <div class="project-list">
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Spectral Glaive: Tool Call Hallucination Detection</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Safety</span>
-                            <span class="project-tag">Agentic AI</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Training free detection of LLM tool call hallucinations via topological collapse in transformer attention graphs. Benchmarked on the full Glaive function calling corpus across 1B to 70B models.</div>
-                    <div class="project-result">0.856 to 0.971 AUC · 177× speedup via Fast Fiedler GPU Lanczos · 80% recall at 90% precision</div>
+        <!-- Demos -->
+        <section class="section" id="demos" aria-labelledby="demos-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Demos</span>
+                    <h2 id="demos-title">Run it in your browser</h2>
+                    <p class="lede">Each demo runs on your device, with no server and no API calls.</p>
                 </div>
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Spectral Conjecture: The Shape of Mathematical Truth</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Interpretability</span>
-                            <span class="project-tag">Formal Math</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Valid and invalid mathematical proofs leave distinct spectral fingerprints in transformer attention. Discovered "Memory of Refutation": historically disproven conjectures occupy a third, separate region in fingerprint space. Signal is orthogonal to perplexity — hard adversarials are more probable but spectrally anomalous.</div>
-                    <div class="project-result">267 labeled proofs · 60 hard adversarials · signal concentrated in late layers ("Platonic Gate")</div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Spectral Steering: Data Free LLM Alignment</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Alignment</span>
-                            <span class="project-tag">Inference Time</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Precise LLM behavior adjustment via singular value spectrum modification of MLP weights. Zero gradient updates, zero training data — operates entirely on the existing model weights at inference time. Achieves a Pareto improvement on the safety capability tradeoff.</div>
-                    <div class="project-result">Llama 3.2 3B: +2.4% sycophancy safety AND +1.4% GSM8K · Phi 3 Mini: 27% sycophancy reduction with +1% math</div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Agent Safety: Prompt Injection via Latent Probing</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Safety</span>
-                            <span class="project-tag">Adversarial</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Comparative study of activation probing vs spectral trust methods for prompt injection detection across GPT 2, Llama 3B, TinyLlama and Llama 1B. Probing achieves perfect in domain AUC but collapses cross domain; spectral methods generalize robustly.</div>
-                    <div class="project-result">Spectral: 0.86 to 0.90 AUC cross dataset · 0.757 to 0.804 F1 at 80%+ recall on mixed multi dataset</div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Spectral Extremism: Training Free Radicalization Detection</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Safety</span>
-                            <span class="project-tag">Content Moderation</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Detects radicalized text via spectral analysis of transformer attention, no fine tuning required. Discovered a critical "register confound" where models detect formality rather than ideology. Genuine within source extremism signal confirmed after register control.</div>
-                    <div class="project-result">0.75 to 0.82 AUROC across 5 models · Cohen's d 0.3 to 0.8 after register correction</div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Spectral Fingerprints: Voice Processing Across 20 Languages</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Interpretability</span>
-                            <span class="project-tag">Linguistics</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Training free spectral fingerprints of active vs passive voice in transformer attention across 20 typologically diverse languages. Attention heads in Layers 2 to 5 form distinct spectral signatures for syntactic structures, suggesting universal attention patterns across languages.</div>
-                    <div class="project-result">20 languages · cross lingual spectral consistency · submitted to ICASSP</div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Spectral Fold: Protein Language Model Interpretability</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Bio AI</span>
-                            <span class="project-tag">Interpretability</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Extends spectral graph analysis to protein language model embeddings (ESM 2, ProtT5, Ankh). Investigates whether the spectral interpretability methods developed for LLMs transfer to biological sequence models.</div>
-                    <div class="project-result">ESM 2, ProtT5, Ankh · Phase A: 50 proteins · scaling in progress</div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-header">
-                        <div class="project-title">Spectral Prior: Geometric Tabular Data Generation</div>
-                        <div class="project-tags">
-                            <span class="project-tag">Generative</span>
-                            <span class="project-tag">Tabular</span>
-                        </div>
-                    </div>
-                    <div class="project-desc">Generates synthetic tabular data with controllable spectral entropy. A 1.1M parameter NanoTabPFN, trained with spectral geometric priors, competes with commercial models 100× its size on TabArena benchmarks.</div>
-                    <div class="project-result">Matches or exceeds NeuralK on Blood Transfusion and Australian datasets at 1% of the parameter count</div>
-                </div>
-
-            </div>
-
-            <p class="subsection-heading">Open source</p>
-            <div class="os-card">
-                <div class="os-card-header">
-                    <div class="os-card-title">
-                        <a href="https://pypi.org/project/spectral-trust/" target="_blank">spectral trust</a>
-                    </div>
-                    <span class="badge badge-accepted">PyPI · Lead Maintainer · 2025 to Present</span>
-                </div>
-                <div class="os-card-desc">
-                    Open source transformer interpretability library. Real time spectral graph diagnostics for LLMs: logical fallacy detection, connectivity collapse monitoring, and circuit level trust metrics. Powers all spectral research projects above. Python and PyTorch.
+                <div class="grid grid-3">
+                    <a class="card is-wide" href="spectral-chat.html">
+                        <span class="card-icon is-orange"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg></span>
+                        <h3>Spectral Chat</h3>
+                        <p>Chat with Qwen2.5 0.5B running entirely in your browser. After each reply, Dirichlet energy, spectral entropy and a trust score are computed per layer from the model's attention, and labelled as proxy metrics when attention weights are not available.</p>
+                        <ul class="tag-list" role="list"><li class="tag">Transformers.js</li><li class="tag">about 400 MB, cached</li></ul>
+                    </a>
+                    <a class="card" href="spectral-demo.html">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-wave"/></svg></span>
+                        <h3>Geometry of Reason</h3>
+                        <p>Layer-wise Fiedler value, HFER, spectral entropy and smoothness for proof traces, across Llama 3.2 3B, Mistral 7B, Phi 3.5 mini and Qwen 2.5 7B.</p>
+                        <ul class="tag-list" role="list"><li class="tag">ICML 2026</li><li class="tag">Chart.js</li></ul>
+                    </a>
+                    <a class="card" href="hallugraph-demo/index.html">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-scale"/></svg></span>
+                        <h3>HalluGraph: legal RAG</h3>
+                        <p>Entity grounding and relation preservation between legal sources and an answer, with an audit trail for each flagged claim. The demo extracts entities with patterns for speed, where the paper uses spaCy NER with legal extensions.</p>
+                        <ul class="tag-list" role="list"><li class="tag">AAAI 2026</li><li class="tag">knowledge graphs</li></ul>
+                    </a>
+                    <a class="card" href="rega-demo/index.html">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-network"/></svg></span>
+                        <h3>ReGA: graph RAG verification</h3>
+                        <p>Hallucination detection by graph alignment: sentence graphs, message passing, Sinkhorn alignment and an alignment energy score, with adjustable hyperparameters.</p>
+                        <ul class="tag-list" role="list"><li class="tag">arXiv:2510.19117</li><li class="tag">Transformers.js</li></ul>
+                    </a>
+                    <a class="card" href="solar-demo/index.html">
+                        <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></span>
+                        <h3>Solar irradiance simulator</h3>
+                        <p>Physics-based GHI, DNI and DHI for any location worldwide, from the Kasten-Young air mass and Cooper declination models.</p>
+                        <ul class="tag-list" role="list"><li class="tag">physics</li><li class="tag">Chart.js</li></ul>
+                    </a>
                 </div>
             </div>
         </section>
 
         <!-- Experience -->
-        <section id="experience">
-            <h2>Experience</h2>
-            <div class="exp-list">
-                <div class="exp-item">
-                    <div class="exp-header">
-                        <div class="exp-title">Research Scientist — <a href="https://www.devoteam.com/"
-                                target="_blank">Devoteam</a></div>
-                        <div class="exp-date">Oct 2024 to Present</div>
-                    </div>
-                    <div class="exp-role">Mechanistic Interpretability, AI Safety, Trustworthy AI · Paris, France</div>
-                    <ul class="exp-bullets">
-                        <li>Spectral circuit analysis of transformer attention matrices; identified load bearing circuits and
-                            demonstrated logical coherence encoded as macroscopic topological properties (95.6% verification
-                            accuracy, d = 3.30).</li>
-                        <li>Discovered Passive Triggered Connectivity Collapse (PTCC) as a developmental failure mode;
-                            causally localized to Layer 2 induction heads; demonstrated targeted repair via activation
-                            steering.</li>
-                        <li>Cross architecture validation across 5+ model families (Llama, Qwen, Phi, Mistral, Gemma).</li>
-                        <li>Agentic safety: spectral kill switches for real time contamination detection; scale dependent
-                            shifts in optimal detector topology across 1B to 70B models.</li>
-                        <li>PI and co-PI on Large Scale AI Research Consortium Grant (joint with a leading university and CAC40
-                            industrial partner, 2025 to Present).</li>
-                    </ul>
+        <section class="section" id="experience" aria-labelledby="experience-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Experience</span>
+                    <h2 id="experience-title">Experience and education</h2>
                 </div>
-                <div class="exp-item">
-                    <div class="exp-header">
-                        <div class="exp-title">PhD Researcher — <a href="https://ens-paris-saclay.fr/"
-                                target="_blank">ENS Paris Saclay</a> and <a href="https://www.centralesupelec.fr/"
-                                target="_blank">CentraleSupélec</a></div>
-                        <div class="exp-date">Oct 2021 to Sept 2024</div>
-                    </div>
-                    <div class="exp-role">Deep Learning, Inverse Problems and Bayesian Methods · Supervisors: T. Rodet and D.
-                        Lesselier</div>
-                    <ul class="exp-bullets">
-                        <li>Bayesian deep learning for uncertainty quantification in multimodal inverse problems (EM and
-                            ultrasound).</li>
-                        <li>Transfer learning for latent structure recovery, conceptually linked to circuit analysis in
-                            foundation models.</li>
-                        <li>HPC training on national supercomputers (SLURM); three years of university teaching in AI,
-                            Signal Processing, and Algorithms (ENS Paris Saclay and Université Paris Saclay).</li>
-                    </ul>
-                </div>
-                <div class="exp-item">
-                    <div class="exp-header">
-                        <div class="exp-title">Research Intern — <a
-                                href="https://www.airbus.com/en/products-services/space" target="_blank">Airbus Defence and
-                                Space</a> and <a href="https://www.irap.omp.eu/en/homepage-en/"
-                                target="_blank">IRAP</a></div>
-                        <div class="exp-date">Feb to July 2021</div>
-                    </div>
-                    <div class="exp-role">Hyperspectral Imaging · Toulouse, France · Supervisor: H. Carfantan</div>
-                    <ul class="exp-bullets">
-                        <li>Forward and inverse simulation pipeline for DD CASSI hyperspectral imaging; ADMM and FISTA
-                            reconstruction; CUDA and cuPy GPU acceleration.</li>
+
+                <ol class="timeline" role="list">
+                    <li class="tl-item is-current">
+                        <div class="tl-head">
+                            <h3 class="tl-title">Research Scientist, <a href="https://www.devoteam.com/" target="_blank" rel="noopener">Devoteam</a></h3>
+                            <span class="tl-date">Oct 2024 to present</span>
+                        </div>
+                        <p class="tl-sub">Paris, France · Research programmes across the group in interpretability, AI safety and applied LLM products</p>
+                        <ul class="tl-bullets">
+                            <li>Lead research programmes that run across several Devoteam entities, setting the research direction and coordinating the teams that deliver it. Supervise 8 interns and work with a consulting organisation of about ninety people.</li>
+                            <li>Designed and shipped the Compliance Checker, a group asset for European AI Act compliance. It applies our research on prompt injection and hallucination detection to verify that generated output is grounded in the documents it cites and has not been steered by injected instructions.</li>
+                            <li>Built HalluGraph, a knowledge-graph provenance verifier for legal RAG that runs as an internal microservice. It reaches an AUC of 0.874 at detecting evidence that does not support the answer. Its blind spots were measured and documented before integration. Best Presentation Award, AAAI 2026.</li>
+                            <li>Showed that sycophancy is often carried by a single layer and can be suppressed by a closed-form, reversible weight edit, from 39.5% to 14.8% on a thousand-item benchmark. The cost on arithmetic reasoning was measured. No retraining and no inference overhead.</li>
+                            <li>Developed a graph signal processing framework that locates load-bearing attention circuits from weights alone, giving a training-free reasoning probe that verifies valid reasoning at 95.6% accuracy (ICML 2026, main track).</li>
+                            <li>Measured how errors spread through agent pipelines. One wrong step left in context raises the failure rate of later, logically unrelated steps by about seven percentage points, and a stronger model is no more resistant. Built spectral kill switches that detect contamination before the next call.</li>
+                            <li>Validated these methods across five model families, from one to fourteen billion parameters.</li>
+                        </ul>
+                    </li>
+                    <li class="tl-item">
+                        <div class="tl-head">
+                            <h3 class="tl-title">PhD Researcher, <a href="https://ens-paris-saclay.fr/" target="_blank" rel="noopener">ENS Paris-Saclay</a> and <a href="https://www.centralesupelec.fr/" target="_blank" rel="noopener">CentraleSupélec</a></h3>
+                            <span class="tl-date">Oct 2021 to Sept 2024</span>
+                        </div>
+                        <p class="tl-sub">Deep learning, inverse problems and Bayesian methods · Supervisors: T. Rodet and D. Lesselier</p>
+                        <ul class="tl-bullets">
+                            <li>Bayesian deep learning for uncertainty quantification in inverse problems that combine electromagnetic and ultrasound data, published in IEEE Transactions on Computational Imaging and the International Journal of Applied Electromagnetics and Mechanics.</li>
+                            <li>Transfer learning that treats reconstruction as the recovery of latent structure, the framing that underlies my circuit analysis work now.</li>
+                            <li>Physics-informed models trained and validated on national supercomputers under SLURM.</li>
+                        </ul>
+                    </li>
+                    <li class="tl-item">
+                        <div class="tl-head">
+                            <h3 class="tl-title">Research Intern, <a href="https://www.airbus.com/en/products-services/space" target="_blank" rel="noopener">Airbus Defence and Space</a> and <a href="https://www.irap.omp.eu/en/homepage-en/" target="_blank" rel="noopener">IRAP</a></h3>
+                            <span class="tl-date">Feb to July 2021</span>
+                        </div>
+                        <p class="tl-sub">Hyperspectral imaging · Toulouse, France · Supervisor: H. Carfantan</p>
+                        <ul class="tl-bullets">
+                            <li>Forward and inverse simulation pipeline for DD-CASSI hyperspectral imaging, with ADMM and FISTA reconstruction and CUDA and cuPy GPU acceleration.</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3 class="sub-head">Education</h3>
+                <div class="panel">
+                    <ul class="entry-list" role="list">
+                        <li class="entry">
+                            <div class="entry-main">
+                                <p class="entry-title">PhD in Deep Learning, <a href="https://ens-paris-saclay.fr/" target="_blank" rel="noopener">ENS Paris-Saclay</a> and <a href="https://www.centralesupelec.fr/" target="_blank" rel="noopener">CentraleSupélec</a></p>
+                                <p class="entry-sub">Paris, France · Supervisors: Thomas Rodet and Dominique Lesselier · Defended Oct 2024</p>
+                            </div>
+                            <span class="entry-date">Oct 2021 to Sept 2024</span>
+                        </li>
+                        <li class="entry">
+                            <div class="entry-main">
+                                <p class="entry-title">MSc in Control and Robotics (Signal Processing and AI), <a href="https://www.ec-nantes.fr/" target="_blank" rel="noopener">École Centrale de Nantes</a></p>
+                                <p class="entry-sub">Nantes, France · Graduated 2nd in class</p>
+                            </div>
+                            <span class="entry-date">Sept 2019 to July 2021</span>
+                        </li>
                     </ul>
                 </div>
             </div>
         </section>
 
-        <!-- Education -->
-        <section id="education">
-            <h2>Education</h2>
-            <div class="exp-list">
-                <div class="exp-item">
-                    <div class="exp-header">
-                        <div class="exp-title">PhD in Deep Learning — <a href="https://ens-paris-saclay.fr/"
-                                target="_blank">ENS Paris Saclay</a> and <a href="https://www.centralesupelec.fr/"
-                                target="_blank">CentraleSupélec</a></div>
-                        <div class="exp-date">Oct 2021 to Sept 2024</div>
-                    </div>
-                    <div class="exp-role">Paris, France</div>
+        <!-- Recognition, talks and service -->
+        <section class="section" id="recognition" aria-labelledby="recognition-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Recognition</span>
+                    <h2 id="recognition-title">Grants, awards, talks and service</h2>
                 </div>
-                <div class="exp-item">
-                    <div class="exp-header">
-                        <div class="exp-title">Master in Control and Robotics (Signal Processing and AI) — <a
-                                href="https://www.ec-nantes.fr/" target="_blank">Ecole Centrale de Nantes</a></div>
-                        <div class="exp-date">Sept 2019 to July 2021</div>
+                <div class="grid grid-2">
+                    <div class="panel" id="grants">
+                        <h3><svg class="icon" aria-hidden="true"><use href="#i-coins"/></svg> Grants</h3>
+                        <ul class="entry-list" role="list">
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Silico Research Grants, Goodfire</p>
+                                    <p class="entry-sub">Two competitive individual awards, USD 15,000 and USD 3,000 (USD 18,000 in compute credits), for spectral methods for open-weight model security</p>
+                                </div>
+                                <span class="entry-date">2026</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Large Scale AI Research Consortium Grant, PI and co-PI</p>
+                                    <p class="entry-sub">Joint with a leading university and a CAC40 industrial partner</p>
+                                </div>
+                                <span class="entry-date">2025 to present</span>
+                            </li>
+                        </ul>
                     </div>
-                    <div class="exp-role">Nantes, France · Graduated 2nd in class</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Awards -->
-        <section id="awards">
-            <h2>Awards</h2>
-            <div class="awards-list">
-                <div class="award-item">
-                    <div>
-                        <div class="award-name">Best Presentation Award — AAAI 2026, AILaw</div>
-                        <div class="award-sub">Association for the Advancement of Artificial Intelligence · Singapore</div>
+                    <div class="panel" id="awards">
+                        <h3><svg class="icon" aria-hidden="true"><use href="#i-award"/></svg> Awards</h3>
+                        <ul class="entry-list" role="list">
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Best Presentation Award, AAAI 2026, AILaw Bridge</p>
+                                    <p class="entry-sub">Association for the Advancement of Artificial Intelligence · Singapore</p>
+                                </div>
+                                <span class="entry-date">2026</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Best Student Paper Award, PIERS</p>
+                                    <p class="entry-sub">PhotonIcs and Electromagnetics Research Symposium · Prague, Czechia</p>
+                                </div>
+                                <span class="entry-date">2023</span>
+                            </li>
+                        </ul>
                     </div>
-                    <div class="award-year">2026</div>
-                </div>
-                <div class="award-item">
-                    <div>
-                        <div class="award-name">Best Student Paper Award — PIERS</div>
-                        <div class="award-sub">PhotonIcs and Electromagnetics Research Symposium · Prague, Czechia</div>
+                    <div class="panel" id="talks">
+                        <h3><svg class="icon" aria-hidden="true"><use href="#i-mic"/></svg> Talks</h3>
+                        <ul class="entry-list" role="list">
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title"><a href="https://www.icms.org.uk/" target="_blank" rel="noopener">AI and Mathematics Residency, International Centre for Mathematical Sciences</a></p>
+                                    <p class="entry-sub">Edinburgh, UK · Invited speaker</p>
+                                </div>
+                                <span class="entry-date">2026</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title"><a href="https://www.nvidia.com/gtc/" target="_blank" rel="noopener">NVIDIA GPU Technology Conference (GTC)</a></p>
+                                    <p class="entry-sub">Paris, France · Speaker</p>
+                                </div>
+                                <span class="entry-date">2025</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title"><a href="https://www.esilv.fr/" target="_blank" rel="noopener">École Supérieure d'Ingénieurs Léonard de Vinci (ESILV)</a></p>
+                                    <p class="entry-sub">Paris, France · Guest talk</p>
+                                </div>
+                                <span class="entry-date">2025</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title"><a href="https://en.uestc.edu.cn/" target="_blank" rel="noopener">University of Electronic Science and Technology of China (UESTC)</a></p>
+                                    <p class="entry-sub">Chengdu, China · Guest lecture</p>
+                                </div>
+                                <span class="entry-date">2025</span>
+                            </li>
+                        </ul>
                     </div>
-                    <div class="award-year">2023</div>
+                    <div class="panel" id="service">
+                        <h3><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg> Teaching and service</h3>
+                        <ul class="entry-list" role="list">
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Lead Maintainer, <a href="#open-source">spectral-trust</a></p>
+                                    <p class="entry-sub">Open-source transformer interpretability library in Python and PyTorch</p>
+                                </div>
+                                <span class="entry-date">2025 to present</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Steering Committee Member, ESIGELEC-IRSEEM</p>
+                                    <p class="entry-sub">NMD ILTN Master's programme: curriculum review, industry and alumni feedback</p>
+                                </div>
+                                <span class="entry-date">2026 to present</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Member, <a href="https://www.oxai.org/" target="_blank" rel="noopener">Oxford Artificial Intelligence Society (OxAI)</a></p>
+                                    <p class="entry-sub">Led the experimental design for contextual reward-modelling evaluation</p>
+                                </div>
+                                <span class="entry-date">2026 to present</span>
+                            </li>
+                            <li class="entry">
+                                <div class="entry-main">
+                                    <p class="entry-title">Lecturer, ENS Paris-Saclay and Université Paris-Saclay</p>
+                                    <p class="entry-sub">AI, signal and image processing, and algorithms: three courses over three years, and supervision of dual-degree research interns</p>
+                                </div>
+                                <span class="entry-date">2021 to 2024</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- Skills -->
-        <section id="skills">
-            <h2>Technical Skills</h2>
-            <div class="skills-grid">
-                <div>
-                    <div class="skill-label">Interpretability and Analysis</div>
-                    <div class="skill-value">Mechanistic Interpretability, Activation Patching and Steering, Circuit Analysis,
-                        Graph Signal Processing, Spectral Methods, Causal Inference, Probing Classifiers, Attention Head
-                        Decomposition</div>
+        <section class="section" id="skills" aria-labelledby="skills-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Skills</span>
+                    <h2 id="skills-title">Technical skills</h2>
                 </div>
-                <div>
-                    <div class="skill-label">Modeling and Training</div>
-                    <div class="skill-value">PyTorch, JAX, Hugging Face Transformers, PEFT and LoRA, CUDA and cuPy, DeepSpeed
-                        (DDP, FSDP, ZeRO), Hugging Face Accelerate, SLURM, Bayesian Neural Networks</div>
+                <dl class="skills">
+                    <div>
+                        <dt>Interpretability and safety</dt>
+                        <dd>Mechanistic interpretability, activation patching and steering, circuit analysis, sparse autoencoders, probing classifiers, attention head decomposition, graph signal processing, spectral methods, causal inference, red-teaming, behavioural evaluation harnesses (lm-eval), sycophancy and faithfulness benchmarks</dd>
+                    </div>
+                    <div>
+                        <dt>Machine learning</dt>
+                        <dd>PyTorch, JAX, Hugging Face Transformers, PEFT and LoRA, CUDA and cuPy, DeepSpeed (DDP, FSDP, ZeRO), Hugging Face Accelerate, SLURM, Bayesian neural networks, inverse problems</dd>
+                    </div>
+                    <div>
+                        <dt>Programming and data</dt>
+                        <dd>Python, C and C++, Julia, Matlab, SQL, PyTorch Geometric, DGL, NetworkX, Neo4j, FAISS, Milvus, pandas, Polars, NumPy</dd>
+                    </div>
+                    <div>
+                        <dt>Statistics</dt>
+                        <dd>Bootstrap confidence intervals, cluster bootstrap, FDR correction, effect sizes, pre-registered analysis, power analysis</dd>
+                    </div>
+                    <div>
+                        <dt>Languages</dt>
+                        <dd>French (native), English (C2), German (B2 to C1)</dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+
+        <!-- Writing -->
+        <section class="section" id="writing" aria-labelledby="writing-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <span class="eyebrow">Writing</span>
+                    <h2 id="writing-title">Notes and posts</h2>
+                    <p class="lede">Notes on interpretability, AI safety and research.</p>
                 </div>
-                <div>
-                    <div class="skill-label">Evaluation and Safety</div>
-                    <div class="skill-value">Activation Steering, Red Teaming, lm eval, Sycophancy and Faithfulness
-                        Benchmarks, Statistical Testing (bootstrap CIs, FDR correction, effect sizes)</div>
-                </div>
-                <div>
-                    <div class="skill-label">Graph and Data</div>
-                    <div class="skill-value">PyTorch Geometric, DGL, NetworkX, Neo4j, FAISS, Milvus, pandas, Polars</div>
-                </div>
-                <div>
-                    <div class="skill-label">Languages</div>
-                    <div class="skill-value">French (native), English (C2), German (B2 to C1)</div>
-                </div>
+                <ol class="post-list" role="list" data-posts="posts/posts.json" data-limit="5">
+                    <li class="post-item">
+                        <div class="post-head">
+                            <h3 class="post-title"><a href="posts/site-relaunch.html">Site relaunch: what this space is for</a></h3>
+                            <time class="post-date" datetime="2026-05-27">27 May 2026</time>
+                        </div>
+                        <p class="post-excerpt">A quick note on why I'm starting to write here, what I'll cover, and how to follow along.</p>
+                        <ul class="tag-list" role="list"><li class="tag">meta</li></ul>
+                    </li>
+                </ol>
+                <a class="more-link" href="posts/index.html">All posts <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
             </div>
         </section>
 
         <!-- Contact -->
-        <section id="contact">
-            <h2>Contact</h2>
-            <p class="contact-body">
-                I am open to conversations about mechanistic interpretability, AI safety research, and collaboration.
-                Best reached by <a href="mailto:val.noel@proton.me">email (val.noel@proton.me)</a>.
-                Also on <a href="https://www.linkedin.com/in/valnoelphd/" target="_blank">LinkedIn</a> and
-                <a href="https://github.com/vcnoel" target="_blank">GitHub</a>.
-            </p>
+        <section class="section" id="contact" aria-labelledby="contact-title">
+            <div class="wrap reveal">
+                <div class="contact">
+                    <div>
+                        <span class="eyebrow">Contact</span>
+                        <h2 id="contact-title" class="h2">Get in touch</h2>
+                        <p class="lede">I am open to conversations about mechanistic interpretability, AI safety research and collaboration. Email is the best way to reach me, at <a href="mailto:val.noel@proton.me">val.noel@proton.me</a>.</p>
+                    </div>
+                    <div class="btn-row">
+                        <a class="btn btn-primary" href="mailto:val.noel@proton.me">
+                            <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg> Email
+                        </a>
+                        <a class="btn" href="assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">
+                            <svg class="icon" aria-hidden="true"><use href="#i-file"/></svg> CV (PDF)
+                        </a>
+                        <a class="btn" href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg> LinkedIn
+                        </a>
+                        <a class="btn" href="https://github.com/vcnoel" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg> GitHub
+                        </a>
+                        <a class="btn" href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg> Google Scholar
+                        </a>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
 
-    <footer>
-        <div class="footer-icons">
-            <a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" title="LinkedIn">
-                <i class="fab fa-linkedin"></i>
-            </a>
-            <a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&hl=fr" target="_blank"
-                title="Google Scholar">
-                <i class="fab fa-google-scholar"></i>
-            </a>
-            <a href="https://github.com/vcnoel" target="_blank" title="GitHub">
-                <i class="fab fa-github"></i>
-            </a>
-            <a href="mailto:val.noel@proton.me" title="Email">
-                <i class="fas fa-envelope"></i>
-            </a>
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <p>© 2026 Valentin Noël</p>
+            <ul class="footer-links" role="list">
+                <li><a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg></a></li>
+                <li><a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener" aria-label="Google Scholar"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg></a></li>
+                <li><a href="https://github.com/vcnoel" target="_blank" rel="noopener" aria-label="GitHub"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg></a></li>
+                <li><a href="mailto:val.noel@proton.me" aria-label="Email"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></a></li>
+            </ul>
         </div>
-        <p class="footer-text">© 2026 Valentin Noël</p>
     </footer>
-
-    <script>
-        async function loadPosts() {
-            const container = document.getElementById('posts-container');
-            try {
-                const res = await fetch('posts/posts.json');
-                if (!res.ok) throw new Error();
-                const posts = await res.json();
-
-                if (!posts.length) {
-                    container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No posts yet.</p>';
-                    return;
-                }
-
-                const recent = posts.slice(0, 5);
-                container.innerHTML = recent.map(post => `
-                    <div class="post-item">
-                        <div class="post-header">
-                            <div class="post-title">
-                                <a href="${post.url}">${post.title}</a>${post.type === 'repost' ? `<span class="repost-label"> via ${post.source}</span>` : ''}
-                            </div>
-                            <div class="post-date">${fmtDate(post.date)}</div>
-                        </div>
-                        ${post.excerpt ? `<div class="post-excerpt">${post.excerpt}</div>` : ''}
-                        ${post.tags && post.tags.length ? `<div class="post-tags">${post.tags.map(t => `<span class="post-tag">${t}</span>`).join('')}</div>` : ''}
-                    </div>
-                `).join('');
-            } catch {
-                container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Posts coming soon.</p>';
-            }
-        }
-
-        function fmtDate(s) {
-            return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-        }
-
-        loadPosts();
-    </script>
 </body>
 
 </html>
