@@ -1,0 +1,15 @@
+# spectral-trust 0.4.0, transformer_lens 4.3.0, torch 2.15.0+cpu, transformers 5.22.2
+# model gpt2 through TransformerBridge, prompt: The cat sat on the mat because it was warm.
+>>> cache
+SpectralCache('gpt2', 12 tokens, layers 0-11, 12 heads, metrics: attn=5, resid=4, graph=10)
+>>> cache.layer(5).head(1)
+HeadSpectra(layer 5, head 1)
+  attn.fiedler_value           0.9865
+  attn.connectivity_ratio      0.5359
+  attn.spectral_entropy_norm   0.9564
+  attn.hfer                    0.5789
+  attn.spectral_radius         1.8407
+  resid.energy                 7199038.5000
+  resid.smoothness_index       0.7784
+  resid.spectral_entropy       0.7063
+  resid.hfer                   0.4215

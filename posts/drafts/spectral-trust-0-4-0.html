@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>spectral-trust 0.4.0 · Valentin Noël</title>
+    <meta name="description" content="Version 0.4.0 of spectral-trust adds a one-call API, adapters for TransformerLens, nnsight and Hugging Face, interactive views, a faster core and fixes that change results.">
+    <meta name="author" content="Valentin Noël">
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://vcnoel.github.io/posts/spectral-trust-0-4-0.html">
+    <meta name="theme-color" content="#fbfaf7">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Valentin Noël">
+    <meta property="og:url" content="https://vcnoel.github.io/posts/spectral-trust-0-4-0.html">
+    <meta property="og:title" content="spectral-trust 0.4.0">
+    <meta property="og:description" content="Version 0.4.0 of spectral-trust adds a one-call API, adapters for TransformerLens, nnsight and Hugging Face, interactive views, a faster core and fixes that change results.">
+    <meta property="og:image" content="https://vcnoel.github.io/posts/figures/spectral-trust-0-4-0/race.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.className += ' js';
+            try { t = localStorage.getItem('theme'); } catch (e) { t = null; }
+            if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            var dark = (t === 'light' || t === 'dark') ? t === 'dark'
+                : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            d.setAttribute('data-theme-effective', dark ? 'dark' : 'light');
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
+    <link rel="stylesheet" href="/assets/css/site.css">
+    <script src="/assets/js/site.js" defer></script>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+        <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 19l-7-7 7-7"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5M22 10v6"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+        <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="/index.html">
+                <img src="/favicon.svg" alt="" width="26" height="26">
+                <span>Valentin Noël</span>
+            </a>
+            <nav class="site-nav" id="site-nav" aria-label="Main">
+                <ul>
+                    <li><a href="/index.html#research">Research</a></li>
+                    <li><a href="https://vcnoel.github.io/spectral-trust/"><img class="nav-mark on-light" src="/assets/img/spectral-trust-mark.svg" alt="" width="18" height="18"><img class="nav-mark on-dark" src="/assets/img/spectral-trust-mark-dark.svg" alt="" width="18" height="18">spectral-trust</a></li>
+                    <li><a href="/index.html#publications">Publications</a></li>
+                    <li><a href="/index.html#about">About</a></li>
+                    <li><a href="/posts/index.html">Blog</a></li>
+                    <li><a href="/assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">CV</a></li>
+                </ul>
+            </nav>
+            <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+                <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+                <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="main" class="wrap narrow">
+        <article class="article">
+            <p class="draft-banner">Draft. Not listed and not indexed.</p>
+            <h1>spectral-trust 0.4.0</h1>
+            <div class="article-meta">
+                <time datetime="2026-01-01">[publication date]</time>
+                <span>4 min read</span>
+                <ul class="tag-list" role="list">
+                    <li class="tag">interpretability</li>
+                    <li class="tag">software</li>
+                </ul>
+            </div>
+
+            <div class="prose">
+                <p>spectral-trust turns the attention of a transformer into graphs over the tokens and measures them: the Laplacian spectrum of every head, and the frequency content of the residual stream on those graphs, from one forward pass. Version 0.4.0 makes the library easier to use next to the tools people already have. One call returns every measurement, adapters read TransformerLens, nnsight and Hugging Face runs, the results can draw themselves, the core is faster, and a few fixes change results for existing callers.</p>
+
+                <h2>One call</h2>
+                <p>The new front door is <code>SpectralModel</code>. <code>from_pretrained</code> loads a Hugging Face causal language model with eager attention, or wraps one that is already loaded, and <code>run_with_spectra</code> runs it once and returns a <code>SpectralCache</code>.</p>
+<pre><code>import spectral_trust as st
+
+model = st.SpectralModel.from_pretrained("Qwen/Qwen3-0.6B")
+cache = model.run_with_spectra("The cat sat on the mat because it was warm.")
+print(cache["blocks.10.attn.fiedler_value"])     # one value per head
+print(cache["blocks.10.graph.hfer"])             # the head-averaged graph</code></pre>
+                <p>The keys follow the naming of TransformerLens. <code>blocks.{l}.attn.{metric}</code> holds one value per head, from the attention weights alone, <code>blocks.{l}.resid.{metric}</code> the per-head metrics that also read the hidden states, and <code>blocks.{l}.graph.{metric}</code> the metrics of the head-averaged graph. <code>cache.layer(10).head(3)</code> gives every measurement of one head, <code>cache.to_dataframe()</code> a long table, and a list of texts runs as a batch.</p>
+
+                <h2>TransformerLens, nnsight and Hugging Face</h2>
+                <p>If you already have a run, you do not need a second forward pass. <code>st.from_transformer_lens</code> reads the attention patterns and the residual stream from a TransformerLens cache and returns the same <code>SpectralCache</code>.</p>
+
+                <figure class="post-figure">
+                    <video data-loop muted loop playsinline preload="none" width="720" height="409"
+                        poster="/posts/figures/spectral-trust-0-4-0/transformer-lens.png" aria-label="A Python terminal. Two lines are typed: a TransformerLens run_with_cache call, then st.from_transformer_lens on the cache it returned. The output appears: a SpectralCache for gpt2 with 12 tokens, layers 0 to 11 and 12 heads, then the nine measurements of layer 5, head 1.">
+                        <source src="/posts/figures/spectral-trust-0-4-0/transformer-lens.webm" type="video/webm">
+                        <source src="/posts/figures/spectral-trust-0-4-0/transformer-lens.mp4" type="video/mp4">
+                        <img src="/posts/figures/spectral-trust-0-4-0/transformer-lens.gif" alt="A Python terminal. Two lines are typed: a TransformerLens run_with_cache call, then st.from_transformer_lens on the cache it returned. The output appears: a SpectralCache for gpt2 with 12 tokens, layers 0 to 11 and 12 heads, then the nine measurements of layer 5, head 1." width="720" height="409" loading="lazy">
+                    </video>
+                    <figcaption>The real output on gpt2 through <code>TransformerBridge</code> (TransformerLens 4.3.0): the cache, then the nine measurements of layer 5, head 1.</figcaption>
+                </figure>
+
+                <p><code>st.from_nnsight</code> does the same for tensors saved inside an nnsight trace, and <code>st.from_hf_outputs</code> for a Hugging Face forward pass run with <code>output_attentions=True</code>. Neither TransformerLens nor nnsight is a dependency of the core install. Patch, ablate or steer with those libraries, then measure the attention graphs here.</p>
+
+                <h2>Views</h2>
+                <p>A cache can draw itself. <code>cache.graph(10, head=3)</code> shows the attention graph of one head, with the tokens as nodes coloured by the Fiedler vector. <code>cache.heatmap("fiedler_value")</code> shows one metric over layers and heads, and <code>cache.spectrum(10)</code> the Laplacian spectrum of a layer. Each view is self-contained SVG with tooltips, renders inline in Jupyter and saves as a standalone HTML file that opens offline.</p>
+
+                <h2>Speed</h2>
+                <p>I timed the same job in both versions: the hidden-state metrics (energy, smoothness, spectral entropy and HFER) for the 28 layers of Qwen3-0.6B on one prompt of 512 tokens, on the head-averaged graph of each layer and on the graph of each of its 16 heads.</p>
+
+                <figure class="post-figure">
+                    <video data-loop muted loop playsinline preload="none" width="720" height="310"
+                        poster="/posts/figures/spectral-trust-0-4-0/race.png" aria-label="Two terminal cards run the same job side by side, each with a progress bar over 28 layers and a running clock. spectral-trust 0.3.0 on the left finishes after 56.6 seconds. spectral-trust 0.4.0 on the right finishes after 11.7 seconds, 4.8 times faster. The replay runs at 3 times the measured speed.">
+                        <source src="/posts/figures/spectral-trust-0-4-0/race.webm" type="video/webm">
+                        <source src="/posts/figures/spectral-trust-0-4-0/race.mp4" type="video/mp4">
+                        <img src="/posts/figures/spectral-trust-0-4-0/race.gif" alt="Two terminal cards run the same job side by side, each with a progress bar over 28 layers and a running clock. spectral-trust 0.3.0 on the left finishes after 56.6 seconds. spectral-trust 0.4.0 on the right finishes after 11.7 seconds, 4.8 times faster. The replay runs at 3 times the measured speed." width="720" height="310" loading="lazy">
+                    </video>
+                    <figcaption>0.3.0: 56.6 s, 0.4.0: 11.7 s, 4.8x. Medians of 3 runs, each version on its defaults, replayed at 3x speed. 0.3.0 with the dense solver: 34.5 s, so 2.9x. The forward pass of the model (3.3 to 3.9 s) is outside both clocks. Left: a loop of <code>analyze_layer</code> over the layers and their heads, one timestamp per layer. Right: one <code>run_with_spectra</code> call, timestamps taken as its per-layer functions return. It also computes the per-head attention metrics (pale segments), which the 0.3.0 loop does not. CPU only, 2 threads, a laptop CPU, torch 2.15.0.</figcaption>
+                </figure>
+
+                <p>Only part of the gap comes from the default solver: with the dense solver, 0.3.0 is still 2.9 times slower. The Dirichlet energy and the smoothness index are now trace-only sums that never form a d by d matrix, <code>analyze_layer</code> projects the signals onto the eigenbasis once instead of three times, and the heads of a layer are decomposed in one batched call.</p>
+
+                <h2>Fixes that change results</h2>
+                <ul>
+                    <li>The default <code>eigen_solver</code> is now <code>"dense"</code>. Above 50 tokens the old <code>"sparse"</code> default kept 50 modes, so HFER and spectral entropy came from a truncated basis. On the prompt of the race, it gives an HFER of 0.00013 at layer 2, where the full basis gives 0.0028.</li>
+                    <li><code>per_head_metrics</code> with <code>normalization="rw"</code> symmetrised the operator before the eigensolve, so it reported the spectrum of a different matrix. It now reports that of the random-walk operator. Results with the default <code>sym</code> normalisation are unchanged.</li>
+                    <li><code>connectivity</code> now uses a tolerance that scales with the size of the graph and the floating-point precision. The fixed threshold of 0.3.0 could report a connected graph as disconnected because of float32 noise on the zero mode.</li>
+                    <li>Hybrid models such as Qwen3.5 return attention for their full-attention layers only. <code>analyze_text</code> now pairs each attention tensor with the output of its own layer and reports the true layer index. In 0.3.0 the hybrid metrics used the hidden states of another layer.</li>
+                </ul>
+                <p>The default normalisation of the command line also moves from <code>rw</code> to <code>sym</code>. With <code>normalization="sym"</code> and <code>eigen_solver="dense"</code>, 0.4.0 reproduces 0.3.0 to float32 rounding: in my timing logs both versions give the same HFER on all 28 layers. The full list is in the <a href="https://github.com/vcnoel/spectral-trust/blob/main/CHANGELOG.md">changelog</a>.</p>
+
+                <h2>Install and links</h2>
+<pre><code>pip install --upgrade spectral-trust</code></pre>
+                <p>The extras <code>spectral-trust[tl]</code> and <code>spectral-trust[nnsight]</code> add TransformerLens and nnsight. The package is on <a href="https://pypi.org/project/spectral-trust/">PyPI</a>, the source is on <a href="https://github.com/vcnoel/spectral-trust">GitHub</a>, and the <a href="https://vcnoel.github.io/spectral-trust/">documentation</a> has three tutorials and the API reference.</p>
+                <p>spectral-trust is used in work by researchers at Cornell, Goodfire AI, Imperial College London and École Polytechnique (<a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener">arXiv:2608.03015</a>, <a href="https://arxiv.org/abs/2610.16709" target="_blank" rel="noopener">arXiv:2610.16709</a>).</p>
+            </div>
+
+            <div class="article-foot">
+                <a class="more-link" href="/posts/index.html">All posts</a>
+                <a class="more-link" href="/index.html">Home page</a>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <p>© 2026 Valentin Noël</p>
+            <ul class="footer-links" role="list">
+                <li><a href="mailto:val.noel@proton.me" aria-label="Email"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></a></li>
+                <li><a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener" aria-label="Google Scholar"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg></a></li>
+                <li><a href="https://github.com/vcnoel" target="_blank" rel="noopener" aria-label="GitHub"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg></a></li>
+                <li><a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg></a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>
