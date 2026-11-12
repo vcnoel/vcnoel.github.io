@@ -98,7 +98,7 @@ def main() -> int:
     listing = args.frames_dir / "frames.txt"
     listing.write_text("".join(f"file '{f.name}'\nduration {1 / args.fps:.6f}\n" for f in frames) + f"file '{frames[-1].name}'\n",
                        encoding="utf-8")
-    common = [ffmpeg, "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", listing.name,
+    common = [ffmpeg, "-y", "-loglevel", "error", "-threads", "2", "-f", "concat", "-safe", "0", "-i", listing.name,
               "-an", "-fps_mode", "cfr", "-r", str(args.fps), "-pix_fmt", "yuv420p"]
     jobs = {
         ".webm": ["-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "36", "-row-mt", "1"],
