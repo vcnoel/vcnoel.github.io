@@ -23,14 +23,14 @@ PNG files were resized to 120 px high.
 | cornell.svg | Cornell University | https://commons.wikimedia.org/wiki/File:Cornell_University_logo.svg (public domain per Commons) | Bao et al. 2026, https://arxiv.org/abs/2608.03015 |
 | goodfire.svg | Goodfire AI | https://www.goodfire.com/ (site logo, https://www.goodfire.com/_astro/logo.B6ErOjAg.svg) | Bao et al. 2026, https://arxiv.org/abs/2608.03015 |
 | imperial.png | Imperial College London | https://commons.wikimedia.org/wiki/File:Imperial_College_London_new_logo.png (public domain per Commons) | Bao et al. 2026, https://arxiv.org/abs/2608.03015 |
-| polytechnique.png | École Polytechnique | https://www.polytechnique.edu/ (site footer logo, https://www.polytechnique.edu/sites/default/files/nc-project/footer/logo.png) | Kim, Lutzeyer and Guo 2026, https://arxiv.org/abs/2610.16709 |
+| polytechnique.svg | École Polytechnique | https://www.polytechnique.edu/ (the vector logo in the site header, cropped to the École Polytechnique mark, without the Institut Polytechnique de Paris part beside it, with the name set as text next to it) | Kim, Lutzeyer and Guo 2026, https://arxiv.org/abs/2610.16709 |
 
 ## Venues of accepted papers
 
 | File | Venue | Source |
 |---|---|---|
 | icml.svg | ICML | https://icml.cc/ (site logo, https://icml.cc/static/core/img/ICML-logo.svg) |
-| neurips.svg | NeurIPS | https://neurips.cc/ (site logo, https://neurips.cc/static/core/img/NeurIPS-logo.svg; a viewBox was added so it scales) |
+| neurips.svg | NeurIPS | https://neurips.cc/ (site logo, https://neurips.cc/static/core/img/NeurIPS-logo.svg, with a viewBox added so it scales) |
 | aaai.svg | AAAI | https://commons.wikimedia.org/wiki/File:AAAI_logo_(2023).svg (public domain per Commons) |
 | acl.svg | ACL | https://commons.wikimedia.org/wiki/File:Association_for_Computational_Linguistics_logo.svg (public domain per Commons) |
 | ieee.svg | IEEE | https://commons.wikimedia.org/wiki/File:IEEE_logo.svg (public domain per Commons) |
