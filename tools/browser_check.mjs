@@ -25,7 +25,7 @@ const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args
 // --root serves another folder, for example a built docs site, with the same checks.
 const ROOT = resolve(opt('--root', REPO));
 const PREFIX = opt('--prefix', '');
-const PAGES = opt('--pages', 'index.html,posts/index.html,posts/site-relaunch.html,posts/template.html').split(',');
+const PAGES = opt('--pages', 'index.html,software/spectral-trust.html,posts/index.html,posts/site-relaunch.html,posts/template.html').split(',');
 const WIDTHS = opt('--widths', '360,390,414,768,1280').split(',').map(Number);
 const THEMES = ['light', 'dark'];
 const OUT = resolve(opt('--out', join(REPO, 'tools', 'screens')));
@@ -315,18 +315,18 @@ async function main() {
         }
     }
 
-    // With motion allowed: the film strip lights up once when it scrolls into view, and blocks
-    // below the fold are revealed by scrolling.
-    if (PAGES.includes('index.html') && ROOT === REPO) {
+    // With motion allowed: the attention graph draws in once it is in view, the film strip lights up
+    // once, the hero text settles, and blocks below the fold are revealed by scrolling.
+    const motionPages = PAGES.filter((pg) => ['index.html', 'software/spectral-trust.html'].includes(pg));
+    for (const pg of ROOT === REPO ? motionPages : []) {
         bucket = [];
         await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, s);
         await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }, s);
         await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, s);
         const loaded = cdp.waitFor('Page.loadEventFired', s);
-        await cdp.send('Page.navigate', { url: `${base}/index.html` }, s);
+        await cdp.send('Page.navigate', { url: `${base}/${pg}` }, s);
         await loaded;
         await sleep(300);
-        const ready = await evaluate("document.querySelector('[data-strip]').classList.contains('is-ready')");
         const pending = await evaluate("document.querySelectorAll('.reveal.is-pending').length");
         const after = await evaluate(`(async () => {
             for (let y = 0; y < document.documentElement.scrollHeight; y += 400) {
@@ -336,17 +336,40 @@ async function main() {
             await new Promise((r) => setTimeout(r, 400));
             return document.querySelectorAll('.reveal.is-pending').length;
         })()`);
-        await evaluate("document.querySelector('[data-strip]').scrollIntoView({ block: 'center', behavior: 'instant' })");
-        await sleep(3500);
-        const played = JSON.parse(await evaluate(`(() => {
+        const state = JSON.parse(await evaluate(`(async () => {
+            const res = {};
+            const g = document.querySelector('svg.st-graph');
+            if (g) {
+                g.scrollIntoView({ block: 'center', behavior: 'instant' });
+                await new Promise((r) => setTimeout(r, 4500));
+                const line = g.querySelector('.g-edges line:last-child');
+                const node = g.querySelector('.g-nodes circle');
+                res.graph = { ready: g.classList.contains('is-ready'), played: g.classList.contains('is-played'),
+                    dash: getComputedStyle(line).strokeDashoffset,
+                    fill: getComputedStyle(node).fill, target: node.style.getPropertyValue('--c') };
+            }
             const st = document.querySelector('[data-strip]');
-            const cells = [...st.querySelectorAll('.strip-cell')].map((c) => getComputedStyle(c).opacity);
-            return JSON.stringify({ played: st.classList.contains('is-played'), cells });
+            if (st) {
+                st.scrollIntoView({ block: 'center', behavior: 'instant' });
+                await new Promise((r) => setTimeout(r, 3500));
+                res.strip = { played: st.classList.contains('is-played') || !st.classList.contains('is-ready'),
+                    cells: [...st.querySelectorAll('.strip-cell')].map((c) => getComputedStyle(c).opacity) };
+            }
+            const hero = document.querySelector('.hero .hero-text > *');
+            res.hero = hero ? getComputedStyle(hero).opacity : null;
+            return JSON.stringify(res);
         })()`));
-        report.push(`motion pass: strip ready ${ready}, ${JSON.stringify(played)}, reveal ${pending} pending then ${after}`);
-        if (!ready || !played.played || played.cells.some((o) => o !== '1')) errors.push(`film strip did not play to its final state: ${JSON.stringify(played)}`);
-        if (!(pending > 0 && after === 0)) errors.push(`reveal on scroll: ${pending} pending at load, ${after} after scrolling`);
-        for (const b of bucket) errors.push(`index.html motion pass: ${b}`);
+        report.push(`motion pass ${pg}: ${JSON.stringify(state)}, reveal ${pending} pending then ${after}`);
+        const hex = (c) => c.trim().toLowerCase();
+        const rgb = (h) => { const n = parseInt(h.slice(1), 16); return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`; };
+        if (state.graph && !(state.graph.ready && state.graph.played && parseFloat(state.graph.dash) === 0 && state.graph.fill === rgb(hex(state.graph.target))))
+            errors.push(`${pg}: the attention graph did not draw to its final state: ${JSON.stringify(state.graph)}`);
+        if (state.strip && (!state.strip.played || state.strip.cells.some((o) => o !== '1')))
+            errors.push(`${pg}: the film strip did not reach its final state: ${JSON.stringify(state.strip)}`);
+        if (state.hero !== null && state.hero !== '1') errors.push(`${pg}: the hero text did not settle (opacity ${state.hero})`);
+        if (after !== 0) errors.push(`${pg}: reveal on scroll left ${after} blocks hidden`);
+        if (pg === 'index.html' && !(pending > 0)) errors.push(`${pg}: no block was waiting to be revealed`);
+        for (const b of bucket) errors.push(`${pg} motion pass: ${b}`);
     }
 
     await cdp.send('Browser.close').catch(() => {});

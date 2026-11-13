@@ -289,7 +289,7 @@ def main() -> int:
         for p in ROOT.rglob("*.html")
         if not any(part.startswith((".", "_")) or part == "node_modules" for part in p.relative_to(ROOT).parts)
     )
-    REDESIGNED[:] = ["index.html"] + [r for r in pages if r.startswith("posts/")]
+    REDESIGNED[:] = ["index.html"] + [r for r in pages if r.startswith(("posts/", "software/"))]
     drafts = [r for r in pages if r.startswith("posts/drafts/")]
     parsed: dict[str, Page] = {}
     for rel in pages:
