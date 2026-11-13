@@ -250,6 +250,21 @@ async function main() {
                     if (lay.demo && lay.demo.stripWidth > width) errors.push(`${label}: the film strip is wider than the page`);
                 }
 
+                // Post figures: every video must load from one of its sources (WebM or MP4).
+                if (width === 1280 && theme === 'light') {
+                    const vids = await evaluate(`Promise.all([...document.querySelectorAll('video')].map((v) => new Promise((r) => {
+                        const done = (ok) => r((ok ? 'ok ' : 'failed ') + (v.currentSrc || v.querySelector('source')?.getAttribute('src')) + ' ' + v.videoWidth + 'x' + v.videoHeight);
+                        v.preload = 'metadata';
+                        v.addEventListener('loadedmetadata', () => done(true), { once: true });
+                        setTimeout(() => done(v.readyState >= 1), 10000);
+                        v.load();
+                    }))).then((x) => JSON.stringify(x))`);
+                    for (const line of JSON.parse(vids)) {
+                        if (!line.startsWith('ok ')) errors.push(`${label}: video ${line}`);
+                    }
+                    if (JSON.parse(vids).length) report.push(`  videos: ${JSON.parse(vids).length} loaded`);
+                }
+
                 const height = Math.min(lay.height, 16000);
                 const shot = await cdp.send('Page.captureScreenshot', {
                     format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height, scale: 1 },

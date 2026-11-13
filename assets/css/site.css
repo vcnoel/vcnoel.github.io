@@ -783,6 +783,7 @@ html:not(.js) .filter-bar { display: none; }
     min-width: var(--tap);
     padding: 4px 8px;
     border-radius: 8px;
+    text-decoration: none;
     transition: background-color 0.25s;
 }
 .logo-row img {
