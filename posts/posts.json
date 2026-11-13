@@ -1,11 +1,49 @@
 [
   {
+    "id": "spectral-trust-0-4-0",
+    "title": "spectral-trust 0.4.0",
+    "date": "2026-11-13",
+    "type": "original",
+    "excerpt": "Version 0.4.0 of spectral-trust adds a one-call API, adapters for TransformerLens, nnsight and Hugging Face, interactive views, a faster core and fixes that change results.",
+    "url": "posts/spectral-trust-0-4-0.html",
+    "tags": [
+      "interpretability",
+      "software"
+    ]
+  },
+  {
+    "id": "probe-direction",
+    "title": "A probe direction is a property of its prompt",
+    "date": "2026-11-13",
+    "type": "original",
+    "excerpt": "A common probe for whether a language model senses it is being tested gives a score, and a trend with model size, that follow the wording of the contrastive prompt more than the model.",
+    "url": "posts/probe-direction.html",
+    "tags": [
+      "interpretability"
+    ]
+  },
+  {
+    "id": "peer-notes",
+    "title": "Secondhand rule-breaking: what a peer's note does to an agent",
+    "date": "2026-11-13",
+    "type": "original",
+    "excerpt": "Notes left by agents of one open-weight model lead agents of other models to break a rule in their own prompt, and one sentence about the act moves them either way.",
+    "url": "posts/peer-notes.html",
+    "tags": [
+      "agents",
+      "AI safety",
+      "interpretability"
+    ]
+  },
+  {
     "id": "site-relaunch",
     "title": "Site relaunch: what this space is for",
     "date": "2026-05-27",
     "type": "original",
     "excerpt": "A quick note on why I'm starting to write here, what I'll cover, and how to follow along.",
     "url": "posts/site-relaunch.html",
-    "tags": ["meta"]
+    "tags": [
+      "meta"
+    ]
   }
 ]
