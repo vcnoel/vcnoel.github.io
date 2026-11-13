@@ -439,6 +439,123 @@ async function main() {
         for (const b of bucket) errors.push(`${pg} motion pass: ${b}`);
     }
 
+    // With motion allowed: the banner moves to the next item after 5.5 s, holds while the pointer or
+    // the keyboard focus is on it and while paused, and the page below it never moves (no layout shift).
+    if (ROOT === REPO && PAGES.includes('index.html')) {
+        bucket = [];
+        await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, s);
+        await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }, s);
+        await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, s);
+        await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 640, y: 700 }, s);
+        const loaded = cdp.waitFor('Page.loadEventFired', s);
+        await cdp.send('Page.navigate', { url: `${base}/index.html` }, s);
+        await loaded;
+        await evaluate(`(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); return true; })()`);
+        const idx = () => evaluate("[...document.querySelectorAll('.announce-item')].findIndex((i) => i.classList.contains('is-active'))");
+        const mainTop = () => evaluate("Math.round(document.getElementById('main').getBoundingClientRect().top + scrollY)");
+        const res = { items: await evaluate("document.querySelectorAll('.announce-item').length"), top0: await mainTop(), start: await idx() };
+        await sleep(6200);
+        res.after6s = await idx();
+        res.top1 = await mainTop();
+        const bb = JSON.parse(await evaluate("JSON.stringify(document.querySelector('[data-announce]').getBoundingClientRect())"));
+        await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: Math.round(bb.x + bb.width / 3), y: Math.round(bb.y + bb.height / 2) }, s);
+        const hoverAt = await idx();
+        await sleep(6200);
+        res.hoverHeld = (await idx()) === hoverAt;
+        await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 640, y: 700 }, s);
+        await sleep(6200);
+        res.afterLeave = (await idx()) !== hoverAt;
+        // keyboard: Tab from the skip link reaches the banner link, and focus holds the item
+        await evaluate("document.activeElement && document.activeElement.blur(), document.querySelector('.skip-link').focus(), true");
+        await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 }, s);
+        await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 }, s);
+        res.tabReaches = await evaluate("!!document.activeElement.closest('.announce-item.is-active')");
+        const focusAt = await idx();
+        await sleep(6200);
+        res.focusHeld = (await idx()) === focusAt;
+        await evaluate("document.activeElement.blur(), true");
+        await evaluate("document.querySelector('.announce-pause').click(), true");
+        const pauseAt = await idx();
+        await sleep(6200);
+        res.pauseHeld = (await idx()) === pauseAt && (await evaluate("document.querySelector('.announce-pause').getAttribute('aria-pressed')")) === 'true';
+        res.top2 = await mainTop();
+        res.cls = Number((await evaluate('window.__cls')).toFixed(4));
+        // At 360 px, with the pause button taking its place, every item still fits in two lines.
+        await cdp.send('Emulation.setDeviceMetricsOverride', { width: 360, height: 800, deviceScaleFactor: 1, mobile: true }, s);
+        const loaded360 = cdp.waitFor('Page.loadEventFired', s);
+        await cdp.send('Page.navigate', { url: `${base}/index.html` }, s);
+        await loaded360;
+        await sleep(600);
+        res.clipped360 = JSON.parse(await evaluate(`JSON.stringify([...document.querySelectorAll('.announce-copy')]
+            .filter((c) => c.scrollHeight > c.clientHeight + 1 || c.getBoundingClientRect().bottom > document.querySelector('[data-announce]').getBoundingClientRect().bottom + 0.5)
+            .map((c) => c.textContent.slice(0, 40)))`));
+        res.pause360 = await evaluate("(() => { const r = document.querySelector('.announce-pause').getBoundingClientRect(); return Math.round(r.width) + 'x' + Math.round(r.height); })()");
+        if (res.clipped360.length) errors.push(`banner: items clipped at 360 px next to the pause button: ${res.clipped360.join(' | ')}`);
+        report.push(`banner motion: ${JSON.stringify(res)}`);
+        if (!(res.items > 1 && res.after6s !== res.start)) errors.push(`banner: did not move to the next item: ${JSON.stringify(res)}`);
+        if (!res.hoverHeld || !res.afterLeave) errors.push(`banner: hover did not hold the item, or leaving did not resume: ${JSON.stringify(res)}`);
+        if (!res.tabReaches || !res.focusHeld) errors.push(`banner: keyboard focus did not reach or hold the item: ${JSON.stringify(res)}`);
+        if (!res.pauseHeld) errors.push(`banner: the pause button did not stop the rotation`);
+        if (res.top0 !== res.top1 || res.top1 !== res.top2) errors.push(`banner: the page moved while the items changed: ${JSON.stringify(res)}`);
+        if (res.cls > 0.01) errors.push(`banner: cumulative layout shift ${res.cls}`);
+        for (const b of bucket) errors.push(`banner motion pass: ${b}`);
+    }
+
+    // With motion allowed: the attention graph first draws after the page has loaded, holds, fades
+    // back and draws again while it stays in view, and starts over when it comes back into view.
+    // The film strip follows the same cycle. None of it moves the layout.
+    if (ROOT === REPO && PAGES.includes('software/spectral-trust.html')) {
+        bucket = [];
+        await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, s);
+        await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }, s);
+        await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, s);
+        const loaded = cdp.waitFor('Page.loadEventFired', s);
+        await cdp.send('Page.navigate', { url: `${base}/software/spectral-trust.html` }, s);
+        await loaded;
+        const cyc = JSON.parse(await evaluate(`(async () => {
+            window.__cls = 0;
+            new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true });
+            const g = document.querySelector('svg.st-graph');
+            const state = (el) => el.classList.contains('is-rewinding') ? 'rewinding' : el.classList.contains('is-played') ? 'played' : el.classList.contains('is-ready') ? 'ready' : 'none';
+            const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+            const seq = [state(g)];
+            const t0 = performance.now();
+            let firstPlay = null;
+            while (performance.now() - t0 < 12500) {
+                await wait(150);
+                const st = state(g);
+                if (st !== seq[seq.length - 1]) seq.push(st);
+                if (st === 'played' && firstPlay === null) firstPlay = Math.round(performance.now() - t0);
+            }
+            window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
+            await wait(400);
+            const away = state(g);
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            await wait(600);
+            const back = state(g);
+            const strip = document.querySelector('[data-strip]');
+            strip.scrollIntoView({ block: 'center', behavior: 'instant' });
+            await wait(600);
+            const stripIn = state(strip);
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            await wait(400);
+            const stripAway = state(strip);
+            strip.scrollIntoView({ block: 'center', behavior: 'instant' });
+            await wait(3500);
+            const stripBack = state(strip);
+            const cells = [...strip.querySelectorAll('.strip-cell')].map((c) => getComputedStyle(c).opacity);
+            return JSON.stringify({ seq, firstPlay, away, back, stripIn, stripAway, stripBack, cells, cls: Number(window.__cls.toFixed(4)) });
+        })()`));
+        report.push(`figure cycle: ${JSON.stringify(cyc)}`);
+        const seqStr = cyc.seq.join(' ');
+        if (!seqStr.startsWith('ready played rewinding played')) errors.push(`figure cycle: the graph did not draw, rewind and draw again: ${seqStr}`);
+        if (!(cyc.firstPlay >= 250)) errors.push(`figure cycle: the graph played before the page had loaded and painted (${cyc.firstPlay} ms)`);
+        if (cyc.away !== 'ready' || cyc.back !== 'played') errors.push(`figure cycle: the graph did not start over on coming back into view (${cyc.away}, ${cyc.back})`);
+        if (cyc.stripIn !== 'played' || cyc.stripAway !== 'ready' || cyc.stripBack !== 'played' || cyc.cells.some((o) => o !== '1')) errors.push(`figure cycle: the film strip did not replay: ${JSON.stringify(cyc)}`);
+        if (cyc.cls > 0.01) errors.push(`figure cycle: cumulative layout shift ${cyc.cls}`);
+        for (const b of bucket) errors.push(`figure cycle pass: ${b}`);
+    }
+
     await cdp.send('Browser.close').catch(() => {});
     proc.kill();
     server.close();

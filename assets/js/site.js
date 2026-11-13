@@ -281,43 +281,59 @@
         revealTarget();
     }
 
-    /* Film strip: the graphs light up layer by layer once, when the strip scrolls into view.
-       Without motion, or without this script, the strip is shown in its final state. */
-    function initStrip() {
-        var strip = document.querySelector('[data-strip]');
-        if (!strip || !('IntersectionObserver' in window)) return;
-        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        if (strip.getBoundingClientRect().top < window.innerHeight * 0.8) return;
-        strip.classList.add('is-ready');
+    /* Animated figures (the attention graph and the film strip). Each one waits in its start
+       state (is-ready), draws in (is-played) once the page has loaded and painted and the figure is
+       in view, holds the finished figure, fades back to the start (is-rewinding) and draws again,
+       for as long as it stays in view. It starts over each time it comes back into view. Without
+       motion, or without this script, the finished figure is shown and nothing moves. */
+    var REPLAY = { holdMs: 7000, rewindMs: 1000 };
+
+    function replayInView(fig, drawMs, threshold) {
+        var visible = false, timer = null;
+        function play() {
+            clearTimeout(timer);
+            // two frames, so that the start state is painted before the transition starts
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    if (!visible) return;
+                    fig.classList.remove('is-rewinding');
+                    fig.classList.add('is-played');
+                    timer = setTimeout(rewind, drawMs + REPLAY.holdMs);
+                });
+            });
+        }
+        function rewind() {
+            if (!visible) return;
+            fig.classList.add('is-rewinding');
+            fig.classList.remove('is-played');
+            timer = setTimeout(play, REPLAY.rewindMs + 100);
+        }
+        function reset() {
+            clearTimeout(timer);
+            fig.classList.remove('is-played', 'is-rewinding');
+        }
         var io = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    io.disconnect();
-                    requestAnimationFrame(function () { strip.classList.add('is-played'); });
-                }
+                if (!visible && entry.intersectionRatio >= threshold) { visible = true; play(); }
+                else if (visible && !entry.isIntersecting) { visible = false; reset(); }
             });
-        }, { threshold: 0.35 });
-        io.observe(strip);
+        }, { threshold: [0, threshold] });
+        io.observe(fig);
     }
 
-    /* Attention graph: its edges draw in and its nodes take their Fiedler colours, once, when it
-       comes into view. Without motion, or without this script, it is shown complete. */
-    function initGraph() {
+    function initFigures() {
         if (!('IntersectionObserver' in window)) return;
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        document.querySelectorAll('svg.st-graph').forEach(function (graph) {
-            graph.classList.add('is-ready');
-            var io = new IntersectionObserver(function (entries) {
-                entries.forEach(function (entry) {
-                    if (!entry.isIntersecting) return;
-                    io.disconnect();
-                    requestAnimationFrame(function () {
-                        requestAnimationFrame(function () { graph.classList.add('is-played'); });
-                    });
-                });
-            }, { threshold: 0.3 });
-            io.observe(graph);
-        });
+        var figs = [];
+        document.querySelectorAll('svg.st-graph').forEach(function (g) { figs.push([g, 2800, 0.3]); });
+        document.querySelectorAll('[data-strip]').forEach(function (st) { figs.push([st, 2500, 0.35]); });
+        if (!figs.length) return;
+        figs.forEach(function (f) { f[0].classList.add('is-ready'); });
+        function start() {
+            setTimeout(function () { figs.forEach(function (f) { replayInView(f[0], f[1], f[2]); }); }, 300);
+        }
+        if (document.readyState === 'complete') start();
+        else window.addEventListener('load', start);
     }
 
     /* Looping figures in posts: play only while visible, and never under reduced motion. */
@@ -487,8 +503,7 @@
         initSectionHighlight();
         initReveal();
         initPubFilter();
-        initStrip();
-        initGraph();
+        initFigures();
         initVideos();
         initCopy();
         initPosts();

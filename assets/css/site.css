@@ -669,6 +669,9 @@ html:not(.js) .copy-btn { display: none; }
     .js .strip.is-ready .strip-dots circle { opacity: 0; transition: opacity 0.4s ease; transition-delay: calc(var(--i) * 0.35s + 0.2s); }
     .js .strip.is-played .strip-cell, .js .strip.is-played .strip-dots circle { opacity: 1; }
     .js .strip.is-played .strip-curve { stroke-dashoffset: 0; }
+    .js .strip.is-ready.is-rewinding .strip-cell,
+    .js .strip.is-ready.is-rewinding .strip-dots circle { transition: opacity 0.9s ease; transition-delay: 0s; }
+    .js .strip.is-ready.is-rewinding .strip-curve { transition: stroke-dashoffset 0.9s ease; }
 }
 
 /* Latest writing: one card per post, the whole card is the link */
@@ -1009,6 +1012,9 @@ html:not(.js) .filter-bar { display: none; }
     }
     .js .st-graph.is-played .g-edges line { stroke-dashoffset: 0; }
     .js .st-graph.is-played .g-nodes circle { fill: var(--c); }
+    /* Between two plays: back to the start state in about a second, all together */
+    .js .st-graph.is-ready.is-rewinding .g-edges line { transition: stroke-dashoffset 0.9s ease; transition-delay: 0s; }
+    .js .st-graph.is-ready.is-rewinding .g-nodes circle { transition: fill 0.9s ease; transition-delay: 0s; }
 }
 
 /* The spectral-trust page */
