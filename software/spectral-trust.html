@@ -220,7 +220,7 @@ cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)</code></pre>
             <div class="wrap reveal two-col is-even st-split">
                 <div class="section-head">
                     <h2 id="speed-title">Faster in 0.4.0</h2>
-                    <p class="lede">The same job takes 4.8 times less time than in 0.3.0 on its defaults, and 2.9 times less than 0.3.0 with its dense solver, so the gain is not only a change of default.</p>
+                    <p class="lede">On the same job, 0.4.0 is 4.8× faster than 0.3.0 on its defaults, and 2.9× faster than 0.3.0 with its dense solver, so the gain is not only a change of default.</p>
                     <p class="note">Hidden-state metrics for the 28 layers of Qwen3-0.6B on one prompt of 512 tokens, on the head-averaged graph of each layer and on the graph of each of its 16 heads. Medians of 3 runs, forward pass excluded, CPU only, 2 threads, torch 2.15.0. 0.4.0 also computes the per-head attention metrics in the same call.</p>
                 </div>
                 <div class="speed" role="img" aria-label="Time for the same job: 56.6 seconds with 0.3.0 on its defaults, 34.5 seconds with 0.3.0 and the dense solver, 11.7 seconds with 0.4.0.">
@@ -250,7 +250,7 @@ cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)</code></pre>
                     <li><a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener" title="Bao et al. 2026, arXiv:2608.03015"><img src="../assets/logos/cornell.svg" alt="Cornell University" width="152" height="20"></a></li>
                     <li><a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener" title="Bao et al. 2026, arXiv:2608.03015"><img src="../assets/logos/goodfire.svg" alt="Goodfire AI" width="163" height="35"></a></li>
                     <li><a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener" title="Bao et al. 2026, arXiv:2608.03015"><img src="../assets/logos/imperial.png" alt="Imperial College London" width="1092" height="120"></a></li>
-                    <li><a class="logo-inv" href="https://arxiv.org/abs/2610.16709" target="_blank" rel="noopener" title="Kim, Lutzeyer and Guo 2026, arXiv:2610.16709"><img src="../assets/logos/polytechnique.png" alt="École Polytechnique" width="245" height="89"></a></li>
+                    <li><a class="is-tall logo-named" href="https://arxiv.org/abs/2610.16709" target="_blank" rel="noopener" title="Kim, Lutzeyer and Guo 2026, arXiv:2610.16709"><img src="../assets/logos/polytechnique.svg" alt="" width="71" height="89"><span class="logo-name">École Polytechnique</span></a></li>
                 </ul>
                 <ul class="paper-list" role="list">
                     <li>
