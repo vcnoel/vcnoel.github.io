@@ -246,7 +246,8 @@
         if (!videos.length) return;
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduce || !('IntersectionObserver' in window)) {
-            videos.forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; });
+            // the poster is the finished figure; no control bar over its axes
+            videos.forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); });
             return;
         }
         var io = new IntersectionObserver(function (entries) {
