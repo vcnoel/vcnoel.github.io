@@ -338,7 +338,47 @@
             </div>
         </section>
 
-        <!-- 4. Publications: five selected, the full list and the topic filter behind the toggle -->
+        <!-- 4. Latest writing: the three newest posts of posts/posts.json, with each post's poster
+             figure. tools/check_site.py warns when these cards fall behind posts.json. -->
+        <section class="section" id="writing" aria-labelledby="writing-title">
+            <div class="wrap reveal">
+                <div class="section-head is-row">
+                    <div>
+                        <h2 id="writing-title">Latest writing</h2>
+                        <p class="lede">Short posts on new results and releases.</p>
+                    </div>
+                    <a class="text-link" href="posts/index.html">All posts <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+                </div>
+                <div class="grid grid-3">
+                    <article class="post-card">
+                        <div class="post-card-media"><img src="posts/figures/probe-direction/slope-flip-720.png" srcset="posts/figures/probe-direction/slope-flip-720.png 720w, posts/figures/probe-direction/slope-flip.png 1440w" sizes="(min-width: 900px) 372px, calc(100vw - 48px)" alt="" width="720" height="405" loading="lazy" decoding="async"></div>
+                        <div class="post-card-body">
+                            <p class="post-card-meta"><time datetime="2026-11-13">13 Nov 2026</time> · 5 min read</p>
+                            <h3 class="post-card-title"><a href="posts/probe-direction.html">A probe direction is a property of its prompt</a></h3>
+                            <p>The same evaluation-awareness probe reports a trend with model size of +0.94 or −0.82, depending only on how the prompt is framed.</p>
+                        </div>
+                    </article>
+                    <article class="post-card">
+                        <div class="post-card-media"><img src="posts/figures/peer-notes/setup-720.png" srcset="posts/figures/peer-notes/setup-720.png 720w, posts/figures/peer-notes/setup.png 1440w" sizes="(min-width: 900px) 372px, calc(100vw - 48px)" alt="" width="720" height="405" loading="lazy" decoding="async"></div>
+                        <div class="post-card-body">
+                            <p class="post-card-meta"><time datetime="2026-11-13">13 Nov 2026</time> · 5 min read</p>
+                            <h3 class="post-card-title"><a href="posts/peer-notes.html">Secondhand rule-breaking: what a peer's note does to an agent</a></h3>
+                            <p>A peer's note that reports breaking a rule leads open-weight agents to break their own, even when another model wrote it.</p>
+                        </div>
+                    </article>
+                    <article class="post-card">
+                        <div class="post-card-media"><img src="posts/figures/spectral-trust-0-4-0/race-720.png" srcset="posts/figures/spectral-trust-0-4-0/race-720.png 720w, posts/figures/spectral-trust-0-4-0/race.png 1440w" sizes="(min-width: 900px) 372px, calc(100vw - 48px)" alt="" width="720" height="310" loading="lazy" decoding="async"></div>
+                        <div class="post-card-body">
+                            <p class="post-card-meta"><time datetime="2026-11-13">13 Nov 2026</time> · 4 min read</p>
+                            <h3 class="post-card-title"><a href="posts/spectral-trust-0-4-0.html">spectral-trust 0.4.0</a></h3>
+                            <p>Every attention-graph measurement in one call, with TransformerLens and nnsight, 4.8× faster.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Publications: five selected, the full list and the topic filter behind the toggle -->
         <section class="section" id="publications" aria-labelledby="publications-title">
             <div class="wrap reveal">
                 <div class="section-head">
