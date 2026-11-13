@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A probe direction is a property of its prompt · Valentin Noël</title>
+    <meta name="description" content="A common probe for whether a language model senses it is being tested gives a score, and a trend with model size, that follow the wording of the contrastive prompt more than the model.">
+    <meta name="author" content="Valentin Noël">
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://vcnoel.github.io/posts/probe-direction.html">
+    <meta name="theme-color" content="#fbfaf7">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Valentin Noël">
+    <meta property="og:url" content="https://vcnoel.github.io/posts/probe-direction.html">
+    <meta property="og:title" content="A probe direction is a property of its prompt">
+    <meta property="og:description" content="A common probe for whether a language model senses it is being tested gives a score, and a trend with model size, that follow the wording of the contrastive prompt more than the model.">
+    <meta property="og:image" content="https://vcnoel.github.io/posts/figures/probe-direction/slope-flip.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.className += ' js';
+            try { t = localStorage.getItem('theme'); } catch (e) { t = null; }
+            if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            var dark = (t === 'light' || t === 'dark') ? t === 'dark'
+                : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            d.setAttribute('data-theme-effective', dark ? 'dark' : 'light');
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
+    <link rel="stylesheet" href="/assets/css/site.css">
+    <script src="/assets/js/site.js" defer></script>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+        <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 19l-7-7 7-7"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5M22 10v6"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+        <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="/index.html">
+                <img src="/favicon.svg" alt="" width="26" height="26">
+                <span>Valentin Noël</span>
+            </a>
+            <nav class="site-nav" id="site-nav" aria-label="Main">
+                <ul>
+                    <li><a href="/index.html#research">Research</a></li>
+                    <li><a href="https://vcnoel.github.io/spectral-trust/"><img class="nav-mark on-light" src="/assets/img/spectral-trust-mark.svg" alt="" width="18" height="18"><img class="nav-mark on-dark" src="/assets/img/spectral-trust-mark-dark.svg" alt="" width="18" height="18">spectral-trust</a></li>
+                    <li><a href="/index.html#publications">Publications</a></li>
+                    <li><a href="/index.html#about">About</a></li>
+                    <li><a href="/posts/index.html">Blog</a></li>
+                    <li><a href="/assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">CV</a></li>
+                </ul>
+            </nav>
+            <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+                <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+                <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="main" class="wrap narrow">
+        <article class="article">
+            <p class="draft-banner">Draft. Not listed and not indexed.</p>
+            <h1>A probe direction is a property of its prompt</h1>
+            <div class="article-meta">
+                <time datetime="2026-01-01">[publication date]</time>
+                <span>5 min read</span>
+                <ul class="tag-list" role="list">
+                    <li class="tag">interpretability</li>
+                </ul>
+            </div>
+
+            <div class="prose">
+                <p>
+                    If a language model can tell when it is being tested, and behaves differently when it can, then
+                    test results stop telling us how it behaves in use. Several groups have tried to detect that
+                    recognition directly, by reading it from the model's internal activations instead of its outputs.
+                    In <a href="https://arxiv.org/abs/2608.13329">a recent paper</a> I asked a narrower question about
+                    the instrument they use. When it reports a number for a model, what is that number a property of?
+                </p>
+
+                <h2>The instrument and its unstated parameter</h2>
+                <p>
+                    The method fits in a sentence. Collect a model's activations on prompts that announce an
+                    evaluation, collect them again on prompts that read as ordinary deployment, and take the
+                    difference of the two means. That difference is a direction in activation space. The score is how
+                    well held-out test and deployment cases separate along it, taken at the best layer. It is then
+                    compared across models and correlated with parameter count, to ask whether larger models are
+                    more aware of being tested.
+                </p>
+                <p>
+                    The one idea of the paper is that this recipe has a free parameter that does not look like one.
+                    "A prompt that announces an evaluation" names a large family of prompts, not a particular one, and
+                    nothing in the method says which to use. Every study picks a wording, and the wording never
+                    appears in the reported number. If the direction captured the model's sense of being evaluated,
+                    the choice would matter little.
+                </p>
+
+                <h2>What I measured</h2>
+                <p>
+                    I wrote six ways of framing a prompt as an evaluation and six ways of framing it as deployment,
+                    and crossed them. That gives 36 pairs, which the paper calls wrappers. Each wrapper is placed
+                    around byte-identical task text, so any difference between two directions comes from the framing
+                    and from nothing else. Every direction is scored on the same 400 labelled items, for four Qwen2.5
+                    models from 0.5B to 7B parameters.
+                </p>
+                <p>
+                    The score moves with the wrapper, and so does its trend with model size. The three wrappers below
+                    share one evaluation framing and differ only in the deployment framing it is contrasted with. The
+                    correlation between the score and the logarithm of the parameter count goes from +0.94 to -0.02
+                    to -0.82.
+                </p>
+
+                <figure class="post-figure">
+                    <video data-loop muted loop playsinline preload="none" width="720" height="405"
+                        poster="/posts/figures/probe-direction/slope-flip.png" aria-label="Line chart of probe score against model size for four Qwen2.5 models. As the deployment framing changes from an agent task to a production API to a private chat, the correlation with size goes from +0.94 to -0.02 to -0.82.">
+                        <source src="/posts/figures/probe-direction/slope-flip.webm" type="video/webm">
+                        <source src="/posts/figures/probe-direction/slope-flip.mp4" type="video/mp4">
+                        <img src="/posts/figures/probe-direction/slope-flip.gif" alt="Line chart of probe score against model size for four Qwen2.5 models. As the deployment framing changes from an agent task to a production API to a private chat, the correlation with size goes from +0.94 to -0.02 to -0.82." width="720" height="405" loading="lazy">
+                    </video>
+                    <figcaption>Same four models, same items, same evaluation framing: changing the deployment framing turns a rising trend into a falling one.</figcaption>
+                </figure>
+
+                <p>
+                    Across all 36 wrappers, 21 give a positive correlation and 15 a negative one, over a range from
+                    -0.988 to +0.939. Two published studies disagree about the sign of this trend, and both of their
+                    results lie inside the range that this single design produces.
+                </p>
+
+                <figure class="post-figure">
+                    <video data-loop muted loop playsinline preload="none" width="720" height="405"
+                        poster="/posts/figures/probe-direction/sign-matrix.png" aria-label="A six by six grid, one cell per pair of evaluation framing and deployment framing, filling in cell by cell with the correlation between probe score and model size. The final count is 21 positive and 15 negative.">
+                        <source src="/posts/figures/probe-direction/sign-matrix.webm" type="video/webm">
+                        <source src="/posts/figures/probe-direction/sign-matrix.mp4" type="video/mp4">
+                        <img src="/posts/figures/probe-direction/sign-matrix.gif" alt="A six by six grid, one cell per pair of evaluation framing and deployment framing, filling in cell by cell with the correlation between probe score and model size. The final count is 21 positive and 15 negative." width="720" height="405" loading="lazy">
+                    </video>
+                    <figcaption>The correlation between score and model size for each of the 36 wrappers: 21 are positive and 15 are negative.</figcaption>
+                </figure>
+
+                <p>
+                    Four points per line is not much, so I checked that the slopes are not noise. Refitted on
+                    disjoint halves of the scoring items, a wrapper's slope reproduces at 0.874 once corrected to
+                    full length. The same crossing on Qwen3 at six sizes and on OLMo-2 at four also spans both
+                    signs.
+                </p>
+
+                <h2>The direction follows the wrapper</h2>
+                <p>
+                    The directions themselves disagree too. Two directions
+                    built from the same wrapper on disjoint halves of the items agree almost exactly, with a cosine
+                    of 0.9995. Two directions built from different wrappers share a cosine of 0.3749, an angle of
+                    roughly 68 degrees. Resampling the items leaves the direction where it was, and rewording the
+                    prompt moves it a long way. The direction is better described as a property of the prompt than
+                    of the concept the prompt names.
+                </p>
+
+                <figure class="post-figure">
+                    <video data-loop muted loop playsinline preload="none" width="720" height="405"
+                        poster="/posts/figures/probe-direction/direction-angle.png" aria-label="Diagram of three arrows from a common origin. Two arrows built from the same wrapper on different halves of the items almost coincide, with cosine 0.9995. A third arrow built from a different wrapper swings out to about 68 degrees, with cosine 0.3749.">
+                        <source src="/posts/figures/probe-direction/direction-angle.webm" type="video/webm">
+                        <source src="/posts/figures/probe-direction/direction-angle.mp4" type="video/mp4">
+                        <img src="/posts/figures/probe-direction/direction-angle.gif" alt="Diagram of three arrows from a common origin. Two arrows built from the same wrapper on different halves of the items almost coincide, with cosine 0.9995. A third arrow built from a different wrapper swings out to about 68 degrees, with cosine 0.3749." width="720" height="405" loading="lazy">
+                    </video>
+                    <figcaption>Measured over 10 models in four families, directions from one wrapper agree at cosine 0.9995 and directions from different wrappers at 0.3749.</figcaption>
+                </figure>
+
+                <h2>How much of the number is the model</h2>
+                <p>
+                    Generalisability theory treats each choice in a
+                    measurement design as a facet, here the model, the wrapper and the items, and asks how much of
+                    the variance in the score each one contributes. On the four Qwen2.5 models, the model itself
+                    accounts for 0.8% of the variance in the number reported about it. The largest share, 38.3%, is
+                    the interaction between model and wrapper, which means that different prompts put the models in
+                    different orders.
+                </p>
+
+                <figure class="post-figure">
+                    <video data-loop muted loop playsinline preload="none" width="720" height="405"
+                        poster="/posts/figures/probe-direction/variance-share.png" aria-label="Horizontal bar chart of variance shares. Model 0.8%, model by wrapper 38.3%, residual 25.6%, items 21.3%, wrapper 5.7%, other interactions 5.4%, model by items 2.9%.">
+                        <source src="/posts/figures/probe-direction/variance-share.webm" type="video/webm">
+                        <source src="/posts/figures/probe-direction/variance-share.mp4" type="video/mp4">
+                        <img src="/posts/figures/probe-direction/variance-share.gif" alt="Horizontal bar chart of variance shares. Model 0.8%, model by wrapper 38.3%, residual 25.6%, items 21.3%, wrapper 5.7%, other interactions 5.4%, model by items 2.9%." width="720" height="405" loading="lazy">
+                    </video>
+                    <figcaption>Shares of the variance in the score on the Qwen2.5 models: the model holds 0.8% and its interaction with the wrapper 38.3%.</figcaption>
+                </figure>
+
+                <p>
+                    This decides the remedy. The usual way to firm up a benchmark number is to collect more items.
+                    Here the model by wrapper component is 13.4 times the model by item component, so more items
+                    change almost nothing. The reliability coefficient for the single wrapper design in use is 0.018,
+                    against a conventional bar of 0.80. With unlimited items it approaches 0.021. With unlimited
+                    wrappers it approaches 0.541.
+                </p>
+
+                <figure class="post-figure">
+                    <video data-loop muted loop playsinline preload="none" width="720" height="405"
+                        poster="/posts/figures/probe-direction/reliability.png" aria-label="Line chart of reliability against the number of wrappers or item sets averaged over. Both lines start at 0.018 for one wrapper. The wrapper line rises towards a limit of 0.541 and the item line stays flat near 0.021, both below the conventional bar of 0.80.">
+                        <source src="/posts/figures/probe-direction/reliability.webm" type="video/webm">
+                        <source src="/posts/figures/probe-direction/reliability.mp4" type="video/mp4">
+                        <img src="/posts/figures/probe-direction/reliability.gif" alt="Line chart of reliability against the number of wrappers or item sets averaged over. Both lines start at 0.018 for one wrapper. The wrapper line rises towards a limit of 0.541 and the item line stays flat near 0.021, both below the conventional bar of 0.80." width="720" height="405" loading="lazy">
+                    </video>
+                    <figcaption>Averaging over more wrappers raises the reliability of the model ranking, and averaging over more items does not.</figcaption>
+                </figure>
+
+                <h2>What it means in practice</h2>
+                <p>
+                    A score from a single prompt cannot support a comparison between models. A defensible comparison
+                    needs about 9 wrappers if the differences between models are as large as the published spread
+                    implies, and 10 on OLMo-2, where that variance is measured instead of assumed.
+                </p>
+                <p>
+                    Three reporting habits follow. Report the score for every wrapper built, because the spread
+                    across wrappers is the dominant term. Report what a direction with no content attains under the
+                    same scoring convention. State the pipeline choices that published descriptions leave out. Across 12
+                    implementations, each consistent with the published description, that choice carried 27.5% of
+                    the variance, more than any other component.
+                </p>
+                <p>
+                    The second habit matters because the scoring set has a problem of its own. Its test and
+                    deployment items can be told apart from surface wording alone, at an AUROC of 0.993 with a bag of
+                    words classifier. A direction that carries no information about evaluation still reaches between
+                    70% and 116% of the published values I compared it with.
+                </p>
+                <p>
+                    Not every published result falls. One of the two studies I reanalysed reports that the score
+                    scales with parameter count over 15 models, and its correlation moves only from +0.600 to +0.561
+                    under the one correction I could apply. Both groups released their artefacts, which is the only
+                    reason any of this could be checked.
+                </p>
+
+                <h2>Limits</h2>
+                <p>
+                    The main design covers one model family. All 36 wrappers are crossed on four Qwen2.5 models, so
+                    the coefficient of 0.018 and the figure of about 9 wrappers rest on three degrees of freedom. On
+                    Qwen3 and OLMo-2 every qualitative claim holds, but the magnitudes do not transfer: the
+                    reliability coefficient runs from 0.012 to 0.263 across the three families.
+                </p>
+                <p>
+                    The 36 wrappers are a designed set, not a sample of what researchers write, so the size of the
+                    wrapper effect is a property of this design. And the paper is a claim about an estimator. It
+                    measures what the score is a property of, not whether models represent being evaluated. That
+                    question needs a causal test, which this work keeps separate.
+                </p>
+                <p>
+                    The code and the result files behind these figures are in the
+                    <a href="https://github.com/vcnoel/probe-direction">repository</a>.
+                </p>
+            </div>
+
+            <div class="article-foot">
+                <a class="more-link" href="/posts/index.html">All posts</a>
+                <a class="more-link" href="/index.html">Home page</a>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <p>© 2026 Valentin Noël</p>
+            <ul class="footer-links" role="list">
+                <li><a href="mailto:val.noel@proton.me" aria-label="Email"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></a></li>
+                <li><a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener" aria-label="Google Scholar"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg></a></li>
+                <li><a href="https://github.com/vcnoel" target="_blank" rel="noopener" aria-label="GitHub"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg></a></li>
+                <li><a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg></a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>
