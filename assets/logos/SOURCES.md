@@ -1,7 +1,7 @@
 # Logo sources
 
 Each logo is the institution's or venue's own mark, taken from Wikimedia Commons, Wikipedia or the
-organisation's website, as listed. They are shown small and monochrome, and in colour on hover, to name
+organisation's website, as listed. They are shown small and monochrome, and in colour on hover in the light theme, to name
 an affiliation, the venue that accepted a paper, or the institution of researchers whose paper used
 spectral-trust. Their use does not imply endorsement. SVG files were cleaned of editor metadata only.
 PNG files were resized to 120 px high.
@@ -24,7 +24,7 @@ PNG files were resized to 120 px high.
 | cornell.svg | Cornell University | https://commons.wikimedia.org/wiki/File:Cornell_University_logo.svg (public domain per Commons) | Bao et al. 2026, https://arxiv.org/abs/2608.03015 |
 | goodfire.svg | Goodfire AI | https://www.goodfire.com/ (site logo, https://www.goodfire.com/_astro/logo.B6ErOjAg.svg) | Bao et al. 2026, https://arxiv.org/abs/2608.03015 |
 | imperial.png | Imperial College London | https://commons.wikimedia.org/wiki/File:Imperial_College_London_new_logo.png (public domain per Commons) | Bao et al. 2026, https://arxiv.org/abs/2608.03015 |
-| polytechnique.svg | École Polytechnique | https://www.polytechnique.edu/ (the vector logo in the site header, cropped to the École Polytechnique mark, without the Institut Polytechnique de Paris part beside it, with the name set as text next to it) | Kim, Lutzeyer and Guo 2026, https://arxiv.org/abs/2610.16709 |
+| polytechnique.svg | École polytechnique | https://www.polytechnique.edu/ (the vector logo in the site header, cropped to the École polytechnique mark, without the Institut Polytechnique de Paris part beside it, with the name set as text next to it) | Kim, Lutzeyer and Guo 2026, https://arxiv.org/abs/2610.16709 |
 
 ## Venues of accepted papers
 

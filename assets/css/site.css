@@ -939,26 +939,44 @@ html:not(.js) .filter-bar { display: none; }
 .logo-row a.logo-inv:hover, .logo-row a.logo-inv:focus-visible { background: #14171c; }
 .logo-row a.logo-inv:hover img, .logo-row a.logo-inv:focus-visible img { filter: none; }
 :root[data-theme-effective="dark"] .logo-row img { filter: grayscale(1) invert(1) contrast(1.1); opacity: 0.82; }
-:root[data-theme-effective="dark"] .logo-row a:hover, :root[data-theme-effective="dark"] .logo-row a:focus-visible { background: #ffffff; }
-:root[data-theme-effective="dark"] .logo-row a:hover img, :root[data-theme-effective="dark"] .logo-row a:focus-visible img { filter: none; opacity: 1; }
+:root[data-theme-effective="dark"] .logo-row a:hover img, :root[data-theme-effective="dark"] .logo-row a:focus-visible img { filter: grayscale(1) invert(1) contrast(1.1); opacity: 1; }
 :root[data-theme-effective="dark"] .logo-row a.logo-inv img { filter: grayscale(1); }
 :root[data-theme-effective="dark"] .logo-row a.logo-inv:hover, :root[data-theme-effective="dark"] .logo-row a.logo-inv:focus-visible { background: transparent; }
-:root[data-theme-effective="dark"] .logo-row a.logo-inv:hover img { filter: none; }
+:root[data-theme-effective="dark"] .logo-row a.logo-inv:hover img, :root[data-theme-effective="dark"] .logo-row a.logo-inv:focus-visible img { filter: grayscale(1); }
+:root[data-theme-effective="dark"] .affil .is-past .logo-row img { opacity: 0.62; }
+:root[data-theme-effective="dark"] .affil .is-past .logo-row a:hover img,
+:root[data-theme-effective="dark"] .affil .is-past .logo-row a:focus-visible img { opacity: 1; }
 
-.logo-row a.logo-named { gap: 0.55rem; }
+/* A mark with its name set beside it (Ecole polytechnique). The name breaks only between its words,
+   onto two lines at most, and only when one line does not fit. */
+.logo-row a.logo-named { gap: 0.6rem; }
 .logo-name {
-    font-size: max(14px, 0.8125rem);
+    display: inline-flex;
+    flex-wrap: wrap;
+    column-gap: 0.3em;
+    font-size: 1.125rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: -0.01em;
     line-height: 1.15;
-    max-width: 8.5em;
-    color: var(--muted);
-    transition: color 0.25s;
+    color: var(--ink);
+    transition: opacity 0.25s;
 }
-.logo-row.is-large .logo-name { font-size: 1.0625rem; max-width: 10em; }
-.logo-row a.logo-named:hover .logo-name, .logo-row a.logo-named:focus-visible .logo-name { color: var(--ink); }
-:root[data-theme-effective="dark"] .logo-row a.logo-named:hover .logo-name { color: #16140f; }
+.logo-name > span { white-space: nowrap; }
+.logo-row a.logo-named.is-tall img { height: 34px; }
+.logo-row.is-large .logo-name { font-size: 1.4375rem; }
+.logo-row.is-large a.logo-named.is-tall img { height: 44px; }
+
+/* Rows of wordmarks shown as one set (Used in work by researchers at): every logo in the ink of the
+   text, from its transparent file, dark in the light theme and light in the dark theme. */
+.logo-row.is-mono img { filter: brightness(0); opacity: 0.8; }
+.logo-row.is-mono .logo-name { opacity: 0.8; }
+.logo-row.is-mono a:hover img, .logo-row.is-mono a:focus-visible img { filter: none; opacity: 1; }
+.logo-row.is-mono a:hover .logo-name, .logo-row.is-mono a:focus-visible .logo-name { opacity: 1; }
+:root[data-theme-effective="dark"] .logo-row.is-mono img { filter: brightness(0) invert(1); opacity: 0.86; }
+:root[data-theme-effective="dark"] .logo-row.is-mono a:hover img,
+:root[data-theme-effective="dark"] .logo-row.is-mono a:focus-visible img { filter: brightness(0) invert(1); opacity: 1; }
+:root[data-theme-effective="dark"] .logo-row.is-mono .logo-name { opacity: 0.86; }
+:root[data-theme-effective="dark"] .logo-row.is-mono a:hover .logo-name { opacity: 1; }
 .cv-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
 .cv-logos img { height: 22px; width: auto; max-width: 120px; object-fit: contain; filter: grayscale(1); opacity: 0.7; }
 :root[data-theme-effective="dark"] .cv-logos img { filter: grayscale(1) invert(1); }
