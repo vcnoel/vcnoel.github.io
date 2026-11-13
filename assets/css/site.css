@@ -778,8 +778,11 @@ html:not(.js) .filter-bar { display: none; }
     to { opacity: 1; transform: none; }
 }
 
-/* Logos: monochrome and small, in colour on hover */
-.affil { margin-top: 2.25rem; }
+/* Logos: monochrome and small. On hover they take their colours in the light theme, and their full
+   ink in the dark theme, without a box behind them. */
+/* Hero affiliations: current ones first, past ones smaller and lighter */
+.affil { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.25rem 2.75rem; margin-top: 2.25rem; }
+.affil-group { min-width: 0; }
 .used-in { margin-top: 2rem; }
 .logo-label { font-size: var(--fs-xs); color: var(--muted); margin-bottom: 0.5rem; }
 .logo-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; list-style: none; padding: 0; }
@@ -806,6 +809,18 @@ html:not(.js) .filter-bar { display: none; }
 .logo-row a.is-tall img { height: 36px; }
 .affil .logo-row img { height: 30px; max-width: 170px; }
 .affil .logo-row a.is-tall img { height: 40px; }
+.affil .logo-row a.is-wide img { height: 25px; }
+/* Phones: the current affiliations stay on one line */
+@media (max-width: 559px) {
+    .affil .logo-row { gap: 0.4rem 0.6rem; }
+    .affil .logo-row a { padding-inline: 4px; }
+    .affil .logo-row img { height: 26px; }
+    .affil .logo-row a.is-wide img { height: 21px; }
+    .affil .logo-row a.is-tall img { height: 36px; }
+}
+.affil .is-past .logo-row img { height: 24px; max-width: 136px; opacity: 0.62; }
+.affil .is-past .logo-row a.is-tall img { height: 32px; }
+.affil .is-past .logo-row a:hover img, .affil .is-past .logo-row a:focus-visible img { opacity: 1; }
 .logo-row.is-large { gap: 0.75rem 2.25rem; }
 .logo-row.is-large img { height: 32px; max-width: 220px; }
 .logo-row.is-large a.is-tall img { height: 46px; }

@@ -15,6 +15,7 @@ PNG files were resized to 120 px high.
 | centralesupelec.svg | CentraleSupélec | https://fr.wikipedia.org/wiki/Fichier:Logo_CentraleSup%C3%A9lec.svg (trademark) |
 | centrale-nantes.svg | École Centrale de Nantes | https://en.wikipedia.org/wiki/File:Centrale_Nantes_Logo.svg (public domain per Wikipedia) |
 | oxai.svg | Oxford Artificial Intelligence Society | https://www.oxai.org/ (site logo, https://cdn.prod.website-files.com/690c3104b61c550e4e3cab30/69306987d51bff559c7ff76b_oxai-outline-logo.svg) |
+| esigelec.png | ESIGELEC (with its research institute IRSEEM) | https://www.esigelec.fr/ (site logo, https://www.esigelec.fr/themes/custom/createur/svg/main-logo.png, cropped to the wordmark and mark without the tagline below them) |
 
 ## Used in work by researchers at
 

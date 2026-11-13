@@ -64,6 +64,10 @@
             "name": "Devoteam",
             "url": "https://www.devoteam.com/"
         },
+        "memberOf": [
+            { "@type": "Organization", "name": "Oxford Artificial Intelligence Society", "url": "https://www.oxai.org/" },
+            { "@type": "Organization", "name": "ESIGELEC-IRSEEM", "url": "https://www.esigelec.fr/" }
+        ],
         "workLocation": {
             "@type": "Place",
             "name": "Paris, France"
@@ -179,15 +183,24 @@
                             <svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg> LinkedIn
                         </a>
                     </div>
+                    <!-- Currently: roles whose end date is "present" in the CV. Previously: the PhD and the MSc. -->
                     <div class="affil">
-                        <p class="logo-label">Affiliations</p>
-                        <ul class="logo-row" role="list">
-                            <li><a href="https://www.devoteam.com/" target="_blank" rel="noopener" title="Devoteam: Research Scientist"><img src="assets/logos/devoteam.png" alt="Devoteam" width="244" height="76"></a></li>
-                            <li><a href="https://ens-paris-saclay.fr/" target="_blank" rel="noopener" title="ENS Paris-Saclay: PhD"><img src="assets/logos/ens-paris-saclay.png" alt="ENS Paris-Saclay" width="543" height="120"></a></li>
-                            <li><a class="is-tall" href="https://www.centralesupelec.fr/" target="_blank" rel="noopener" title="CentraleSupélec: PhD"><img src="assets/logos/centralesupelec.svg" alt="CentraleSupélec" width="700" height="363"></a></li>
-                            <li><a class="is-tall" href="https://www.ec-nantes.fr/" target="_blank" rel="noopener" title="École Centrale de Nantes: MSc"><img src="assets/logos/centrale-nantes.svg" alt="École Centrale de Nantes" width="128" height="64"></a></li>
-                            <li><a class="is-tall logo-inv" href="https://www.oxai.org/" target="_blank" rel="noopener" title="Oxford Artificial Intelligence Society: member"><img src="assets/logos/oxai.svg" alt="Oxford Artificial Intelligence Society" width="255" height="255"></a></li>
-                        </ul>
+                        <div class="affil-group">
+                            <p class="logo-label">Currently</p>
+                            <ul class="logo-row" role="list">
+                                <li><a href="https://www.devoteam.com/" target="_blank" rel="noopener" title="Devoteam: Research Scientist, since Oct 2024"><img src="assets/logos/devoteam.png" alt="Devoteam" width="244" height="76"></a></li>
+                                <li><a class="is-wide" href="https://www.esigelec.fr/" target="_blank" rel="noopener" title="ESIGELEC-IRSEEM: Steering Committee Member, NMD ILTN Master's programme, since 2026"><img src="assets/logos/esigelec.png" alt="ESIGELEC" width="672" height="120"></a></li>
+                                <li><a class="is-tall logo-inv" href="https://www.oxai.org/" target="_blank" rel="noopener" title="Oxford Artificial Intelligence Society: member, since 2026"><img src="assets/logos/oxai.svg" alt="Oxford Artificial Intelligence Society" width="255" height="255"></a></li>
+                            </ul>
+                        </div>
+                        <div class="affil-group is-past">
+                            <p class="logo-label">Previously</p>
+                            <ul class="logo-row" role="list">
+                                <li><a href="https://ens-paris-saclay.fr/" target="_blank" rel="noopener" title="ENS Paris-Saclay: PhD, 2021 to 2024"><img src="assets/logos/ens-paris-saclay.png" alt="ENS Paris-Saclay" width="543" height="120"></a></li>
+                                <li><a class="is-tall" href="https://www.centralesupelec.fr/" target="_blank" rel="noopener" title="CentraleSupélec: PhD, 2021 to 2024"><img src="assets/logos/centralesupelec.svg" alt="CentraleSupélec" width="700" height="363"></a></li>
+                                <li><a class="is-tall" href="https://www.ec-nantes.fr/" target="_blank" rel="noopener" title="École Centrale de Nantes: MSc, 2019 to 2021"><img src="assets/logos/centrale-nantes.svg" alt="École Centrale de Nantes" width="128" height="64"></a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="portrait">
