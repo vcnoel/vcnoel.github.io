@@ -40,6 +40,7 @@ import html.parser
 import http.server
 import json
 import re
+import subprocess
 import sys
 import threading
 import urllib.error
@@ -536,7 +537,7 @@ def main() -> int:
         raw = (ROOT / rel).read_text(encoding="utf-8")
         if "data-announce" not in raw:
             errors.append(f"{rel}: no announcement bar (an element with data-announce)")
-        scripts = [v for t, a, v in pg.urls if t == "script" and a == "src"]
+        scripts = [v.split("?")[0] for t, a, v in pg.urls if t == "script" and a == "src"]
         i_ann = next((i for i, v in enumerate(scripts) if v.endswith(ann_rel)), None)
         i_site = next((i for i, v in enumerate(scripts) if v.endswith("assets/js/site.js")), None)
         if i_ann is None or i_site is None or i_ann > i_site:
@@ -575,6 +576,12 @@ def main() -> int:
                 warnings.append(f"external {u} returned {status}")
 
     httpd.shutdown()
+
+    # CSS and JS links carry ?v=<content hash> so browsers fetch a changed file at once
+    stamp = subprocess.run([sys.executable, str(ROOT / "tools" / "bump_assets.py"), "--check"],
+                           capture_output=True, text=True)
+    if stamp.returncode != 0:
+        errors.append(stamp.stdout.strip() or "asset versions are stale (run python tools/bump_assets.py)")
 
     print(f"Pages fetched: {len(parsed)} ({', '.join(parsed)})")
     print(f"Local URLs checked: {len(local_checked)}, external links well formed: {len(external)}")
