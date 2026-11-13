@@ -220,6 +220,26 @@
         io.observe(strip);
     }
 
+    /* Attention graph: its edges draw in and its nodes take their Fiedler colours, once, when it
+       comes into view. Without motion, or without this script, it is shown complete. */
+    function initGraph() {
+        if (!('IntersectionObserver' in window)) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        document.querySelectorAll('svg.st-graph').forEach(function (graph) {
+            graph.classList.add('is-ready');
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
+                    io.disconnect();
+                    requestAnimationFrame(function () {
+                        requestAnimationFrame(function () { graph.classList.add('is-played'); });
+                    });
+                });
+            }, { threshold: 0.3 });
+            io.observe(graph);
+        });
+    }
+
     /* Looping figures in posts: play only while visible, and never under reduced motion. */
     function initVideos() {
         var videos = Array.prototype.slice.call(document.querySelectorAll('video[data-loop]'));
@@ -386,6 +406,7 @@
         initReveal();
         initPubFilter();
         initStrip();
+        initGraph();
         initVideos();
         initCopy();
         initPosts();
