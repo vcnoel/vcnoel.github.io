@@ -46,6 +46,11 @@
     --card-gap: 24px;
     --radius: 14px;
     --header-h: 60px;
+    --bar-h: 40px;
+    /* Two measures for running text, both about 75 characters a line:
+       one for body text (15 to 16 px), one for ledes and intros (18 to 19 px). */
+    --measure: 36rem;
+    --measure-lede: 42rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -380,7 +385,7 @@ html:not(.js) .theme-toggle { display: none; }
 /* Sections */
 .section { padding-block: calc(var(--gap) / 2); }
 .section:first-of-type { padding-top: calc(var(--gap) / 2); }
-.section-head { max-width: 46rem; margin-bottom: calc(var(--card-gap) + 0.25rem); }
+.section-head { max-width: var(--measure-lede); margin-bottom: calc(var(--card-gap) + 0.25rem); }
 .section-head.is-row {
     display: flex;
     flex-wrap: wrap;
@@ -397,7 +402,13 @@ h2 {
     letter-spacing: -0.022em;
 }
 h3, h4 { font-size: 1.0625rem; font-weight: 600; line-height: 1.4; letter-spacing: -0.01em; }
-.lede { margin-top: 0.6rem; font-size: 1.125rem; color: var(--muted); }
+.lede { margin-top: 0.6rem; max-width: var(--measure-lede); font-size: 1.125rem; color: var(--muted); }
+/* Running text never runs wider than its measure; narrower columns keep their own width */
+.note, .news-item p, .card p, .deploy-list p, .cv-points, .details-body ul, .paper-meta, .post-card p, .contact-note p {
+    max-width: var(--measure);
+}
+.lede, .hero-sentence, .about-intro, .contact-band p, .note, .news-item p, .card p, .paper-meta, .post-card p, .contact-note p { text-wrap: pretty; }
+.note { margin-top: 0.9rem; font-size: var(--fs-sm); color: var(--muted); }
 
 .band { background: var(--surface); border-block: 1px solid var(--line); }
 
@@ -451,7 +462,7 @@ h3, h4 { font-size: 1.0625rem; font-weight: 600; line-height: 1.4; letter-spacin
     letter-spacing: -0.015em;
     color: var(--ink-2);
 }
-.hero-sentence { margin-top: 1.25rem; max-width: 36rem; font-size: 1.1875rem; line-height: 1.55; color: var(--ink); }
+.hero-sentence { margin-top: 1.25rem; max-width: var(--measure-lede); font-size: 1.1875rem; line-height: 1.55; color: var(--ink); }
 .hero .chip-list { margin-top: 1.75rem; }
 .hero .btn-row { margin-top: 2rem; }
 
@@ -570,9 +581,6 @@ html:not(.js) .copy-btn { display: none; }
 .strip-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; margin-top: 1rem; font-size: var(--fs-xs); color: var(--muted); }
 .strip-legend .key { display: inline-flex; align-items: center; gap: 0.45rem; }
 .strip-legend .sw { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--strip-node-line); }
-.strip-caption { margin-top: 0.9rem; max-width: 52rem; font-size: var(--fs-sm); color: var(--muted); }
-.adoption { margin-top: 1.5rem; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.75rem 2rem; }
-.adoption p { max-width: 44rem; color: var(--ink-2); }
 
 @media (prefers-reduced-motion: no-preference) {
     .js .strip.is-ready .strip-cell { opacity: 0.15; transition: opacity 0.5s ease; transition-delay: calc(var(--i) * 0.35s); }
@@ -681,7 +689,7 @@ html:not(.js) .filter-bar { display: none; }
 @media (max-width: 559px) { .news-item { grid-template-columns: minmax(0, 1fr); } }
 
 /* About and experience */
-.about-intro { max-width: 46rem; font-size: 1.125rem; color: var(--ink-2); }
+.about-intro { max-width: var(--measure-lede); font-size: 1.125rem; color: var(--ink-2); }
 .cv-list { list-style: none; padding: 0; margin-top: calc(var(--card-gap) + 0.5rem); border-top: 1px solid var(--line); }
 .cv-item {
     display: grid;
