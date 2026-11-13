@@ -299,6 +299,7 @@ async function main() {
                             all: document.querySelectorAll('#pub-list > li').length,
                             shown: document.querySelectorAll('#pub-list > li:not([hidden])').length,
                             news: document.querySelectorAll('#news .news-item').length,
+                            newsTop: document.querySelectorAll('#news .wrap > .news-list > .news-item').length,
                             newsShown: [...document.querySelectorAll('#news .news-item')].filter((e) => e.checkVisibility()).length,
                         })`));
                         const press = mobile ? tap : async (sel) => { await evaluate(`document.querySelector(${JSON.stringify(sel)}).click()`); };
@@ -320,7 +321,7 @@ async function main() {
                         const res = { ...before, filterHidden, expanded, filterShown, agents, collapsed, newsOpen, skillsOpen };
                         report.push('  interactions: ' + JSON.stringify(res));
                         if (!(res.shown === 5 && res.filterHidden && res.expanded === res.all && res.filterShown && res.agents === 4 && res.collapsed === 5)) errors.push(`${label}: publication toggle or filter failed: ${JSON.stringify(res)}`);
-                        if (!(res.newsShown === 3 && res.newsOpen === res.news)) errors.push(`${label}: news toggle failed: ${JSON.stringify(res)}`);
+                        if (!(res.newsShown === res.newsTop && res.newsTop < res.news && res.newsOpen === res.news)) errors.push(`${label}: news toggle failed: ${JSON.stringify(res)}`);
                         if (!res.skillsOpen) errors.push(`${label}: details toggle failed`);
                         if (mobile && lay.demo) report.push('  demo: ' + JSON.stringify(lay.demo));
                     }
