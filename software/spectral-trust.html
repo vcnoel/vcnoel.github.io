@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>spectral-trust · Valentin Noël</title>
+    <meta name="description" content="spectral-trust, an open-source Python library that turns each layer's attention into a graph over the tokens and measures it, from one forward pass. Training-free and label-free, with TransformerLens, nnsight and Hugging Face adapters.">
+    <meta name="author" content="Valentin Noël">
+    <link rel="canonical" href="https://vcnoel.github.io/software/spectral-trust.html">
+    <meta name="theme-color" content="#fbfaf7">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Valentin Noël">
+    <meta property="og:url" content="https://vcnoel.github.io/software/spectral-trust.html">
+    <meta property="og:title" content="spectral-trust: see how a model routes information, layer by layer">
+    <meta property="og:description" content="An open-source Python library that turns each layer's attention into a graph and measures it. Training-free, label-free, one forward pass.">
+    <meta property="og:image" content="https://vcnoel.github.io/assets/img/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.className += ' js';
+            try { t = localStorage.getItem('theme'); } catch (e) { t = null; }
+            if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            var dark = (t === 'light' || t === 'dark') ? t === 'dark'
+                : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            d.setAttribute('data-theme-effective', dark ? 'dark' : 'light');
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
+    <link rel="stylesheet" href="../assets/css/site.css">
+    <script src="../assets/js/site.js" defer></script>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5M22 10v6"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+        <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+        <symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+        <symbol id="i-package" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="../index.html">
+                <img src="../favicon.svg" alt="" width="26" height="26">
+                <span>Valentin Noël</span>
+            </a>
+            <nav class="site-nav" id="site-nav" aria-label="Main">
+                <ul>
+                    <li><a href="../index.html#research">Research</a></li>
+                    <li><a href="spectral-trust.html" aria-current="page"><img class="nav-mark on-light" src="../assets/img/spectral-trust-mark.svg" alt="" width="18" height="18"><img class="nav-mark on-dark" src="../assets/img/spectral-trust-mark-dark.svg" alt="" width="18" height="18">spectral-trust</a></li>
+                    <li><a href="../index.html#publications">Publications</a></li>
+                    <li><a href="../index.html#about">About</a></li>
+                    <li><a href="../posts/index.html">Blog</a></li>
+                    <li><a href="../assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">CV</a></li>
+                </ul>
+            </nav>
+            <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+                <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+                <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="main">
+        <section class="hero st-hero" aria-labelledby="st-title">
+            <div class="wrap st-hero-grid">
+                <div class="hero-text">
+                    <img class="product-logo on-light" src="../assets/img/spectral-trust-logo.svg" alt="spectral-trust" width="176" height="40">
+                    <img class="product-logo on-dark" src="../assets/img/spectral-trust-logo-dark.svg" alt="spectral-trust" width="176" height="40">
+                    <h1 id="st-title" class="st-title">See how a model routes information, layer by layer.</h1>
+                    <p class="hero-sentence">An open-source Python library. It turns each layer's attention into a graph over the tokens and measures it: the Laplacian spectrum of every head, and the frequency content of the residual stream on those graphs, from one forward pass.</p>
+                    <ul class="pill-list" role="list" aria-label="Properties">
+                        <li class="pill">Training-free</li>
+                        <li class="pill">Label-free</li>
+                        <li class="pill">One forward pass</li>
+                        <li class="pill">Works with TransformerLens, nnsight and Hugging Face</li>
+                        <li class="pill">Open source, AGPL-3.0</li>
+                    </ul>
+                    <div class="btn-row">
+                        <a class="btn btn-primary" href="https://vcnoel.github.io/spectral-trust/">
+                            <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg> Documentation
+                        </a>
+                        <a class="btn" href="https://github.com/vcnoel/spectral-trust" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg> GitHub
+                        </a>
+                        <a class="btn" href="https://pypi.org/project/spectral-trust/" target="_blank" rel="noopener">
+                            <svg class="icon" aria-hidden="true"><use href="#i-package"/></svg> PyPI
+                        </a>
+                    </div>
+                    <div class="code-panel st-install">
+                        <div class="install">
+                            <pre tabindex="0" aria-label="Install command"><code><span class="p">$ </span>pip install spectral-trust</code></pre>
+                            <button class="copy-btn" type="button" data-copy="pip install spectral-trust" data-copy-status="copy-status">
+                                <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg>
+                                <span class="copy-label">Copy</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="visually-hidden" id="copy-status" aria-live="polite"></p>
+                </div>
+                <figure class="st-figure">
+<!-- st-graph:start -->
+<svg class="st-graph" viewBox="0 0 400 400" role="img" aria-label="The attention graph of layer 10 of Qwen/Qwen3-0.6B over the 11 tokens of one sentence, with nodes split into two groups by the Fiedler vector. Its Fiedler value is 0.642."><g class="g-edges"><line pathLength="1" style="--k:0" x1="103.3" y1="283.8" x2="73.3" y2="218.2" stroke-width="1.36" opacity="0.28"/><line pathLength="1" style="--k:1" x1="269.2" y1="92.3" x2="296.7" y2="283.8" stroke-width="1.39" opacity="0.29"/><line pathLength="1" style="--k:2" x1="326.7" y1="218.2" x2="236.1" y2="322.8" stroke-width="1.40" opacity="0.29"/><line pathLength="1" style="--k:3" x1="326.7" y1="218.2" x2="296.7" y2="283.8" stroke-width="1.41" opacity="0.29"/><line pathLength="1" style="--k:4" x1="296.7" y1="283.8" x2="236.1" y2="322.8" stroke-width="1.41" opacity="0.29"/><line pathLength="1" style="--k:5" x1="73.3" y1="218.2" x2="83.6" y2="146.8" stroke-width="1.42" opacity="0.29"/><line pathLength="1" style="--k:6" x1="316.4" y1="146.8" x2="163.9" y2="322.8" stroke-width="1.47" opacity="0.29"/><line pathLength="1" style="--k:7" x1="316.4" y1="146.8" x2="296.7" y2="283.8" stroke-width="1.52" opacity="0.30"/><line pathLength="1" style="--k:8" x1="163.9" y1="322.8" x2="83.6" y2="146.8" stroke-width="1.64" opacity="0.31"/><line pathLength="1" style="--k:9" x1="163.9" y1="322.8" x2="130.8" y2="92.3" stroke-width="1.88" opacity="0.34"/><line pathLength="1" style="--k:10" x1="316.4" y1="146.8" x2="326.7" y2="218.2" stroke-width="1.96" opacity="0.35"/><line pathLength="1" style="--k:11" x1="269.2" y1="92.3" x2="326.7" y2="218.2" stroke-width="2.08" opacity="0.36"/><line pathLength="1" style="--k:12" x1="269.2" y1="92.3" x2="316.4" y2="146.8" stroke-width="2.25" opacity="0.38"/><line pathLength="1" style="--k:13" x1="163.9" y1="322.8" x2="103.3" y2="283.8" stroke-width="2.27" opacity="0.38"/><line pathLength="1" style="--k:14" x1="163.9" y1="322.8" x2="73.3" y2="218.2" stroke-width="2.31" opacity="0.39"/><line pathLength="1" style="--k:15" x1="200.0" y1="72.0" x2="83.6" y2="146.8" stroke-width="4.35" opacity="0.62"/><line pathLength="1" style="--k:16" x1="200.0" y1="72.0" x2="73.3" y2="218.2" stroke-width="4.54" opacity="0.64"/><line pathLength="1" style="--k:17" x1="200.0" y1="72.0" x2="130.8" y2="92.3" stroke-width="4.95" opacity="0.68"/><line pathLength="1" style="--k:18" x1="200.0" y1="72.0" x2="163.9" y2="322.8" stroke-width="5.22" opacity="0.71"/><line pathLength="1" style="--k:19" x1="200.0" y1="72.0" x2="103.3" y2="283.8" stroke-width="5.33" opacity="0.72"/><line pathLength="1" style="--k:20" x1="200.0" y1="72.0" x2="326.7" y2="218.2" stroke-width="5.53" opacity="0.75"/><line pathLength="1" style="--k:21" x1="200.0" y1="72.0" x2="236.1" y2="322.8" stroke-width="5.64" opacity="0.76"/><line pathLength="1" style="--k:22" x1="200.0" y1="72.0" x2="296.7" y2="283.8" stroke-width="6.05" opacity="0.80"/><line pathLength="1" style="--k:23" x1="200.0" y1="72.0" x2="316.4" y2="146.8" stroke-width="6.07" opacity="0.81"/><line pathLength="1" style="--k:24" x1="200.0" y1="72.0" x2="269.2" y2="92.3" stroke-width="7.80" opacity="1.00"/></g><g class="g-nodes"><circle style="--c:#cde3f0;--k:0" cx="200.0" cy="72.0" r="15"/><circle style="--c:#80b9d9;--k:1" cx="269.2" cy="92.3" r="15"/><circle style="--c:#8cc0dc;--k:2" cx="316.4" cy="146.8" r="15"/><circle style="--c:#55a1cc;--k:3" cx="326.7" cy="218.2" r="15"/><circle style="--c:#4799c7;--k:4" cx="296.7" cy="283.8" r="15"/><circle style="--c:#c5dfed;--k:5" cx="236.1" cy="322.8" r="15"/><circle style="--c:#e69f00;--k:6" cx="163.9" cy="322.8" r="15"/><circle style="--c:#f5d794;--k:7" cx="103.3" cy="283.8" r="15"/><circle style="--c:#f0c668;--k:8" cx="73.3" cy="218.2" r="15"/><circle style="--c:#f0c668;--k:9" cx="83.6" cy="146.8" r="15"/><circle style="--c:#f2cd79;--k:10" cx="130.8" cy="92.3" r="15"/></g><g class="g-labels" aria-hidden="true"><text x="200.0" y="37.0" text-anchor="middle">The</text><text x="290.8" y="63.7" text-anchor="start">cat</text><text x="352.8" y="135.2" text-anchor="start">sat</text><text x="366.3" y="228.9" text-anchor="start">on</text><text x="327.0" y="315.0" text-anchor="start">the</text><text x="247.3" y="366.2" text-anchor="start">mat</text><text x="152.7" y="366.2" text-anchor="end">because</text><text x="73.0" y="315.0" text-anchor="end">it</text><text x="33.7" y="228.9" text-anchor="end">was</text><text x="47.2" y="135.2" text-anchor="end">warm</text><text x="109.2" y="63.7" text-anchor="end">.</text></g></svg>
+<!-- st-graph:end -->
+                    <figcaption>Layer 10 of Qwen3-0.6B reading one sentence. Thicker edges carry more attention, and the Fiedler vector splits the tokens into a blue and an orange group.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="section" id="quickstart" aria-labelledby="quickstart-title">
+            <div class="wrap reveal two-col is-even st-split">
+                <div class="section-head">
+                    <h2 id="quickstart-title">Quickstart</h2>
+                    <p class="lede">Load a Hugging Face model and run it once. The cache holds every measurement, keyed in the style of TransformerLens: one value per head under <code>attn</code>, the metrics that also read the hidden states under <code>resid</code>, and the head-averaged graph under <code>graph</code>.</p>
+                    <p class="lede">It runs on a CPU. A list of texts runs as a batch, and the views render inline in Jupyter or save as standalone HTML.</p>
+                </div>
+                <!-- Run with spectral-trust 0.4.0 from PyPI on a CPU: blocks.10.graph.fiedler_value printed 0.6423. -->
+                <div class="code-panel">
+                    <div class="code-head">Python, spectral-trust 0.4.0</div>
+                    <pre tabindex="0" aria-label="Quickstart example"><code><span class="k">import</span> spectral_trust <span class="k">as</span> st
+
+model = st.SpectralModel.from_pretrained(<span class="s">"Qwen/Qwen3-0.6B"</span>)
+cache = model.run_with_spectra(
+    <span class="s">"The cat sat on the mat because it was warm."</span>)
+
+cache[<span class="s">"blocks.10.graph.fiedler_value"</span>]   <span class="c"># 0.642</span>
+
+<span class="c"># every measurement of one head, and an interactive view</span>
+cache.layer(10).head(3)
+cache.graph(10, head=3)</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="section band" id="interop" aria-labelledby="interop-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <h2 id="interop-title">Already using TransformerLens or nnsight?</h2>
+                    <p class="lede">Measure a run you already have, with no second forward pass. Patch, ablate or steer with those libraries, then measure the attention graphs here. <code>st.from_hf_outputs</code> does the same for a Hugging Face forward pass.</p>
+                </div>
+                <div class="grid grid-2">
+                    <div class="code-panel">
+                        <div class="code-head">TransformerLens</div>
+                        <pre tabindex="0" aria-label="TransformerLens example"><code><span class="k">from</span> transformer_lens.model_bridge <span class="k">import</span> TransformerBridge
+<span class="k">import</span> spectral_trust <span class="k">as</span> st
+
+model = TransformerBridge.boot_transformers(<span class="s">"gpt2"</span>)
+tokens = model.to_tokens(
+    <span class="s">"The cat sat on the mat because it was warm."</span>)
+_, tl_cache = model.run_with_cache(tokens)
+cache = st.from_transformer_lens(tl_cache, model, tokens)
+<span class="c"># SpectralCache('gpt2', 12 tokens, layers 0-11, 12 heads,</span>
+<span class="c">#   metrics: attn=5, resid=4, graph=10)</span></code></pre>
+                    </div>
+                    <div class="code-panel">
+                        <div class="code-head">nnsight</div>
+                        <pre tabindex="0" aria-label="nnsight example"><code><span class="k">from</span> nnsight <span class="k">import</span> LanguageModel
+<span class="k">import</span> spectral_trust <span class="k">as</span> st
+
+prompt = <span class="s">"The cat sat on the mat because it was warm."</span>
+lm = LanguageModel(<span class="s">"gpt2"</span>, attn_implementation=<span class="s">"eager"</span>,
+                   dispatch=<span class="k">True</span>)
+attn, resid = [], []
+<span class="k">with</span> lm.trace(prompt):
+    <span class="k">for</span> block <span class="k">in</span> lm.transformer.h:
+        <span class="c"># attention weights, then the block output</span>
+        attn.append(block.attn.output[1].save())
+        resid.append(block.output.save())
+cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="layers" aria-labelledby="layers-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <h2 id="layers-title">Every layer at a glance</h2>
+                    <p class="lede">The same sentence through six of the 28 layers. The Fiedler value falls towards zero when the graph splits into groups that barely attend to each other.</p>
+                </div>
+<!-- film-strip:start -->
+<div class="strip" data-strip>
+<div class="strip-cells">
+<figure class="strip-cell" style="--i:0"><svg viewBox="0 0 120 120" role="img" aria-label="Attention graph over the 11 tokens at layer 0"><g class="strip-edges"><line x1="47.0" y1="104.1" x2="35.1" y2="21.3" stroke-width="1.05" opacity="0.34"/><line x1="84.9" y1="21.3" x2="105.5" y2="66.5" stroke-width="1.08" opacity="0.35"/><line x1="73.0" y1="104.1" x2="47.0" y2="104.1" stroke-width="1.09" opacity="0.35"/><line x1="84.9" y1="21.3" x2="73.0" y2="104.1" stroke-width="1.09" opacity="0.35"/><line x1="105.5" y1="66.5" x2="73.0" y2="104.1" stroke-width="1.10" opacity="0.35"/><line x1="101.8" y1="40.9" x2="94.8" y2="90.1" stroke-width="1.26" opacity="0.38"/><line x1="14.5" y1="66.5" x2="35.1" y2="21.3" stroke-width="1.34" opacity="0.39"/><line x1="94.8" y1="90.1" x2="18.2" y2="40.9" stroke-width="1.47" opacity="0.41"/><line x1="47.0" y1="104.1" x2="14.5" y2="66.5" stroke-width="1.52" opacity="0.42"/><line x1="60.0" y1="14.0" x2="18.2" y2="40.9" stroke-width="1.54" opacity="0.42"/><line x1="94.8" y1="90.1" x2="14.5" y2="66.5" stroke-width="1.63" opacity="0.44"/><line x1="84.9" y1="21.3" x2="101.8" y2="40.9" stroke-width="1.66" opacity="0.44"/><line x1="60.0" y1="14.0" x2="73.0" y2="104.1" stroke-width="1.82" opacity="0.47"/><line x1="60.0" y1="14.0" x2="14.5" y2="66.5" stroke-width="1.83" opacity="0.47"/><line x1="14.5" y1="66.5" x2="18.2" y2="40.9" stroke-width="1.85" opacity="0.48"/><line x1="60.0" y1="14.0" x2="25.2" y2="90.1" stroke-width="2.01" opacity="0.50"/><line x1="94.8" y1="90.1" x2="35.1" y2="21.3" stroke-width="2.11" opacity="0.52"/><line x1="60.0" y1="14.0" x2="47.0" y2="104.1" stroke-width="2.12" opacity="0.52"/><line x1="60.0" y1="14.0" x2="35.1" y2="21.3" stroke-width="2.14" opacity="0.52"/><line x1="94.8" y1="90.1" x2="25.2" y2="90.1" stroke-width="2.18" opacity="0.53"/><line x1="94.8" y1="90.1" x2="73.0" y2="104.1" stroke-width="2.42" opacity="0.57"/><line x1="60.0" y1="14.0" x2="94.8" y2="90.1" stroke-width="2.73" opacity="0.62"/><line x1="60.0" y1="14.0" x2="105.5" y2="66.5" stroke-width="2.74" opacity="0.62"/><line x1="25.2" y1="90.1" x2="14.5" y2="66.5" stroke-width="2.80" opacity="0.63"/><line x1="94.8" y1="90.1" x2="47.0" y2="104.1" stroke-width="2.83" opacity="0.64"/><line x1="47.0" y1="104.1" x2="25.2" y2="90.1" stroke-width="3.10" opacity="0.68"/><line x1="105.5" y1="66.5" x2="94.8" y2="90.1" stroke-width="3.17" opacity="0.69"/><line x1="101.8" y1="40.9" x2="105.5" y2="66.5" stroke-width="4.01" opacity="0.84"/><line x1="60.0" y1="14.0" x2="101.8" y2="40.9" stroke-width="4.43" opacity="0.91"/><line x1="60.0" y1="14.0" x2="84.9" y2="21.3" stroke-width="5.00" opacity="1.00"/></g><g class="strip-nodes"><circle cx="60.0" cy="14.0" r="7.5" fill="#9dc9e1"/><circle cx="84.9" cy="21.3" r="7.5" fill="#499ac8"/><circle cx="101.8" cy="40.9" r="7.5" fill="#6fafd4"/><circle cx="105.5" cy="66.5" r="7.5" fill="#acd1e6"/><circle cx="94.8" cy="90.1" r="7.5" fill="#fcf4e2"/><circle cx="73.0" cy="104.1" r="7.5" fill="#a2cce3"/><circle cx="47.0" cy="104.1" r="7.5" fill="#f7dfaa"/><circle cx="25.2" cy="90.1" r="7.5" fill="#f6db9e"/><circle cx="14.5" cy="66.5" r="7.5" fill="#f1c971"/><circle cx="18.2" cy="40.9" r="7.5" fill="#e69f00"/><circle cx="35.1" cy="21.3" r="7.5" fill="#f8e2b3"/></g></svg><figcaption>Layer 0</figcaption></figure>
+<figure class="strip-cell" style="--i:1"><svg viewBox="0 0 120 120" role="img" aria-label="Attention graph over the 11 tokens at layer 5"><g class="strip-edges"><line x1="84.9" y1="21.3" x2="47.0" y2="104.1" stroke-width="0.86" opacity="0.31"/><line x1="84.9" y1="21.3" x2="94.8" y2="90.1" stroke-width="0.89" opacity="0.32"/><line x1="101.8" y1="40.9" x2="94.8" y2="90.1" stroke-width="1.00" opacity="0.33"/><line x1="47.0" y1="104.1" x2="25.2" y2="90.1" stroke-width="1.02" opacity="0.34"/><line x1="84.9" y1="21.3" x2="101.8" y2="40.9" stroke-width="1.13" opacity="0.35"/><line x1="47.0" y1="104.1" x2="14.5" y2="66.5" stroke-width="1.13" opacity="0.35"/><line x1="101.8" y1="40.9" x2="105.5" y2="66.5" stroke-width="1.16" opacity="0.36"/><line x1="60.0" y1="14.0" x2="14.5" y2="66.5" stroke-width="3.81" opacity="0.80"/><line x1="60.0" y1="14.0" x2="35.1" y2="21.3" stroke-width="3.98" opacity="0.83"/><line x1="60.0" y1="14.0" x2="18.2" y2="40.9" stroke-width="4.14" opacity="0.86"/><line x1="60.0" y1="14.0" x2="25.2" y2="90.1" stroke-width="4.16" opacity="0.86"/><line x1="60.0" y1="14.0" x2="94.8" y2="90.1" stroke-width="4.21" opacity="0.87"/><line x1="60.0" y1="14.0" x2="47.0" y2="104.1" stroke-width="4.34" opacity="0.89"/><line x1="60.0" y1="14.0" x2="73.0" y2="104.1" stroke-width="4.39" opacity="0.90"/><line x1="60.0" y1="14.0" x2="105.5" y2="66.5" stroke-width="4.57" opacity="0.93"/><line x1="60.0" y1="14.0" x2="101.8" y2="40.9" stroke-width="4.61" opacity="0.94"/><line x1="60.0" y1="14.0" x2="84.9" y2="21.3" stroke-width="5.00" opacity="1.00"/></g><g class="strip-nodes"><circle cx="60.0" cy="14.0" r="7.5" fill="#fcfdfe"/><circle cx="84.9" cy="21.3" r="7.5" fill="#f8e3b6"/><circle cx="101.8" cy="40.9" r="7.5" fill="#f6dca3"/><circle cx="105.5" cy="66.5" r="7.5" fill="#f8e3b5"/><circle cx="94.8" cy="90.1" r="7.5" fill="#f5d796"/><circle cx="73.0" cy="104.1" r="7.5" fill="#faeac8"/><circle cx="47.0" cy="104.1" r="7.5" fill="#dbebf4"/><circle cx="25.2" cy="90.1" r="7.5" fill="#fdfeff"/><circle cx="14.5" cy="66.5" r="7.5" fill="#dfeef5"/><circle cx="18.2" cy="40.9" r="7.5" fill="#9dc9e1"/><circle cx="35.1" cy="21.3" r="7.5" fill="#0072b2"/></g></svg><figcaption>Layer 5</figcaption></figure>
+<figure class="strip-cell" style="--i:2"><svg viewBox="0 0 120 120" role="img" aria-label="Attention graph over the 11 tokens at layer 10"><g class="strip-edges"><line x1="25.2" y1="90.1" x2="14.5" y2="66.5" stroke-width="0.86" opacity="0.31"/><line x1="84.9" y1="21.3" x2="94.8" y2="90.1" stroke-width="0.88" opacity="0.31"/><line x1="105.5" y1="66.5" x2="73.0" y2="104.1" stroke-width="0.88" opacity="0.31"/><line x1="105.5" y1="66.5" x2="94.8" y2="90.1" stroke-width="0.89" opacity="0.31"/><line x1="94.8" y1="90.1" x2="73.0" y2="104.1" stroke-width="0.89" opacity="0.32"/><line x1="14.5" y1="66.5" x2="18.2" y2="40.9" stroke-width="0.90" opacity="0.32"/><line x1="101.8" y1="40.9" x2="47.0" y2="104.1" stroke-width="0.93" opacity="0.32"/><line x1="101.8" y1="40.9" x2="94.8" y2="90.1" stroke-width="0.96" opacity="0.33"/><line x1="47.0" y1="104.1" x2="18.2" y2="40.9" stroke-width="1.04" opacity="0.34"/><line x1="47.0" y1="104.1" x2="35.1" y2="21.3" stroke-width="1.20" opacity="0.37"/><line x1="101.8" y1="40.9" x2="105.5" y2="66.5" stroke-width="1.24" opacity="0.37"/><line x1="84.9" y1="21.3" x2="105.5" y2="66.5" stroke-width="1.32" opacity="0.39"/><line x1="84.9" y1="21.3" x2="101.8" y2="40.9" stroke-width="1.43" opacity="0.40"/><line x1="47.0" y1="104.1" x2="25.2" y2="90.1" stroke-width="1.45" opacity="0.41"/><line x1="47.0" y1="104.1" x2="14.5" y2="66.5" stroke-width="1.47" opacity="0.41"/><line x1="60.0" y1="14.0" x2="18.2" y2="40.9" stroke-width="2.78" opacity="0.63"/><line x1="60.0" y1="14.0" x2="14.5" y2="66.5" stroke-width="2.91" opacity="0.65"/><line x1="60.0" y1="14.0" x2="35.1" y2="21.3" stroke-width="3.17" opacity="0.70"/><line x1="60.0" y1="14.0" x2="47.0" y2="104.1" stroke-width="3.34" opacity="0.72"/><line x1="60.0" y1="14.0" x2="25.2" y2="90.1" stroke-width="3.41" opacity="0.74"/><line x1="60.0" y1="14.0" x2="105.5" y2="66.5" stroke-width="3.54" opacity="0.76"/><line x1="60.0" y1="14.0" x2="73.0" y2="104.1" stroke-width="3.61" opacity="0.77"/><line x1="60.0" y1="14.0" x2="94.8" y2="90.1" stroke-width="3.87" opacity="0.81"/><line x1="60.0" y1="14.0" x2="101.8" y2="40.9" stroke-width="3.89" opacity="0.81"/><line x1="60.0" y1="14.0" x2="84.9" y2="21.3" stroke-width="5.00" opacity="1.00"/></g><g class="strip-nodes"><circle cx="60.0" cy="14.0" r="7.5" fill="#cde3f0"/><circle cx="84.9" cy="21.3" r="7.5" fill="#80b9d9"/><circle cx="101.8" cy="40.9" r="7.5" fill="#8cc0dc"/><circle cx="105.5" cy="66.5" r="7.5" fill="#55a1cc"/><circle cx="94.8" cy="90.1" r="7.5" fill="#4799c7"/><circle cx="73.0" cy="104.1" r="7.5" fill="#c5dfed"/><circle cx="47.0" cy="104.1" r="7.5" fill="#e69f00"/><circle cx="25.2" cy="90.1" r="7.5" fill="#f5d794"/><circle cx="14.5" cy="66.5" r="7.5" fill="#f0c668"/><circle cx="18.2" cy="40.9" r="7.5" fill="#f0c668"/><circle cx="35.1" cy="21.3" r="7.5" fill="#f2cd79"/></g></svg><figcaption>Layer 10</figcaption></figure>
+<figure class="strip-cell" style="--i:3"><svg viewBox="0 0 120 120" role="img" aria-label="Attention graph over the 11 tokens at layer 15"><g class="strip-edges"><line x1="47.0" y1="104.1" x2="35.1" y2="21.3" stroke-width="0.87" opacity="0.31"/><line x1="105.5" y1="66.5" x2="94.8" y2="90.1" stroke-width="0.88" opacity="0.31"/><line x1="25.2" y1="90.1" x2="14.5" y2="66.5" stroke-width="0.89" opacity="0.31"/><line x1="73.0" y1="104.1" x2="47.0" y2="104.1" stroke-width="0.89" opacity="0.32"/><line x1="14.5" y1="66.5" x2="18.2" y2="40.9" stroke-width="0.95" opacity="0.32"/><line x1="47.0" y1="104.1" x2="14.5" y2="66.5" stroke-width="0.98" opacity="0.33"/><line x1="18.2" y1="40.9" x2="35.1" y2="21.3" stroke-width="0.99" opacity="0.33"/><line x1="84.9" y1="21.3" x2="101.8" y2="40.9" stroke-width="1.09" opacity="0.35"/><line x1="84.9" y1="21.3" x2="105.5" y2="66.5" stroke-width="1.10" opacity="0.35"/><line x1="101.8" y1="40.9" x2="105.5" y2="66.5" stroke-width="1.30" opacity="0.38"/><line x1="47.0" y1="104.1" x2="25.2" y2="90.1" stroke-width="1.42" opacity="0.40"/><line x1="60.0" y1="14.0" x2="35.1" y2="21.3" stroke-width="3.37" opacity="0.73"/><line x1="60.0" y1="14.0" x2="25.2" y2="90.1" stroke-width="3.65" opacity="0.77"/><line x1="60.0" y1="14.0" x2="18.2" y2="40.9" stroke-width="3.76" opacity="0.79"/><line x1="60.0" y1="14.0" x2="105.5" y2="66.5" stroke-width="3.77" opacity="0.80"/><line x1="60.0" y1="14.0" x2="14.5" y2="66.5" stroke-width="3.84" opacity="0.81"/><line x1="60.0" y1="14.0" x2="47.0" y2="104.1" stroke-width="3.84" opacity="0.81"/><line x1="60.0" y1="14.0" x2="73.0" y2="104.1" stroke-width="4.09" opacity="0.85"/><line x1="60.0" y1="14.0" x2="94.8" y2="90.1" stroke-width="4.27" opacity="0.88"/><line x1="60.0" y1="14.0" x2="101.8" y2="40.9" stroke-width="4.42" opacity="0.90"/><line x1="60.0" y1="14.0" x2="84.9" y2="21.3" stroke-width="5.00" opacity="1.00"/></g><g class="strip-nodes"><circle cx="60.0" cy="14.0" r="7.5" fill="#e0eef6"/><circle cx="84.9" cy="21.3" r="7.5" fill="#3b93c4"/><circle cx="101.8" cy="40.9" r="7.5" fill="#2a89bf"/><circle cx="105.5" cy="66.5" r="7.5" fill="#157eb8"/><circle cx="94.8" cy="90.1" r="7.5" fill="#4b9bc9"/><circle cx="73.0" cy="104.1" r="7.5" fill="#e8f3f8"/><circle cx="47.0" cy="104.1" r="7.5" fill="#e69f00"/><circle cx="25.2" cy="90.1" r="7.5" fill="#efc25e"/><circle cx="14.5" cy="66.5" r="7.5" fill="#f1cb74"/><circle cx="18.2" cy="40.9" r="7.5" fill="#eab02e"/><circle cx="35.1" cy="21.3" r="7.5" fill="#ebb336"/></g></svg><figcaption>Layer 15</figcaption></figure>
+<figure class="strip-cell" style="--i:4"><svg viewBox="0 0 120 120" role="img" aria-label="Attention graph over the 11 tokens at layer 20"><g class="strip-edges"><line x1="101.8" y1="40.9" x2="105.5" y2="66.5" stroke-width="0.96" opacity="0.33"/><line x1="47.0" y1="104.1" x2="25.2" y2="90.1" stroke-width="1.06" opacity="0.34"/><line x1="105.5" y1="66.5" x2="94.8" y2="90.1" stroke-width="1.22" opacity="0.37"/><line x1="60.0" y1="14.0" x2="94.8" y2="90.1" stroke-width="3.90" opacity="0.82"/><line x1="60.0" y1="14.0" x2="18.2" y2="40.9" stroke-width="3.92" opacity="0.82"/><line x1="60.0" y1="14.0" x2="73.0" y2="104.1" stroke-width="4.07" opacity="0.85"/><line x1="60.0" y1="14.0" x2="14.5" y2="66.5" stroke-width="4.10" opacity="0.85"/><line x1="60.0" y1="14.0" x2="35.1" y2="21.3" stroke-width="4.11" opacity="0.85"/><line x1="60.0" y1="14.0" x2="25.2" y2="90.1" stroke-width="4.18" opacity="0.86"/><line x1="60.0" y1="14.0" x2="47.0" y2="104.1" stroke-width="4.29" opacity="0.88"/><line x1="60.0" y1="14.0" x2="105.5" y2="66.5" stroke-width="4.35" opacity="0.89"/><line x1="60.0" y1="14.0" x2="101.8" y2="40.9" stroke-width="4.51" opacity="0.92"/><line x1="60.0" y1="14.0" x2="84.9" y2="21.3" stroke-width="5.00" opacity="1.00"/></g><g class="strip-nodes"><circle cx="60.0" cy="14.0" r="7.5" fill="#f2f8fb"/><circle cx="84.9" cy="21.3" r="7.5" fill="#faebc9"/><circle cx="101.8" cy="40.9" r="7.5" fill="#f0c565"/><circle cx="105.5" cy="66.5" r="7.5" fill="#e9aa1e"/><circle cx="94.8" cy="90.1" r="7.5" fill="#e9a91b"/><circle cx="73.0" cy="104.1" r="7.5" fill="#f6dda4"/><circle cx="47.0" cy="104.1" r="7.5" fill="#61a8cf"/><circle cx="25.2" cy="90.1" r="7.5" fill="#9ec9e2"/><circle cx="14.5" cy="66.5" r="7.5" fill="#abd0e6"/><circle cx="18.2" cy="40.9" r="7.5" fill="#65aad0"/><circle cx="35.1" cy="21.3" r="7.5" fill="#0072b2"/></g></svg><figcaption>Layer 20</figcaption></figure>
+<figure class="strip-cell" style="--i:5"><svg viewBox="0 0 120 120" role="img" aria-label="Attention graph over the 11 tokens at layer 27"><g class="strip-edges"><line x1="60.0" y1="14.0" x2="94.8" y2="90.1" stroke-width="4.03" opacity="0.84"/><line x1="60.0" y1="14.0" x2="14.5" y2="66.5" stroke-width="4.20" opacity="0.87"/><line x1="60.0" y1="14.0" x2="25.2" y2="90.1" stroke-width="4.47" opacity="0.91"/><line x1="60.0" y1="14.0" x2="35.1" y2="21.3" stroke-width="4.58" opacity="0.93"/><line x1="60.0" y1="14.0" x2="105.5" y2="66.5" stroke-width="4.60" opacity="0.93"/><line x1="60.0" y1="14.0" x2="73.0" y2="104.1" stroke-width="4.65" opacity="0.94"/><line x1="60.0" y1="14.0" x2="18.2" y2="40.9" stroke-width="4.67" opacity="0.94"/><line x1="60.0" y1="14.0" x2="47.0" y2="104.1" stroke-width="4.79" opacity="0.97"/><line x1="60.0" y1="14.0" x2="101.8" y2="40.9" stroke-width="4.83" opacity="0.97"/><line x1="60.0" y1="14.0" x2="84.9" y2="21.3" stroke-width="5.00" opacity="1.00"/></g><g class="strip-nodes"><circle cx="60.0" cy="14.0" r="7.5" fill="#f0f7fb"/><circle cx="84.9" cy="21.3" r="7.5" fill="#e9f3f8"/><circle cx="101.8" cy="40.9" r="7.5" fill="#fffefc"/><circle cx="105.5" cy="66.5" r="7.5" fill="#f7e1b1"/><circle cx="94.8" cy="90.1" r="7.5" fill="#e69f00"/><circle cx="73.0" cy="104.1" r="7.5" fill="#fefaf1"/><circle cx="47.0" cy="104.1" r="7.5" fill="#d2e6f1"/><circle cx="25.2" cy="90.1" r="7.5" fill="#b3d5e8"/><circle cx="14.5" cy="66.5" r="7.5" fill="#b0d3e7"/><circle cx="18.2" cy="40.9" r="7.5" fill="#d9eaf4"/><circle cx="35.1" cy="21.3" r="7.5" fill="#c3deed"/></g></svg><figcaption>Layer 27</figcaption></figure>
+</div>
+<div class="strip-line">
+<svg viewBox="0 0 600 64" role="img" aria-label="Fiedler value of each of the 28 layers, between 0.26 and 0.88, with the six layers above marked"><line class="strip-base" x1="8" y1="56" x2="592" y2="56"/><polyline class="strip-curve" points="8.0,43.7 29.6,33.4 51.3,34.6 72.9,13.9 94.5,24.2 116.1,20.6 137.8,25.7 159.4,25.3 181.0,21.8 202.7,26.6 224.3,25.2 245.9,26.1 267.6,17.4 289.2,25.2 310.8,22.3 332.4,21.0 354.1,19.3 375.7,20.5 397.3,21.7 419.0,18.1 440.6,19.5 462.2,15.8 483.9,19.0 505.5,21.2 527.1,17.6 548.7,17.2 570.4,21.2 592.0,24.8"/><g class="strip-dots"><circle style="--i:0" cx="8.0" cy="43.7" r="4.5"/><circle style="--i:1" cx="116.1" cy="20.6" r="4.5"/><circle style="--i:2" cx="224.3" cy="25.2" r="4.5"/><circle style="--i:3" cx="332.4" cy="21.0" r="4.5"/><circle style="--i:4" cx="440.6" cy="19.5" r="4.5"/><circle style="--i:5" cx="592.0" cy="24.8" r="4.5"/></g></svg>
+<p class="strip-axis"><span>Layer 0</span><span><code>fiedler_value</code>, all 28 layers</span><span>Layer 27</span></p>
+</div>
+</div>
+<!-- film-strip:end -->
+            </div>
+        </section>
+
+        <section class="section band" id="speed" aria-labelledby="speed-title">
+            <div class="wrap reveal two-col is-even st-split">
+                <div class="section-head">
+                    <h2 id="speed-title">Faster in 0.4.0</h2>
+                    <p class="lede">The same job takes 4.8 times less time than in 0.3.0 on its defaults, and 2.9 times less than 0.3.0 with its dense solver, so the gain is not only a change of default.</p>
+                    <p class="note">Hidden-state metrics for the 28 layers of Qwen3-0.6B on one prompt of 512 tokens, on the head-averaged graph of each layer and on the graph of each of its 16 heads. Medians of 3 runs, forward pass excluded, CPU only, 2 threads, torch 2.15.0. 0.4.0 also computes the per-head attention metrics in the same call.</p>
+                </div>
+                <div class="speed" role="img" aria-label="Time for the same job: 56.6 seconds with 0.3.0 on its defaults, 34.5 seconds with 0.3.0 and the dense solver, 11.7 seconds with 0.4.0.">
+                    <div class="speed-row">
+                        <span class="speed-name">0.3.0, defaults</span>
+                        <span class="speed-track"><span class="speed-bar" style="--w:1"></span><span class="speed-val">56.6 s</span></span>
+                    </div>
+                    <div class="speed-row">
+                        <span class="speed-name">0.3.0, dense solver</span>
+                        <span class="speed-track"><span class="speed-bar" style="--w:0.6095"></span><span class="speed-val">34.5 s</span></span>
+                    </div>
+                    <div class="speed-row is-new">
+                        <span class="speed-name">0.4.0, defaults</span>
+                        <span class="speed-track"><span class="speed-bar" style="--w:0.2067"></span><span class="speed-val">11.7 s</span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="used-in" aria-labelledby="used-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <h2 id="used-title">Used in work by researchers at</h2>
+                    <p class="lede">Each logo links to the paper that uses the library.</p>
+                </div>
+                <ul class="logo-row is-large" role="list">
+                    <li><a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener" title="Bao et al. 2026, arXiv:2608.03015"><img src="../assets/logos/cornell.svg" alt="Cornell University" width="152" height="20"></a></li>
+                    <li><a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener" title="Bao et al. 2026, arXiv:2608.03015"><img src="../assets/logos/goodfire.svg" alt="Goodfire AI" width="163" height="35"></a></li>
+                    <li><a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener" title="Bao et al. 2026, arXiv:2608.03015"><img src="../assets/logos/imperial.png" alt="Imperial College London" width="1092" height="120"></a></li>
+                    <li><a class="logo-inv" href="https://arxiv.org/abs/2610.16709" target="_blank" rel="noopener" title="Kim, Lutzeyer and Guo 2026, arXiv:2610.16709"><img src="../assets/logos/polytechnique.png" alt="École Polytechnique" width="245" height="89"></a></li>
+                </ul>
+                <ul class="paper-list" role="list">
+                    <li>
+                        <p class="paper-title"><a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener">A Graph Signal Processing Perspective on Numerical Sequence Representations in LLM In-Context Learning</a></p>
+                        <p class="paper-meta">Bao, Qi, Liu, Arora, Sarfati, Boullé and Earls, 2026 · arXiv:2608.03015 · Cornell University, Goodfire AI and Imperial College London. Adapts the library's Fiedler value, HFER and spectral entropy diagnostics to numerical in-context learning.</p>
+                    </li>
+                    <li>
+                        <p class="paper-title"><a href="https://arxiv.org/abs/2610.16709" target="_blank" rel="noopener">Attention-Graph Curvature for the Verification of Mathematical Reasoning</a></p>
+                        <p class="paper-meta">Kim, Lutzeyer and Guo, 2026 · arXiv:2610.16709, NeurIPS 2026 MATH-AI workshop · LIX, École Polytechnique. Its spectral module is ported from spectral-trust.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section band" aria-labelledby="start-title">
+            <div class="wrap contact-band">
+                <div>
+                    <h2 id="start-title">Start with the documentation</h2>
+                    <p>Install, three tutorials, the concepts and the full API reference. Version 0.4.0 is on PyPI.</p>
+                </div>
+                <div class="btn-row">
+                    <a class="btn btn-primary" href="https://vcnoel.github.io/spectral-trust/">
+                        <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg> Documentation
+                    </a>
+                    <a class="btn" href="https://github.com/vcnoel/spectral-trust" target="_blank" rel="noopener">
+                        <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg> GitHub
+                    </a>
+                    <a class="btn" href="https://pypi.org/project/spectral-trust/" target="_blank" rel="noopener">
+                        <svg class="icon" aria-hidden="true"><use href="#i-package"/></svg> PyPI
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <p>© 2026 Valentin Noël</p>
+            <ul class="footer-links" role="list">
+                <li><a href="mailto:val.noel@proton.me" aria-label="Email"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></a></li>
+                <li><a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener" aria-label="Google Scholar"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg></a></li>
+                <li><a href="https://github.com/vcnoel" target="_blank" rel="noopener" aria-label="GitHub"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg></a></li>
+                <li><a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg></a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>
