@@ -1,4 +1,4 @@
-/* Shared script for vcnoel.github.io: theme toggle, mobile menu, section
+/* Shared script for vcnoel.github.io: announcement bar, theme toggle, mobile menu, section
    highlighting, reveal on scroll, publication filter, copy button, posts list.
    Every feature checks for its elements, so the file is safe on every page. */
 (function () {
@@ -46,6 +46,86 @@
             else if (darkQuery.addListener) darkQuery.addListener(onChange);
         }
         sync();
+    }
+
+    /* Announcement bar: the items of assets/js/announcements.js, one at a time. A new item every
+       5.5 s, held while the pointer or the keyboard focus is on the bar, and stopped by its pause
+       button. With reduced motion only the first item shows and nothing moves. */
+    var ANNOUNCE_MS = 5500;
+
+    function siteRoot() {
+        var s = document.querySelector('script[src$="assets/js/site.js"]');
+        return s ? s.src.replace(/assets\/js\/site\.js$/, '') : '';
+    }
+
+    function initAnnounce() {
+        var bar = document.querySelector('[data-announce]');
+        if (!bar) return;
+        var items = Array.isArray(window.SITE_ANNOUNCEMENTS) ? window.SITE_ANNOUNCEMENTS : [];
+        if (!items.length) { bar.hidden = true; return; }
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) items = items.slice(0, 1);
+        var root = siteRoot();
+
+        var inner = el('div', 'wrap announce-inner');
+        var list = el('ul', 'announce-list');
+        list.setAttribute('role', 'list');
+        var lis = items.map(function (item, i) {
+            var li = el('li', 'announce-item' + (i === 0 ? ' is-active' : ''));
+            var a = el('a', 'announce-link');
+            var external = /^https?:\/\//.test(item.href || '');
+            a.href = external ? item.href : root + (item.href || '');
+            if (external) { a.target = '_blank'; a.rel = 'noopener'; }
+            var copy = el('span', 'announce-copy');
+            if (item.label) {
+                copy.appendChild(el('span', 'announce-label', item.label));
+                copy.appendChild(document.createTextNode(' '));
+            }
+            copy.appendChild(el('span', 'announce-text', item.text || ''));
+            a.appendChild(copy);
+            li.appendChild(a);
+            list.appendChild(li);
+            return li;
+        });
+        inner.appendChild(list);
+        bar.appendChild(inner);
+        if (lis.length < 2) return;
+
+        var btn = el('button', 'announce-pause');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'Pause the news');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.innerHTML = '<svg class="icon i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>'
+            + '<svg class="icon i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>';
+        inner.appendChild(btn);
+
+        var current = 0, timer = null, hover = false, focus = false, paused = false;
+        function show(next) {
+            var prev = lis[current];
+            prev.classList.remove('is-active');
+            prev.classList.add('is-leaving');
+            setTimeout(function () { prev.classList.remove('is-leaving'); }, 800);
+            current = next;
+            lis[current].classList.add('is-active');
+        }
+        function schedule() {
+            clearTimeout(timer);
+            if (hover || focus || paused || document.hidden) return;
+            timer = setTimeout(function () { show((current + 1) % lis.length); schedule(); }, ANNOUNCE_MS);
+        }
+        bar.addEventListener('mouseenter', function () { hover = true; schedule(); });
+        bar.addEventListener('mouseleave', function () { hover = false; schedule(); });
+        bar.addEventListener('focusin', function () { focus = true; schedule(); });
+        bar.addEventListener('focusout', function (e) {
+            if (!bar.contains(e.relatedTarget)) { focus = false; schedule(); }
+        });
+        btn.addEventListener('click', function () {
+            paused = !paused;
+            btn.setAttribute('aria-pressed', String(paused));
+            schedule();
+        });
+        document.addEventListener('visibilitychange', schedule);
+        schedule();
     }
 
     /* Mobile menu */
@@ -401,6 +481,7 @@
     }
 
     function init() {
+        initAnnounce();
         initTheme();
         initMenu();
         initSectionHighlight();

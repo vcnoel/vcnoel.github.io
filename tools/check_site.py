@@ -18,7 +18,12 @@ HTML page, and checks that:
   * no excluded topic appears on the redesigned pages;
   * every draft in posts/drafts/ carries a robots noindex tag, is missing from
     posts.json and is linked from no published page, and no published page
-    except the template carries noindex.
+    except the template carries noindex;
+  * every redesigned page has the announcement bar and loads its items
+    (assets/js/announcements.js) before site.js, and every item links to a page
+    that exists and keeps to the same text rules;
+  * the Latest writing cards on the home page are the three newest posts of
+    posts.json (a warning, so that a new post is not forgotten there).
 
 Links to https://vcnoel.github.io/spectral-trust/ go to the library's own
 project site, which is served from its repository, so they count as external.
@@ -485,6 +490,57 @@ def main() -> int:
             for _tag, _attr, raw in pg.urls:
                 if "drafts/" in raw and raw.split("#")[0].endswith(name):
                     errors.append(f"{rel} links to the draft {d}")
+
+    # The home page's Latest writing cards follow posts.json (newest first)
+    raw_index = (ROOT / "index.html").read_text(encoding="utf-8")
+    cards = re.findall(r'<h3 class="post-card-title"><a href="([^"]+)"', raw_index)
+    newest = [post.get("url", "") for post in sorted(listed, key=lambda q: q.get("date", ""), reverse=True)[:3]]
+    if set(cards) != set(newest):
+        warnings.append(f"index.html: the Latest writing cards {cards} are not the three newest posts {newest}")
+
+    # Announcement bar: the place is reserved on every redesigned page, the items load before
+    # site.js, and every item links to something that exists.
+    ann_rel = "assets/js/announcements.js"
+    ann_src = (ROOT / ann_rel).read_text(encoding="utf-8") if (ROOT / ann_rel).is_file() else ""
+    ann_items = []
+    for m in re.finditer(r"\{([^{}]*)\}", ann_src.split("SITE_ANNOUNCEMENTS", 1)[-1]):
+        pairs = re.findall(r"""(\w+)\s*:\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")""", m.group(1))
+        ann_items.append({k: a or b for k, a, b in pairs})
+    if not ann_items:
+        errors.append(f"{ann_rel}: no announcement items found")
+    for item in ann_items:
+        text = f"{item.get('label', '')} {item.get('text', '')}"
+        if not item.get("text"):
+            errors.append(f"{ann_rel}: an item without text: {item}")
+        for ch in FORBIDDEN_TEXT:
+            if ch in text:
+                errors.append(f"{ann_rel}: {text.strip()!r} contains {ch!r}")
+        for n, topic, _everywhere in excluded:
+            if topic.lower() in text.lower():
+                errors.append(f"{ann_rel}: contains the excluded phrase on line {n} of tools/excluded-topics.txt")
+        href = item.get("href", "")
+        sp = urllib.parse.urlsplit(href)
+        if sp.scheme in {"http", "https"}:
+            problem = well_formed_external(href)
+            if problem:
+                errors.append(f"{ann_rel}: {href}: {problem}")
+            external.add(href)
+        elif not href or href.startswith("/") or sp.scheme:
+            errors.append(f"{ann_rel}: href {href!r} must be a path from the site root without a leading slash, or a full URL")
+        else:
+            check_local("index.html", href, "announcement")
+    for rel in REDESIGNED:
+        pg = parsed.get(rel)
+        if pg is None:
+            continue
+        raw = (ROOT / rel).read_text(encoding="utf-8")
+        if "data-announce" not in raw:
+            errors.append(f"{rel}: no announcement bar (an element with data-announce)")
+        scripts = [v for t, a, v in pg.urls if t == "script" and a == "src"]
+        i_ann = next((i for i, v in enumerate(scripts) if v.endswith(ann_rel)), None)
+        i_site = next((i for i, v in enumerate(scripts) if v.endswith("assets/js/site.js")), None)
+        if i_ann is None or i_site is None or i_ann > i_site:
+            errors.append(f"{rel}: {ann_rel} must load before assets/js/site.js")
 
     # Budget
     total = sum((ROOT / f).stat().st_size for f in BUDGET_FILES)

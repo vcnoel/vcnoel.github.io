@@ -159,6 +159,43 @@ const LAYOUT_JS = `(() => {
     });
 })()`;
 
+// The banner: measured at the top of the page, then after a scroll. Each item's text is put in
+// the shown item in turn to test that all of them fit at this width.
+const BANNER_JS = `(async () => {
+    const bar = document.querySelector('[data-announce]');
+    if (!bar) return 'null';
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    await new Promise((r) => requestAnimationFrame(() => r()));
+    const header = document.querySelector('.site-header');
+    const r = bar.getBoundingClientRect();
+    const reserved = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bar-h'));
+    const items = [...bar.querySelectorAll('.announce-item')];
+    const shown = items.filter((i) => getComputedStyle(i).visibility === 'visible');
+    const clipped = [];
+    const copy = shown[0] && shown[0].querySelector('.announce-copy');
+    if (copy) {
+        const label = copy.querySelector('.announce-label'), text = copy.querySelector('.announce-text');
+        const keep = [label && label.textContent, text.textContent];
+        for (const it of window.SITE_ANNOUNCEMENTS || []) {
+            if (label) label.textContent = it.label || '';
+            text.textContent = it.text;
+            if (copy.scrollHeight > copy.clientHeight + 1 || copy.scrollWidth > copy.clientWidth + 1 || copy.getBoundingClientRect().bottom > r.bottom + 0.5)
+                clipped.push(it.text.slice(0, 40) + ' (' + copy.scrollWidth + 'x' + copy.scrollHeight + ' in ' + copy.clientWidth + 'x' + copy.clientHeight + ')');
+        }
+        if (label) label.textContent = keep[0];
+        text.textContent = keep[1];
+    }
+    const headerGap = Math.abs(header.getBoundingClientRect().top - r.bottom);
+    window.scrollTo({ top: 900, behavior: 'instant' });
+    await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(() => res())));
+    const h = header.getBoundingClientRect();
+    const probe = document.elementFromPoint(Math.round(innerWidth / 2), Math.round(h.bottom + 4));
+    const afterScroll = { headerTop: Math.round(h.top), barBottom: Math.round(bar.getBoundingClientRect().bottom), coveredByBar: !!(probe && probe.closest('[data-announce]')) };
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return JSON.stringify({ position: getComputedStyle(bar).position, height: r.height, reserved, items: items.length, shown: shown.length,
+        pause: !!bar.querySelector('.announce-pause'), clipped, headerGap, afterScroll });
+})()`;
+
 async function main() {
     mkdirSync(OUT, { recursive: true });
     const server = await startServer();
@@ -248,6 +285,20 @@ async function main() {
                     if (lay.small.length) errors.push(`${label}: text under 14 px: ${lay.small.join(' | ')}`);
                     if (lay.taps.length) errors.push(`${label}: tap targets under 44 px: ${lay.taps.join(' | ')}`);
                     if (lay.demo && lay.demo.stripWidth > width) errors.push(`${label}: the film strip is wider than the page`);
+                }
+
+                // Announcement bar: in the page flow above the header, its height fixed, every item
+                // fitting without clipping, and nothing covered once the page scrolls.
+                const bar = JSON.parse(await evaluate(BANNER_JS));
+                if (!bar) errors.push(`${label}: no announcement bar`);
+                else {
+                    if (width === 360 || width === 1280) report.push(`  banner: ${JSON.stringify(bar)}`);
+                    if (!['static', 'relative'].includes(bar.position)) errors.push(`${label}: the banner is ${bar.position}, it could cover content`);
+                    if (Math.abs(bar.height - bar.reserved) > 0.5) errors.push(`${label}: banner height ${bar.height} differs from the reserved ${bar.reserved}`);
+                    if (bar.items !== 1 || bar.pause) errors.push(`${label}: with reduced motion the banner should show one item and no pause button`);
+                    if (bar.clipped.length) errors.push(`${label}: banner items clipped: ${bar.clipped.join(' | ')}`);
+                    if (bar.headerGap > 0.5) errors.push(`${label}: the header does not sit right under the banner (${bar.headerGap})`);
+                    if (bar.afterScroll.headerTop !== 0 || bar.afterScroll.barBottom > 0 || bar.afterScroll.coveredByBar) errors.push(`${label}: after scrolling the banner covers content: ${JSON.stringify(bar.afterScroll)}`);
                 }
 
                 // Post figures: every video must load from one of its sources (WebM or MP4).
