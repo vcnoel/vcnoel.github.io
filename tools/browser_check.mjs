@@ -1,6 +1,6 @@
 // Browser check for the redesigned pages, run from the repository root:
 //
-//     node tools/browser_check.mjs [--chrome PATH] [--out DIR] [--widths 360,390,414,768,1280]
+//     node tools/browser_check.mjs [--chrome PATH] [--out DIR] [--widths 360,390,414,768,1280] [--no-shots]
 //
 // Needs Node 22 or later (built-in WebSocket) and a local Chrome or Edge. The
 // script serves the repository on a local port and opens each page in headless
@@ -10,7 +10,9 @@
 // 14 px and that buttons, toggles and standalone links are at least 44 px, and
 // it operates the menu, the toggles and the filter with touch events. One
 // full-page screenshot per page, width and theme goes to DIR (default
-// tools/screens, which is not tracked). Exit status is 1 when any error is found.
+// tools/screens, which is not tracked), unless --no-shots is given. Chrome runs
+// with a fresh profile in the temp directory, which is removed once Chrome has
+// exited. Exit status is 1 when any error is found.
 
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -29,6 +31,8 @@ const PAGES = opt('--pages', 'index.html,software/spectral-trust.html,posts/inde
 const WIDTHS = opt('--widths', '360,390,414,768,1280').split(',').map(Number);
 const THEMES = ['light', 'dark'];
 const OUT = resolve(opt('--out', join(REPO, 'tools', 'screens')));
+// --no-shots runs every check without writing the screenshots.
+const SHOTS = !args.includes('--no-shots');
 const CANDIDATES = [
     opt('--chrome', ''),
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -63,11 +67,12 @@ function startServer() {
 function launchChrome(profile) {
     const proc = spawn(CHROME, [
         '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
-        '--disable-extensions', `--user-data-dir=${profile}`, '--remote-debugging-port=0', 'about:blank',
+        '--disable-extensions', '--disable-breakpad', '--disable-crash-reporter',
+        `--user-data-dir=${profile}`, '--remote-debugging-port=0', 'about:blank',
     ], { stdio: ['ignore', 'ignore', 'pipe'] });
     return new Promise((ok, fail) => {
         let buf = '';
-        const t = setTimeout(() => fail(new Error('Chrome did not start')), 30000);
+        const t = setTimeout(() => { proc.kill(); fail(new Error('Chrome did not start')); }, 30000);
         proc.stderr.on('data', (d) => {
             buf += d.toString();
             const m = buf.match(/DevTools listening on (ws:\/\/\S+)/);
@@ -116,6 +121,26 @@ class CDP {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Close Chrome, wait for it to exit, then remove its profile folder from the temp directory.
+// On Windows the profile's files stay locked for a moment after the process exits, so the removal
+// is retried for up to 15 s. Returns false when the folder is still there.
+async function closeChrome(cdp, proc, profile) {
+    if (proc) {
+        const running = () => proc.exitCode === null && proc.signalCode === null;
+        const exited = new Promise((ok) => { if (!running()) ok(); else proc.once('exit', ok); });
+        if (cdp) await Promise.race([cdp.send('Browser.close').catch(() => {}), sleep(3000)]);
+        await Promise.race([exited, sleep(10000)]);
+        if (running()) { proc.kill(); await Promise.race([exited, sleep(5000)]); }
+    }
+    for (let i = 0; i < 30; i++) {
+        try { rmSync(profile, { recursive: true, force: true }); } catch { /* still locked */ }
+        if (!existsSync(profile)) return true;
+        await sleep(500);
+    }
+    return false;
+}
+let teardown = null;
 
 const LAYOUT_JS = `(() => {
     const de = document.documentElement, w = de.clientWidth;
@@ -201,8 +226,15 @@ async function main() {
     const server = await startServer();
     const base = `http://127.0.0.1:${server.address().port}`;
     const profile = mkdtempSync(join(tmpdir(), 'site-check-profile-'));
-    const { proc, ws } = await launchChrome(profile);
-    const cdp = new CDP(ws);
+    let proc = null, cdp = null;
+    teardown = async () => {
+        teardown = null;
+        server.close();
+        return closeChrome(cdp, proc, profile);
+    };
+    const launched = await launchChrome(profile);
+    proc = launched.proc;
+    cdp = new CDP(launched.ws);
     await cdp.open();
 
     const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
@@ -316,13 +348,15 @@ async function main() {
                     if (JSON.parse(vids).length) report.push(`  videos: ${JSON.parse(vids).length} loaded`);
                 }
 
-                const height = Math.min(lay.height, 16000);
-                const shot = await cdp.send('Page.captureScreenshot', {
-                    format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height, scale: 1 },
-                }, s);
-                const file = `${PREFIX}${page.replace(/[\\/]/g, '_').replace('.html', '')}-${width}-${theme}.png`;
-                writeFileSync(join(OUT, file), Buffer.from(shot.data, 'base64'));
-                shots.push(file);
+                if (SHOTS) {
+                    const height = Math.min(lay.height, 16000);
+                    const shot = await cdp.send('Page.captureScreenshot', {
+                        format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height, scale: 1 },
+                    }, s);
+                    const file = `${PREFIX}${page.replace(/[\\/]/g, '_').replace('.html', '')}-${width}-${theme}.png`;
+                    writeFileSync(join(OUT, file), Buffer.from(shot.data, 'base64'));
+                    shots.push(file);
+                }
 
                 // Interactions, once per width, after the screenshot.
                 if (theme === 'light') {
@@ -556,10 +590,7 @@ async function main() {
         for (const b of bucket) errors.push(`figure cycle pass: ${b}`);
     }
 
-    await cdp.send('Browser.close').catch(() => {});
-    proc.kill();
-    server.close();
-    try { rmSync(profile, { recursive: true, force: true }); } catch { /* profile still locked */ }
+    if (!(await teardown())) errors.push(`the Chrome profile could not be removed: ${profile}`);
 
     report.forEach((l) => console.log(l));
     console.log(`Screenshots (${shots.length}): ${OUT}`);
@@ -568,4 +599,13 @@ async function main() {
     process.exit(errors.length ? 1 : 0);
 }
 
-main().catch((e) => { console.error(e); process.exit(2); });
+process.on('SIGINT', async () => {
+    if (teardown) await teardown().catch(() => {});
+    process.exit(130);
+});
+
+main().catch(async (e) => {
+    console.error(e);
+    if (teardown) await teardown().catch(() => {});
+    process.exit(2);
+});
