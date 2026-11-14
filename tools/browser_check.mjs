@@ -335,6 +335,13 @@ async function main() {
                     if (bar.afterScroll.coveredByBar || (!bar.afterScroll.short && (bar.afterScroll.headerTop !== 0 || bar.afterScroll.barBottom > 0))) errors.push(`${label}: after scrolling the banner covers content: ${JSON.stringify(bar.afterScroll)}`);
                 }
 
+                // Looping videos with reduced motion rest on their poster: paused, no autoplay, no control bar.
+                if (width === 1280 && theme === 'light') {
+                    const loops = JSON.parse(await evaluate(`JSON.stringify([...document.querySelectorAll('video[data-loop]')].map((v) => ({ poster: (v.getAttribute('poster') || '').split('/').pop(), paused: v.paused, autoplay: v.autoplay, controls: v.controls })))`));
+                    for (const v of loops) if (!v.paused || v.autoplay || v.controls) errors.push(`${label}: with reduced motion a looping video should rest on its poster: ${JSON.stringify(v)}`);
+                    if (loops.length) report.push(`  looping videos at rest with reduced motion: ${loops.length}`);
+                }
+
                 // Post figures: every video must load from one of its sources (WebM or MP4).
                 if (width === 1280 && theme === 'light') {
                     const vids = await evaluate(`Promise.all([...document.querySelectorAll('video')].map((v) => new Promise((r) => {
@@ -622,6 +629,18 @@ async function main() {
         if (cyc.away !== 'ready' || cyc.back !== 'played') errors.push(`figure cycle: the graph did not start over on coming back into view (${cyc.away}, ${cyc.back})`);
         if (cyc.stripIn !== 'played' || cyc.stripAway !== 'ready' || cyc.stripBack !== 'played' || cyc.cells.some((o) => o !== '1')) errors.push(`figure cycle: the film strip did not replay: ${JSON.stringify(cyc)}`);
         if (cyc.cls > 0.01) errors.push(`figure cycle: cumulative layout shift ${cyc.cls}`);
+        // The flow film of the animated views plays once it is in view, without a control bar.
+        if (await evaluate("!!document.querySelector('#animated-views video')")) {
+            const film = JSON.parse(await evaluate(`(async () => {
+                const v = document.querySelector('#animated-views video');
+                v.scrollIntoView({ block: 'center', behavior: 'instant' });
+                const t0 = performance.now();
+                while (performance.now() - t0 < 8000 && !(v.currentTime > 0.5)) await new Promise((r) => setTimeout(r, 200));
+                return JSON.stringify({ paused: v.paused, time: Number(v.currentTime.toFixed(2)), controls: v.controls, src: (v.currentSrc || '').split('/').pop() });
+            })()`));
+            report.push(`flow film in view: ${JSON.stringify(film)}`);
+            if (film.paused || !(film.time > 0.5) || film.controls) errors.push(`the flow film did not play in view: ${JSON.stringify(film)}`);
+        }
         for (const b of bucket) errors.push(`figure cycle pass: ${b}`);
     }
 
