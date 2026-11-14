@@ -1143,6 +1143,25 @@ html:not(.js) .filter-bar { display: none; }
 .product-top .st-install { margin-top: 1.25rem; }
 .st-split { align-items: start; }
 
+/* Animated views (spectral-trust 0.4.2): the dark renders keep a dark frame in both themes.
+   The videos follow the post figures: they play while in view, and only the poster shows when
+   motion is reduced (initVideos in site.js). */
+.st-video { margin: 0; }
+.st-video video {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: #0f1115;
+}
+.st-video figcaption { margin-top: 0.65rem; font-size: var(--fs-sm); color: var(--muted); text-wrap: pretty; }
+.st-videos { margin-top: var(--card-gap); }
+.st-animate { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem 1.25rem; margin-top: var(--card-gap); }
+.st-animate .code-panel { flex: 0 1 auto; min-width: 0; }
+.st-animate .install { padding-right: 1.1rem; }
+
 .speed { display: grid; gap: 1.1rem; align-content: center; }
 .speed-row { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 0.75rem; align-items: center; }
 .speed-name { font-size: var(--fs-sm); color: var(--ink-2); }
@@ -1238,6 +1257,7 @@ html:not(.js) .filter-bar { display: none; }
     background: #ffffff;
 }
 .post-figure figcaption { margin-top: 0.6rem; font-size: var(--fs-sm); line-height: 1.55; color: var(--muted); }
+.post-figure.is-dark video, .post-figure.is-dark img { background: #0f1115; }
 
 .article-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 1rem; padding-top: 1.25rem; margin-top: 3rem; border-top: 1px solid var(--line); }
 

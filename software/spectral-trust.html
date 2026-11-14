@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
-    <link rel="stylesheet" href="../assets/css/site.css?v=a94211ab">
+    <link rel="stylesheet" href="../assets/css/site.css?v=c21533da">
     <script src="../assets/js/announcements.js?v=cbacb7c9" defer></script>
     <script src="../assets/js/site.js?v=6c014c2e" defer></script>
 </head>
@@ -126,6 +126,55 @@
 <!-- st-graph:end -->
                     <figcaption>Layer 10 of Qwen3-0.6B reading one sentence. Thicker edges carry more attention, and the Fiedler vector splits the tokens into a blue and an orange group.</figcaption>
                 </figure>
+            </div>
+        </section>
+
+        <!-- Animated views: the media of 0.4.2 are hosted under media/spectral-trust/0.4.2/ (dark renders
+             of the library's docs/make_gallery.py on Qwen3-0.6B). Facts from the files and docs/gallery.md. -->
+        <section class="section band" id="animated-views" aria-labelledby="animated-title">
+            <div class="wrap reveal">
+                <div class="section-head">
+                    <h2 id="animated-title">Animated views</h2>
+                    <p class="lede">New in 0.4.2: one call writes a video, a GIF or an interactive page of a cache, and the file suffix picks the format.</p>
+                </div>
+                <figure class="st-video">
+                    <video data-loop autoplay muted loop playsinline preload="none" width="1280" height="720"
+                        poster="../media/spectral-trust/0.4.2/flow-poster.png" aria-label="Each of the 53 tokens of an email that carries an injected instruction is a tube through the 28 layers of Qwen3-0.6B. The camera flies along the layers, then pulls back over the whole braid: a blue and an orange bundle, a thick trunk for the first token, and the twelve injected tokens as a vermillion strand.">
+                        <source src="../media/spectral-trust/0.4.2/flow.webm" type="video/webm">
+                        <source src="../media/spectral-trust/0.4.2/flow.mp4" type="video/mp4">
+                        <img src="../media/spectral-trust/0.4.2/flow.gif" alt="Each of the 53 tokens of an email that carries an injected instruction is a tube through the 28 layers of Qwen3-0.6B, in a blue and an orange bundle, with the twelve injected tokens as a vermillion strand." width="560" height="316" loading="lazy">
+                    </video>
+                    <figcaption><code>flow</code>: each token is a tube through depth, placed by its spectral coordinates at each layer, coloured by its side of the Fiedler split and as thick as the attention it receives. The twelve injected tokens, outlined in vermillion, travel as their own strand.</figcaption>
+                </figure>
+                <div class="grid grid-2 st-videos">
+                    <figure class="st-video">
+                        <video data-loop muted loop playsinline preload="none" width="1280" height="720"
+                            poster="../media/spectral-trust/0.4.2/waterfall-poster.png" aria-label="Ridges of residual-stream energy over the graph-frequency modes build up front to back, one per layer of Qwen3-0.6B reading one sentence. The top modes, the HFER band, are orange, and an inset traces HFER by layer.">
+                            <source src="../media/spectral-trust/0.4.2/waterfall.webm" type="video/webm">
+                            <source src="../media/spectral-trust/0.4.2/waterfall.mp4" type="video/mp4">
+                            <img src="../media/spectral-trust/0.4.2/waterfall.gif" alt="Ridges of residual-stream energy over the graph-frequency modes, one per layer of Qwen3-0.6B, with the HFER band in orange." width="640" height="360" loading="lazy">
+                        </video>
+                        <figcaption><code>waterfall</code>: the residual-stream energy of each graph-frequency mode, one ridge per layer, with the HFER band shaded orange.</figcaption>
+                    </figure>
+                    <figure class="st-video">
+                        <video data-loop muted loop playsinline preload="none" width="1280" height="720"
+                            poster="../media/spectral-trust/0.4.2/compare-poster.png" aria-label="Two attention graphs side by side, layer by layer: a prompt and the same prompt with an injected instruction. The eight injected tokens and their edges are vermillion, and the Fiedler value and HFER of both prompts are traced below.">
+                            <source src="../media/spectral-trust/0.4.2/compare.webm" type="video/webm">
+                            <source src="../media/spectral-trust/0.4.2/compare.mp4" type="video/mp4">
+                            <img src="../media/spectral-trust/0.4.2/compare.gif" alt="Two attention graphs side by side, a prompt and the same prompt with an injected instruction, with the injected tokens and their edges in vermillion." width="640" height="360" loading="lazy">
+                        </video>
+                        <figcaption><code>compare</code>: a clean and an injected prompt, tokens matched. The eight injected tokens hold 48% of the edge weight at layer 0 and 33% at the last layer.</figcaption>
+                    </figure>
+                </div>
+                <div class="st-animate">
+                    <div class="code-panel">
+                        <div class="install">
+                            <pre tabindex="0" aria-label="Animation call"><code>cache.animate(kind, <span class="s">"out.mp4"</span>)</code></pre>
+                        </div>
+                    </div>
+                    <a class="btn" href="../media/spectral-trust/0.4.2/flow.html">Open the interactive flow</a>
+                </div>
+                <p class="note">The kinds are <code>flow</code>, <code>embedding3d</code>, <code>waterfall</code>, <code>compare</code>, <code>graph_movie</code> and <code>head_atlas</code>. <code>.webm</code>, <code>.gif</code> or <code>.html</code> in place of <code>.mp4</code> writes a VP9 video, a GIF sized for phones or an interactive page. Video and GIF need the <code>viz</code> extra. The interactive flow plays the flight once, then can be orbited and hovered.</p>
             </div>
         </section>
 
@@ -272,7 +321,7 @@ cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)</code></pre>
             <div class="wrap contact-band">
                 <div>
                     <h2 id="start-title">Start with the documentation</h2>
-                    <p>Install, three tutorials, the concepts and the full API reference. Version 0.4.1 is on PyPI, under the Apache 2.0 licence, with per-feature metrics for SAE features and layers computed in parallel.</p>
+                    <p>Install, three tutorials, the concepts and the full API reference. Version 0.4.2 is on PyPI, under the Apache 2.0 licence, and adds the animated views to the per-feature metrics and parallel layers of 0.4.1.</p>
                 </div>
                 <div class="btn-row">
                     <a class="btn btn-primary" href="https://vcnoel.github.io/spectral-trust/">
