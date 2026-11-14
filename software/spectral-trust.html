@@ -33,7 +33,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
     <link rel="stylesheet" href="../assets/css/site.css?v=a94211ab">
-    <script src="../assets/js/announcements.js?v=9d10d92a" defer></script>
+    <script src="../assets/js/announcements.js?v=cbacb7c9" defer></script>
     <script src="../assets/js/site.js?v=6c014c2e" defer></script>
 </head>
 
@@ -136,9 +136,9 @@
                     <p class="lede">Load a Hugging Face model and run it once. The cache holds every measurement, keyed in the style of TransformerLens: one value per head under <code>attn</code>, the metrics that also read the hidden states under <code>resid</code>, and the head-averaged graph under <code>graph</code>.</p>
                     <p class="lede">It runs on a CPU. A list of texts runs as a batch, and the views render inline in Jupyter or save as standalone HTML.</p>
                 </div>
-                <!-- Run with spectral-trust 0.4.0 from PyPI on a CPU: blocks.10.graph.fiedler_value printed 0.6423. -->
+                <!-- Run with spectral-trust 0.4.0 and again with 0.4.1 on a CPU: blocks.10.graph.fiedler_value printed 0.6423 both times. -->
                 <div class="code-panel">
-                    <div class="code-head">Python, spectral-trust 0.4.0</div>
+                    <div class="code-head">Python, spectral-trust 0.4.1</div>
                     <pre tabindex="0" aria-label="Quickstart example"><code><span class="k">import</span> spectral_trust <span class="k">as</span> st
 
 model = st.SpectralModel.from_pretrained(<span class="s">"Qwen/Qwen3-0.6B"</span>)
@@ -272,7 +272,7 @@ cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)</code></pre>
             <div class="wrap contact-band">
                 <div>
                     <h2 id="start-title">Start with the documentation</h2>
-                    <p>Install, three tutorials, the concepts and the full API reference. Version 0.4.0 is on PyPI.</p>
+                    <p>Install, three tutorials, the concepts and the full API reference. Version 0.4.1 is on PyPI, under the Apache 2.0 licence, with per-feature metrics for SAE features and layers computed in parallel.</p>
                 </div>
                 <div class="btn-row">
                     <a class="btn btn-primary" href="https://vcnoel.github.io/spectral-trust/">
