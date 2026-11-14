@@ -1,5 +1,5 @@
 /* Shared script for vcnoel.github.io: announcement bar, theme toggle, mobile menu, section
-   highlighting, reveal on scroll, publication filter, animated figures, card icons,
+   highlighting, reveal on scroll, publication filter, animated figures, card icons, spotlight,
    copy button, posts list.
    Every feature checks for its elements, so the file is safe on every page. */
 (function () {
@@ -337,6 +337,30 @@
         else window.addEventListener('load', start);
     }
 
+    /* Spotlight: a mouse or pen over a card or tile moves the bright part of its gradient border
+       and its glow (the .spot rules in site.css), at most once a frame. Touch, keyboard focus and
+       reduced motion get the whole border from the CSS alone. */
+    function initSpotlight() {
+        var spots = document.querySelectorAll('.spot');
+        if (!spots.length) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        spots.forEach(function (spot) {
+            var frame = 0, x = 0, y = 0;
+            spot.addEventListener('pointermove', function (e) {
+                if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+                x = e.clientX;
+                y = e.clientY;
+                if (frame) return;
+                frame = requestAnimationFrame(function () {
+                    frame = 0;
+                    var r = spot.getBoundingClientRect();
+                    spot.style.setProperty('--mx', Math.round(x - r.left) + 'px');
+                    spot.style.setProperty('--my', Math.round(y - r.top) + 'px');
+                });
+            });
+        });
+    }
+
     /* The card icons (drawn by tools/make_card_icons.py) loop every 6 s while in view and pause
        out of view. Each loop ends on the finished picture, held from 3.6 s. Hovering a card while
        its icon holds plays the icon again, at most once every 2.5 s. With reduced motion, or
@@ -540,6 +564,7 @@
         initReveal();
         initPubFilter();
         initFigures();
+        initSpotlight();
         initCardArt();
         initVideos();
         initCopy();
