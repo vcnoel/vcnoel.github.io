@@ -45,7 +45,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
-    <link rel="stylesheet" href="assets/css/site.css?v=fddee9bf">
+    <link rel="stylesheet" href="assets/css/site.css?v=c983d1da">
     <script src="assets/js/announcements.js?v=9d10d92a" defer></script>
     <script src="assets/js/site.js?v=a9372ac4" defer></script>
 
@@ -223,9 +223,9 @@
                         <h3>Catching invalid reasoning from inside the model</h3>
                         <p>A probe that needs no training reads the shape of attention and tells valid mathematical reasoning from invalid reasoning.</p>
                         <p class="card-venue">Geometry of Reason, ICML 2026</p>
-                        <div class="link-row">
-                            <a class="text-link" href="#pub-geometry-of-reason">Publication</a>
-                            <a class="text-link" href="spectral-demo.html">Demo <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+                        <div class="pill-row">
+                            <a class="pill-link" href="#pub-geometry-of-reason">Publication</a>
+                            <a class="pill-link" href="spectral-demo.html">Demo <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
                         </div>
                     </article>
                     <article class="card">
@@ -233,10 +233,10 @@
                         <h3>Guardrails for agents</h3>
                         <p>Monitors that flag a hallucinated tool call from the shape of attention, and catch a contaminated context before the agent's next call.</p>
                         <p class="card-venue">Spectral Guardrails · Spectral Kill Switches, AAAI 2026 · NeurIPS 2026 SLM-Agent Workshop</p>
-                        <div class="link-row">
-                            <a class="text-link" href="https://arxiv.org/abs/2602.08082" target="_blank" rel="noopener">Guardrails</a>
-                            <a class="text-link" href="https://arxiv.org/abs/2511.05804" target="_blank" rel="noopener">Kill switches</a>
-                            <a class="text-link" href="#pub-error-contagion">Error contagion</a>
+                        <div class="pill-row">
+                            <a class="pill-link" href="https://arxiv.org/abs/2602.08082" target="_blank" rel="noopener">Guardrails</a>
+                            <a class="pill-link" href="https://arxiv.org/abs/2511.05804" target="_blank" rel="noopener">Kill switches</a>
+                            <a class="pill-link" href="#pub-error-contagion">Error contagion</a>
                         </div>
                     </article>
                     <article class="card">
@@ -244,9 +244,9 @@
                         <h3>Grounded and auditable legal AI</h3>
                         <p>Checking that every claim in a legal answer is backed by its sources, with an audit trail, and reward models for grounded legal reasoning.</p>
                         <p class="card-venue">HalluGraph, AAAI 2026 · Legal reward models, ICML 2026 AI for Law Workshop</p>
-                        <div class="link-row">
-                            <a class="text-link" href="https://arxiv.org/abs/2512.01659" target="_blank" rel="noopener">HalluGraph</a>
-                            <a class="text-link" href="hallugraph-demo/index.html">Demo <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+                        <div class="pill-row">
+                            <a class="pill-link" href="https://arxiv.org/abs/2512.01659" target="_blank" rel="noopener">HalluGraph</a>
+                            <a class="pill-link" href="hallugraph-demo/index.html">Demo <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
                         </div>
                     </article>
                 </div>
@@ -254,27 +254,31 @@
                 <div class="deploy">
                     <h3>Where it runs</h3>
                     <ul class="deploy-list" role="list">
-                        <li>
+                        <li class="deploy-tile">
+                            <span class="deploy-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path class="dm-line" d="M8 4h11l6 6v17a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path class="dm-line" d="M19 4v6h6M11 14h9M11 18h5"/><circle class="dm-orange" cx="22.5" cy="23.5" r="5.5"/><path class="dm-tick" d="M20 23.6l1.7 1.7 3.1-3.3"/></svg></span>
                             <strong>Compliance Checker</strong>
                             <p>Shipped at Devoteam as a group asset for European AI Act compliance.</p>
                         </li>
-                        <li>
+                        <li class="deploy-tile">
+                            <span class="deploy-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path class="dm-edge" d="M8 9l15-2M8 9l3 16M23 7l3 15M11 25l15-3M8 9l9 7M17 16l9 6"/><circle class="dm-blue" cx="8" cy="9" r="3.2"/><circle class="dm-blue" cx="23" cy="7" r="3.2"/><circle class="dm-blue" cx="11" cy="25" r="3.2"/><circle class="dm-blue" cx="17" cy="16" r="3.2"/><circle class="dm-orange" cx="26" cy="22" r="3.2"/></svg></span>
                             <strong>HalluGraph</strong>
                             <p>A provenance verifier for legal RAG, running as an internal microservice.</p>
                         </li>
-                        <li>
+                        <li class="deploy-tile">
+                            <span class="deploy-mark"><img class="on-light" src="assets/img/spectral-trust-mark.svg" alt="" width="28" height="28"><img class="on-dark" src="assets/img/spectral-trust-mark-dark.svg" alt="" width="28" height="28"></span>
                             <strong>spectral-trust</strong>
                             <p>Open source, and used in work by researchers at four organisations.</p>
                         </li>
-                        <li>
+                        <li class="deploy-tile">
+                            <span class="deploy-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="dm-line" x="3.5" y="6" width="25" height="20" rx="3"/><path class="dm-line" d="M3.5 11.5h25"/><path class="dm-dots" d="M7 8.8h.01M10 8.8h.01M13 8.8h.01"/><path class="dm-play" d="M13.5 15v7.4l6.2-3.7z"/></svg></span>
                             <strong>Browser demos</strong>
-                            <p class="demo-links">
-                                <a href="spectral-chat.html">Spectral Chat</a>
-                                <a href="spectral-demo.html">Geometry of Reason</a>
-                                <a href="hallugraph-demo/index.html">HalluGraph</a>
-                                <a href="rega-demo/index.html">ReGA</a>
-                                <a href="solar-demo/index.html">Solar irradiance</a>
-                            </p>
+                            <div class="pill-row">
+                                <a class="pill-link" href="spectral-chat.html">Spectral Chat</a>
+                                <a class="pill-link" href="spectral-demo.html">Geometry of Reason</a>
+                                <a class="pill-link" href="hallugraph-demo/index.html">HalluGraph</a>
+                                <a class="pill-link" href="rega-demo/index.html">ReGA</a>
+                                <a class="pill-link" href="solar-demo/index.html">Solar irradiance</a>
+                            </div>
                         </li>
                     </ul>
                 </div>
