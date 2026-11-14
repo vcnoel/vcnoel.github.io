@@ -215,7 +215,9 @@ const BANNER_JS = `(async () => {
     await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(() => res())));
     const h = header.getBoundingClientRect();
     const probe = document.elementFromPoint(Math.round(innerWidth / 2), Math.round(h.bottom + 4));
-    const afterScroll = { headerTop: Math.round(h.top), barBottom: Math.round(bar.getBoundingClientRect().bottom), coveredByBar: !!(probe && probe.closest('[data-announce]')) };
+    // a page shorter than the window plus the banner cannot scroll the banner away (the post template)
+    const room = document.documentElement.scrollHeight - innerHeight;
+    const afterScroll = { headerTop: Math.round(h.top), barBottom: Math.round(bar.getBoundingClientRect().bottom), coveredByBar: !!(probe && probe.closest('[data-announce]')), short: room < r.height };
     window.scrollTo({ top: 0, behavior: 'instant' });
     return JSON.stringify({ position: getComputedStyle(bar).position, height: r.height, reserved, items: items.length, shown: shown.length,
         pause: !!bar.querySelector('.announce-pause'), clipped, headerGap, afterScroll });
@@ -330,7 +332,7 @@ async function main() {
                     if (bar.items !== 1 || bar.pause) errors.push(`${label}: with reduced motion the banner should show one item and no pause button`);
                     if (bar.clipped.length) errors.push(`${label}: banner items clipped: ${bar.clipped.join(' | ')}`);
                     if (bar.headerGap > 0.5) errors.push(`${label}: the header does not sit right under the banner (${bar.headerGap})`);
-                    if (bar.afterScroll.headerTop !== 0 || bar.afterScroll.barBottom > 0 || bar.afterScroll.coveredByBar) errors.push(`${label}: after scrolling the banner covers content: ${JSON.stringify(bar.afterScroll)}`);
+                    if (bar.afterScroll.coveredByBar || (!bar.afterScroll.short && (bar.afterScroll.headerTop !== 0 || bar.afterScroll.barBottom > 0))) errors.push(`${label}: after scrolling the banner covers content: ${JSON.stringify(bar.afterScroll)}`);
                 }
 
                 // Post figures: every video must load from one of its sources (WebM or MP4).
@@ -346,6 +348,33 @@ async function main() {
                         if (!line.startsWith('ok ')) errors.push(`${label}: video ${line}`);
                     }
                     if (JSON.parse(vids).length) report.push(`  videos: ${JSON.parse(vids).length} loaded`);
+                }
+
+                // Card icons and spotlight with reduced motion: no animation, the finished picture,
+                // and hovering a card shows the whole gradient border at once, without the glow.
+                if (page === 'index.html' && ROOT === REPO && width === 1280 && theme === 'light') {
+                    const still = JSON.parse(await evaluate(`(() => {
+                        const arts = [...document.querySelectorAll('svg.card-art')];
+                        const cs = (sel) => getComputedStyle(document.querySelector(sel));
+                        return JSON.stringify({ arts: arts.length,
+                            animations: arts.reduce((n, a) => n + a.getAnimations({ subtree: true }).length, 0),
+                            armed: arts.filter((a) => a.classList.contains('is-anim')).length,
+                            final: [cs('.ca-rsn .rs-halo').opacity, cs('.ca-rsn .rs-n5').fill, cs('.ca-agt .ag-tool').opacity,
+                                cs('.ca-agt .ag-shield').fillOpacity, cs('.ca-lgl .lg-l3').opacity, cs('.ca-lgl .lg-s3').fill] });
+                    })()`));
+                    const card = JSON.parse(await evaluate(`(() => { const c = document.querySelectorAll('#research .card')[1]; c.scrollIntoView({ block: 'center', behavior: 'instant' });
+                        const r = c.getBoundingClientRect(); return JSON.stringify({ x: r.left + r.width * 0.3, y: r.top + r.height * 0.4 }); })()`));
+                    await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: Math.round(card.x), y: Math.round(card.y) }, s);
+                    await sleep(150);
+                    const hov = JSON.parse(await evaluate(`(() => { const c = document.querySelectorAll('#research .card')[1];
+                        const b = getComputedStyle(c, '::before'), a = getComputedStyle(c, '::after');
+                        return JSON.stringify({ border: b.opacity, radial: b.backgroundImage.includes('radial'), glow: a.opacity, mx: c.style.getPropertyValue('--mx') }); })()`));
+                    await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 }, s);
+                    report.push(`  card icons, reduced motion: ${JSON.stringify(still)}, hover ${JSON.stringify(hov)}`);
+                    const want = ['0.95', 'rgb(230, 159, 0)', '0.32', '0.18', '0', 'rgb(230, 159, 0)'];
+                    if (still.arts !== 3 || still.animations !== 0 || still.armed !== 0) errors.push(`${label}: with reduced motion the card icons should not animate: ${JSON.stringify(still)}`);
+                    if (JSON.stringify(still.final) !== JSON.stringify(want)) errors.push(`${label}: the card icons do not show their finished picture: ${JSON.stringify(still.final)}`);
+                    if (hov.border !== '1' || hov.radial || hov.glow !== '0' || hov.mx) errors.push(`${label}: with reduced motion a hovered card should show the whole border only: ${JSON.stringify(hov)}`);
                 }
 
                 if (SHOTS) {
@@ -378,6 +407,12 @@ async function main() {
                         const t = await evaluate("document.documentElement.getAttribute('data-theme-effective')");
                         if (t !== 'dark') errors.push(`${label}: the theme toggle did not respond to touch`);
                         await tap('[data-theme-toggle]');
+                    }
+                    if (mobile && page === 'index.html' && ROOT === REPO) {
+                        // A tap on a tile shows its whole gradient border.
+                        await tap('#research .deploy-tile strong');
+                        const lit = await evaluate("getComputedStyle(document.querySelector('#research .deploy-tile'), '::before').opacity");
+                        if (lit !== '1') errors.push(`${label}: a tap on a tile did not show its gradient border (opacity ${lit})`);
                     }
                     if (page === 'index.html' && ROOT === REPO) {
                         const before = JSON.parse(await evaluate(`JSON.stringify({
@@ -588,6 +623,91 @@ async function main() {
         if (cyc.stripIn !== 'played' || cyc.stripAway !== 'ready' || cyc.stripBack !== 'played' || cyc.cells.some((o) => o !== '1')) errors.push(`figure cycle: the film strip did not replay: ${JSON.stringify(cyc)}`);
         if (cyc.cls > 0.01) errors.push(`figure cycle: cumulative layout shift ${cyc.cls}`);
         for (const b of bucket) errors.push(`figure cycle pass: ${b}`);
+    }
+
+    // With motion allowed: the card icons loop while in view and pause out of view, hovering a card
+    // replays its icon only while it holds its finished picture and at most once every 2.5 s, the
+    // spotlight follows a mouse, keyboard focus shows the whole border, and nothing moves the layout.
+    if (ROOT === REPO && PAGES.includes('index.html')) {
+        bucket = [];
+        await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, s);
+        await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }, s);
+        await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] }, s);
+        await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 }, s);
+        const loaded = cdp.waitFor('Page.loadEventFired', s);
+        await cdp.send('Page.navigate', { url: `${base}/index.html` }, s);
+        await loaded;
+        await sleep(400);
+        // layout shifts from here on only: the icons, the replays and the spotlight must cause none
+        await evaluate(`(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift' }); return true; })()`);
+        const run = JSON.parse(await evaluate(`(async () => {
+            const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+            const arts = [...document.querySelectorAll('svg.card-art')];
+            const time = () => arts.map((a) => { const an = a.getAnimations({ subtree: true }); return an.length ? Math.round(Number(an[0].currentTime)) : null; });
+            const res = { armed: arts.filter((a) => a.classList.contains('is-anim')).length, animations: arts.map((a) => a.getAnimations({ subtree: true }).length) };
+            document.querySelector('#research .grid-3').scrollIntoView({ block: 'center', behavior: 'instant' });
+            await wait(400);
+            res.live = arts.map((a) => a.classList.contains('is-live'));
+            const t0 = time(); await wait(1000); const t1 = time();
+            res.advanced = t0.map((v, i) => t1[i] - v);
+            window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
+            await wait(400);
+            res.liveAway = arts.map((a) => a.classList.contains('is-live'));
+            const t2 = time(); await wait(800); const t3 = time();
+            res.advancedAway = t2.map((v, i) => t3[i] - v);
+            document.querySelector('#research .grid-3').scrollIntoView({ block: 'center', behavior: 'instant' });
+            await wait(400);
+            res.liveBack = arts.map((a) => a.classList.contains('is-live'));
+            return JSON.stringify(res);
+        })()`));
+        // Hover replays: the pointer enters the first card with its icon set to a given moment of the loop.
+        const firstCard = JSON.parse(await evaluate(`(() => { const r = document.querySelector('#research .card').getBoundingClientRect(); return JSON.stringify({ x: r.left + r.width / 2, y: r.top + r.height / 2 }); })()`));
+        const enterAt = async (ms) => {
+            await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 }, s);
+            await evaluate(`(() => { for (const a of document.querySelector('svg.card-art').getAnimations({ subtree: true })) a.currentTime = ${ms}; return true; })()`);
+            await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: Math.round(firstCard.x), y: Math.round(firstCard.y) }, s);
+            await sleep(50);
+            return evaluate(`(() => { const an = document.querySelector('svg.card-art').getAnimations({ subtree: true }); return Math.round(Number(an[0].currentTime)) % 6000; })()`);
+        };
+        const replay = { hold: await enterAt(4000), tooSoon: await enterAt(4200) };
+        await sleep(2600);
+        replay.duringBuild = await enterAt(1000);
+        replay.holdAgain = await enterAt(4500);
+        // Spotlight: the pointer at 30 % and 40 % of the second card.
+        const sp = JSON.parse(await evaluate(`(() => { const r = document.querySelectorAll('#research .card')[1].getBoundingClientRect(); return JSON.stringify({ x: r.left, y: r.top, w: r.width, h: r.height }); })()`));
+        const px = Math.round(sp.x + sp.w * 0.3), py = Math.round(sp.y + sp.h * 0.4);
+        await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: px, y: py }, s);
+        await sleep(500);
+        const spot = JSON.parse(await evaluate(`(() => { const c = document.querySelectorAll('#research .card')[1];
+            const b = getComputedStyle(c, '::before'), a = getComputedStyle(c, '::after');
+            return JSON.stringify({ mx: c.style.getPropertyValue('--mx'), my: c.style.getPropertyValue('--my'), border: b.opacity, radial: b.backgroundImage.includes('radial'), glow: a.opacity }); })()`));
+        spot.want = `${px - Math.round(sp.x)}px ${py - Math.round(sp.y)}px`;
+        await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 }, s);
+        await sleep(500);
+        spot.after = await evaluate("getComputedStyle(document.querySelectorAll('#research .card')[1], '::before').opacity");
+        // Keyboard: a Tab press, then focus on a link of the third card, shows its whole border.
+        await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 }, s);
+        await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 }, s);
+        await evaluate("document.querySelectorAll('#research .card')[2].querySelector('a').focus(), true");
+        await sleep(500);
+        const focus = JSON.parse(await evaluate(`(() => { const c = document.querySelectorAll('#research .card')[2], b = getComputedStyle(c, '::before');
+            return JSON.stringify({ visible: !!c.querySelector(':focus-visible'), border: b.opacity, radial: b.backgroundImage.includes('radial') }); })()`));
+        await evaluate('document.activeElement.blur(), true');
+        const cls = Number((await evaluate('window.__cls')).toFixed(4));
+        report.push(`card icons and spotlight: ${JSON.stringify({ ...run, replay, spot, focus, cls })}`);
+        if (run.armed !== 3 || run.animations.some((n) => n < 10)) errors.push(`card icons: not armed with motion allowed: ${JSON.stringify(run)}`);
+        if (run.live.some((v) => !v) || run.advanced.some((d) => d < 800)) errors.push(`card icons: not running while in view: ${JSON.stringify(run)}`);
+        if (run.liveAway.some((v) => v) || run.advancedAway.some((d) => d !== 0)) errors.push(`card icons: still running out of view: ${JSON.stringify(run)}`);
+        if (run.liveBack.some((v) => !v)) errors.push(`card icons: did not resume on coming back into view: ${JSON.stringify(run)}`);
+        if (!(replay.hold < 300 && replay.tooSoon >= 4200 && replay.duringBuild >= 1000 && replay.duringBuild < 1400 && replay.holdAgain < 300))
+            errors.push(`card icons: hover replay should happen only while the icon holds, at most every 2.5 s: ${JSON.stringify(replay)}`);
+        const off = (a, b) => Math.abs(parseFloat(a) - parseFloat(b));
+        const [wx, wy] = spot.want.split(' ');
+        if (!(off(spot.mx, wx) <= 1 && off(spot.my, wy) <= 1) || spot.border !== '1' || !spot.radial || spot.glow !== '1' || spot.after !== '0')
+            errors.push(`spotlight: did not follow the pointer or did not fade out: ${JSON.stringify(spot)}`);
+        if (!focus.visible || focus.border !== '1' || focus.radial) errors.push(`spotlight: keyboard focus did not show the whole border: ${JSON.stringify(focus)}`);
+        if (cls > 0.001) errors.push(`card icons and spotlight: cumulative layout shift ${cls}`);
+        for (const b of bucket) errors.push(`card icons pass: ${b}`);
     }
 
     if (!(await teardown())) errors.push(`the Chrome profile could not be removed: ${profile}`);
