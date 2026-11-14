@@ -900,9 +900,15 @@ html:not(.js) .filter-bar { display: none; }
 .contact-band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem 3rem; }
 .contact-band h2 { margin-bottom: 0.5rem; }
 .contact-band p { max-width: var(--measure-lede); font-size: 1.125rem; color: var(--ink-2); }
-.contact-notes { margin-top: calc(var(--card-gap) + 0.5rem); }
-.contact-note { padding-top: 1.1rem; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 16px); }
-.contact-note h3 { margin-bottom: 0.35rem; }
+.contact-notes { margin-top: 3rem; }
+.contact-note {
+    padding: 1.3rem 1.45rem 1.4rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--bg);
+    scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.contact-note h3 { margin-bottom: 0.6rem; }
 .contact-note p { color: var(--ink-2); }
 
 /* Footer */
