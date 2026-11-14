@@ -1,5 +1,6 @@
 /* Shared script for vcnoel.github.io: announcement bar, theme toggle, mobile menu, section
-   highlighting, reveal on scroll, publication filter, copy button, posts list.
+   highlighting, reveal on scroll, publication filter, animated figures, card icons,
+   copy button, posts list.
    Every feature checks for its elements, so the file is safe on every page. */
 (function () {
     'use strict';
@@ -336,6 +337,41 @@
         else window.addEventListener('load', start);
     }
 
+    /* The card icons (drawn by tools/make_card_icons.py) loop every 6 s while in view and pause
+       out of view. Each loop ends on the finished picture, held from 3.6 s. Hovering a card while
+       its icon holds plays the icon again, at most once every 2.5 s. With reduced motion, or
+       without this script, the finished picture shows and nothing moves. */
+    var CARD_ART = { loopMs: 6000, holdFromMs: 3600, replayGapMs: 2500 };
+
+    function initCardArt() {
+        var arts = Array.prototype.slice.call(document.querySelectorAll('svg.card-art'));
+        if (!arts.length || !('IntersectionObserver' in window)) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) { entry.target.classList.toggle('is-live', entry.isIntersecting); });
+        }, { threshold: 0 });
+        arts.forEach(function (art) {
+            art.classList.add('is-anim');
+            io.observe(art);
+            var card = art.closest('.card');
+            if (!card || !art.getAnimations) return;
+            var last = -Infinity;
+            card.addEventListener('pointerenter', function (e) {
+                if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+                var now = performance.now();
+                if (now - last < CARD_ART.replayGapMs) return;
+                var anims = art.getAnimations({ subtree: true });
+                if (!anims.length) return;
+                var t = Number(anims[0].currentTime) || 0;
+                var delay = anims[0].effect ? anims[0].effect.getTiming().delay || 0 : 0;
+                var phase = t < delay ? CARD_ART.loopMs : (t - delay) % CARD_ART.loopMs;
+                if (phase < CARD_ART.holdFromMs) return;
+                last = now;
+                anims.forEach(function (a) { a.currentTime = delay; });
+            });
+        });
+    }
+
     /* Looping figures in posts: play only while visible, and never under reduced motion. */
     function initVideos() {
         var videos = Array.prototype.slice.call(document.querySelectorAll('video[data-loop]'));
@@ -504,6 +540,7 @@
         initReveal();
         initPubFilter();
         initFigures();
+        initCardArt();
         initVideos();
         initCopy();
         initPosts();
