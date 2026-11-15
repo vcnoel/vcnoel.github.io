@@ -33,7 +33,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
     <link rel="stylesheet" href="../assets/css/site.css?v=c21533da">
-    <script src="../assets/js/announcements.js?v=981ee931" defer></script>
+    <script src="../assets/js/announcements.js?v=04dd0bf4" defer></script>
     <script src="../assets/js/site.js?v=6c014c2e" defer></script>
 </head>
 
@@ -126,6 +126,73 @@
 <!-- st-graph:end -->
                     <figcaption>Layer 10 of Qwen3-0.6B reading one sentence. Thicker edges carry more attention, and the Fiedler vector splits the tokens into a blue and an orange group.</figcaption>
                 </figure>
+            </div>
+        </section>
+
+        <!-- Interventions: new in 0.5.0. The code ran on the released 0.5.0 on a CPU (GPT-2 from the
+             Hugging Face cache), and remove_edges warned as the comment says. Results from the library's
+             docs/use-cases pages and examples/use_cases/outputs. -->
+        <section class="section" id="interventions" aria-labelledby="interventions-title">
+            <div class="wrap reveal two-col is-even st-split">
+                <div class="section-head">
+                    <h2 id="interventions-title">Interventions</h2>
+                    <p class="lede">New in 0.5.0: edits in the graph-spectral domain. Filter the residual stream along the token axis, in the frequency basis of the model's own attention graph, with low-pass, high-pass and band filters and a causal mode for generation. Patch one band of graph frequencies from a clean run into a corrupted one. Remove attention edges while the sink keeps its share.</p>
+                    <p class="lede">Activation patching, head ablation, activation steering and custom hooks work on Hugging Face models too, and every edit is undone when the block exits.</p>
+                </div>
+                <div class="code-panel">
+                    <div class="code-head">Python, spectral-trust 0.5.0</div>
+                    <pre tabindex="0" aria-label="Interventions example"><code><span class="k">import</span> torch
+<span class="k">import</span> spectral_trust <span class="k">as</span> st
+
+model = st.SpectralModel.from_pretrained(<span class="s">"gpt2"</span>)
+text = (<span class="s">"When Mary and John went to the store, "</span>
+        <span class="s">"John gave a drink to"</span>)
+ids = model.tokenizer(text, return_tensors=<span class="s">"pt"</span>).input_ids
+S = ids.shape[1]
+mask = torch.zeros(S, S, dtype=torch.bool)
+mask[S - 1, [1, 3, 9]] = <span class="k">True</span>  <span class="c"># last token, the names</span>
+
+<span class="k">with</span> st.intervene(model) <span class="k">as</span> iv:
+    <span class="c"># smooth the residual stream along the attention graph</span>
+    iv.resid(5).graph_filter(<span class="s">"lowpass"</span>, cutoff=1.0,
+                             strength=0.5, causal=<span class="k">True</span>,
+                             token_span=(1, <span class="k">None</span>))
+    <span class="c"># remove edges, the sink keeps its share (this warns:</span>
+    <span class="c"># those edges held most of the row)</span>
+    iv.attention(9, 9).remove_edges(mask)
+    logits = model(ids).logits
+<span class="c"># the model is unchanged here</span></code></pre>
+                </div>
+            </div>
+            <div class="wrap reveal">
+                <ul class="paper-list" role="list">
+                    <li>
+                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/sink-ablation/">Edge ablation and the sink</a></p>
+                        <p class="paper-meta">GPT-2 small, 200 IOI prompts. Removing the name movers' edges to the names changes the logit difference by −0.79, −0.12 or +0.08, depending only on where the removed attention goes.</p>
+                    </li>
+                    <li>
+                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-steering/">Graph-frequency steering</a></p>
+                        <p class="paper-meta">GPT-2 small, IOI and WikiText-2. Large, layer-specific effects that mostly follow the size of the edit. Along the attention graph, smoothing costs 1.4 to 2.5 times the next-token loss of an edit of the same size along positions.</p>
+                    </li>
+                    <li>
+                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/frequency-patching/">Frequency-resolved patching</a></p>
+                        <p class="paper-meta">GPT-2 small, 200 IOI prompt pairs. One band of the attention graph recovers 0.51 of the logit difference at block 10, above positional and random bands. Patching the final position alone recovers more.</p>
+                    </li>
+                    <li>
+                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-side-effects/">Graph-filter side effects</a></p>
+                        <p class="paper-meta">GPT-2 small and Phi-3-mini, WikiText-2. Low-pass edits up to about 0.3 of the residual's norm leave generation clean, and full-strength high-pass and band-pass edits break the model.</p>
+                    </li>
+                    <li>
+                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/phi3-prepositions/">Which words split Phi-3's attention graph</a></p>
+                        <p class="paper-meta">Phi-3-mini-4k-instruct and four other models. A Fiedler drop that looks like the passive voice comes from eight frequent prepositions, and attention-sink mass detects it as well.</p>
+                    </li>
+                </ul>
+                <p class="note">Run them in Colab: <a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/01_quickstart.ipynb" target="_blank" rel="noopener">Quickstart</a>, <a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/02_animated_views.ipynb" target="_blank" rel="noopener">Animated views</a>, <a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/03_interventions.ipynb" target="_blank" rel="noopener">Interventions</a> (sink-preserving ablation, graph-frequency steering and frequency-resolved patching on GPT-2) and <a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/04_phi3_prepositions.ipynb" target="_blank" rel="noopener">Phi-3 prepositions</a> (on a GPU runtime).</p>
+                <div class="btn-row">
+                    <a class="btn btn-primary" href="../posts/steering-along-the-token-axis.html">Read the release post</a>
+                    <a class="btn" href="https://vcnoel.github.io/spectral-trust/use-cases/">All use cases</a>
+                    <a class="btn" href="https://vcnoel.github.io/spectral-trust/tutorials/interventions/">Interventions tutorial</a>
+                </div>
             </div>
         </section>
 
@@ -321,7 +388,7 @@ cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)</code></pre>
             <div class="wrap contact-band">
                 <div>
                     <h2 id="start-title">Start with the documentation</h2>
-                    <p>Install, three tutorials, the concepts and the full API reference. Version 0.4.2 is on PyPI, under the Apache 2.0 licence, and adds the animated views to the per-feature metrics and parallel layers of 0.4.1.</p>
+                    <p>Install, four tutorials, the use cases, the concepts and the full API reference. Version 0.5.0 is on PyPI, under the Apache 2.0 licence, and adds interventions in the graph-spectral domain to the animated views of 0.4.2.</p>
                 </div>
                 <div class="btn-row">
                     <a class="btn btn-primary" href="https://vcnoel.github.io/spectral-trust/">

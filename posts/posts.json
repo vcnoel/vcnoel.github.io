@@ -1,5 +1,17 @@
 [
   {
+    "id": "steering-along-the-token-axis",
+    "title": "Steering along the token axis",
+    "date": "2026-11-15",
+    "type": "original",
+    "excerpt": "spectral-trust 0.5.0 filters the residual stream of a language model in the frequency basis of its own attention graph, patches single graph-frequency bands and removes attention edges while keeping the sink.",
+    "url": "posts/steering-along-the-token-axis.html",
+    "tags": [
+      "interpretability",
+      "software"
+    ]
+  },
+  {
     "id": "spectral-trust-0-4-0",
     "title": "spectral-trust 0.4.0",
     "date": "2026-11-13",
