@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Steering along the token axis · Valentin Noël</title>
+    <meta name="description" content="spectral-trust 0.5.0 filters the residual stream of a language model in the frequency basis of its own attention graph, patches single graph-frequency bands and removes attention edges while keeping the sink.">
+    <meta name="author" content="Valentin Noël">
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://vcnoel.github.io/posts/steering-along-the-token-axis.html">
+    <meta name="theme-color" content="#fbfaf7">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Valentin Noël">
+    <meta property="og:url" content="https://vcnoel.github.io/posts/steering-along-the-token-axis.html">
+    <meta property="og:title" content="Steering along the token axis">
+    <meta property="og:description" content="spectral-trust 0.5.0 filters the residual stream of a language model in the frequency basis of its own attention graph, patches single graph-frequency bands and removes attention edges while keeping the sink.">
+    <meta property="og:image" content="https://vcnoel.github.io/posts/figures/steering-along-the-token-axis/token-axis.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.className += ' js';
+            try { t = localStorage.getItem('theme'); } catch (e) { t = null; }
+            if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            var dark = (t === 'light' || t === 'dark') ? t === 'dark'
+                : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            d.setAttribute('data-theme-effective', dark ? 'dark' : 'light');
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
+    <link rel="stylesheet" href="/assets/css/site.css?v=c21533da">
+    <script src="/assets/js/announcements.js?v=981ee931" defer></script>
+    <script src="/assets/js/site.js?v=6c014c2e" defer></script>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+        <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 19l-7-7 7-7"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5M22 10v6"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+        <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="announce" data-announce role="region" aria-label="Latest news"></div>
+
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="/index.html">
+                <img src="/favicon.svg" alt="" width="26" height="26">
+                <span>Valentin Noël</span>
+            </a>
+            <nav class="site-nav" id="site-nav" aria-label="Main">
+                <ul>
+                    <li><a href="/index.html#research">Research</a></li>
+                    <li><a href="/software/spectral-trust.html"><img class="nav-mark on-light" src="/assets/img/spectral-trust-mark.svg" alt="" width="18" height="18"><img class="nav-mark on-dark" src="/assets/img/spectral-trust-mark-dark.svg" alt="" width="18" height="18">spectral-trust</a></li>
+                    <li><a href="/index.html#publications">Publications</a></li>
+                    <li><a href="/index.html#about">About</a></li>
+                    <li><a href="/posts/index.html">Blog</a></li>
+                    <li><a href="/assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">CV</a></li>
+                </ul>
+            </nav>
+            <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+                <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+                <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="main" class="wrap narrow">
+        <article class="article">
+            <p class="draft-banner">Draft. Not listed and not indexed.</p>
+            <h1>Steering along the token axis</h1>
+            <div class="article-meta">
+                <time datetime="2026-01-01">[publication date]</time>
+                <span>7 min read</span>
+                <ul class="tag-list" role="list">
+                    <li class="tag">interpretability</li>
+                    <li class="tag">software</li>
+                </ul>
+            </div>
+
+            <div class="prose">
+                <p>spectral-trust has so far measured the attention graphs of a transformer. Version 0.5.0 also acts on them. It filters the residual stream along the token axis, in the frequency basis of the model’s own attention graph, with low-pass, high-pass and band filters and a causal mode for generation. It patches a single band of graph frequencies from a clean run into a corrupted one. And it removes attention edges while the first token, the attention sink, keeps its share.</p>
+                <p>This post gives the idea, three results, what the edits cost and one measurement story. Every number comes from the use cases that ship with the release, where each result stands next to the controls that could have produced it.</p>
+
+                <h2>Frequencies along the token axis</h2>
+                <p>Most steering methods act on the hidden dimension: they add a vector at every position. The residual stream has a second axis, the tokens. At one layer it is a matrix with one row per token, so each of its columns is a signal over the tokens.</p>
+                <p>That layer’s attention, averaged over heads and made symmetric, is a graph on the same tokens, and the eigenvectors of its Laplacian are its frequencies. A low frequency changes little between tokens that attend strongly to each other, and a high frequency changes across those links.</p>
+
+                <figure class="post-figure">
+                    <img src="/posts/figures/steering-along-the-token-axis/token-axis-720.png" srcset="/posts/figures/steering-along-the-token-axis/token-axis-720.png 720w, /posts/figures/steering-along-the-token-axis/token-axis.png 1440w" sizes="(min-width: 808px) 760px, calc(100vw - 48px)" alt="Top: the tokens of the sentence When Mary and John went to the store, John gave a drink to, joined by blue arcs whose thickness is the attention between two tokens in layer 8 of GPT-2 small. Below, three rows of bars over the same tokens: one column of the residual stream in grey, its low-pass part in blue, which follows the signal smoothly, and its high-pass part in orange, small bars of either sign. The low-pass and high-pass rows add up to the grey row." width="720" height="405" loading="lazy" decoding="async">
+                    <figcaption>GPT-2 small reading an IOI sentence. Top: the attention graph of layer 8, its stronger edges drawn as arcs. Bottom: one column of the residual stream after block 8 (its projection on the Mary minus John direction of the unembedding), split on that graph at cutoff 1.0. The two parts add up to the signal.</figcaption>
+                </figure>
+                <p>A low-pass filter keeps the smooth part, pulling each token towards the tokens it is linked to. A high-pass filter keeps what sets a token apart from its neighbours. The edit is X′ = X + s (g(L) X − X), with g the response of the filter and s its strength, computed as a Chebyshev polynomial in the Laplacian L, with no eigendecomposition. With <code>causal=True</code> each position is filtered on the graph of its own prefix, so cached generation gives the same tokens as recomputing the sequence.</p>
+                <p>I am not aware of earlier work that intervenes on a language model’s residual stream in the graph-frequency basis of its own attention. Token-axis filters themselves are older. <a href="https://arxiv.org/abs/2011.04823" target="_blank" rel="noopener">Language Through a Prism</a> (Tamkin, Jurafsky and Goodman, NeurIPS 2020) and <a href="https://arxiv.org/abs/2210.11860" target="_blank" rel="noopener">Spectral Probing</a> (Müller-Eberstein, van der Goot and Plank, EMNLP 2022) filter frozen representations in a fixed positional basis, the discrete cosine transform, to probe what they encode at different scales. They read representations rather than intervene on a model through its attention graph.</p>
+
+                <h2>Where the removed attention goes</h2>
+                <p>Removing an attention edge leaves a row that no longer sums to one, and the missing mass has to go somewhere. <code>remove_edges</code> makes that choice an argument. The first use case removes the edges from the final position to the three name tokens in the GPT-2 name movers 9.6, 9.9 and 10.0, on 200 IOI prompts. Before the edit, the logit difference between the right and the wrong name is 3.64.</p>
+
+                <figure class="post-figure">
+                    <img src="/posts/figures/steering-along-the-token-axis/sink-reversal-720.png" srcset="/posts/figures/steering-along-the-token-axis/sink-reversal-720.png 720w, /posts/figures/steering-along-the-token-axis/sink-reversal.png 1440w" sizes="(min-width: 808px) 760px, calc(100vw - 48px)" alt="Left: stacked bars of where the attention of the final position goes. Before the edit, 0.77 on the three names, 0.20 on the first token and 0.03 on other tokens. With keep_sink=True, 0.20 on the first token and 0.80 on other tokens. With keep_sink=False, 0.87 on the first token and 0.13 on other tokens. With renormalize=False, 0.20 and 0.03, with 0.77 missing. Right: the change in logit difference, minus 0.79 with keep_sink=True, minus 0.12 with keep_sink=False and plus 0.08 with renormalize=False." width="720" height="350" loading="lazy" decoding="async">
+                    <figcaption>The same edges removed three ways in the name movers of GPT-2 small, 200 IOI prompts. Left: where the attention of the final position goes. Right: the change in logit difference, with 95% intervals.</figcaption>
+                </figure>
+                <p>With the sink held fixed, the default, the logit difference changes by −0.79 [−0.90, −0.68]. Plain renormalisation gives −0.12 [−0.23, −0.01], and zeroing gives +0.08 [−0.03, 0.18], an interval that includes zero. The same edges carry a fifth of the logit difference, a thirtieth or nothing, and one keyword decides which.</p>
+                <p>These edges hold 0.77 of the row, against 0.20 for the first token and 0.03 for the rest. Plain renormalisation hands the freed mass mostly to the first token, whose share rises to 0.87. Zeroing hands it to no token. Holding the sink fixed hands it to the remaining content tokens and multiplies their attention by a median factor of 13 to 181, depending on the head, so the −0.79 includes that amplification. When the removed edges carry little of the row, the choice barely matters: in 20 random head triples, where they carry 0.15, all three choices give −0.06 or −0.07.</p>
+
+                <h2>Steering against controls of the same size</h2>
+                <p>The steering use case filters the residual stream after each block of GPT-2 small. The effect is the IOI logit difference, the side effect the next-token loss on WikiText-2. Each edit is compared with the same filter on two graphs, rescaled to the same edit norm: the chain graph over positions, and the attention graph with each row’s weights shuffled among the keys of its prefix.</p>
+                <p>The edits are strong. A full-strength low-pass after block 5 changes the logit difference by −3.21 [−3.62, −2.80], most of the clean 3.64. But most of that follows the size of the edit. In the 66 cells where the edit is not the identity, the effect of the attention graph differs from both controls in 24, above both in 12 and below both in 10. On the effect alone, it has no consistent advantage.</p>
+
+                <figure class="post-figure">
+                    <img src="/posts/figures/steering-along-the-token-axis/steering-tradeoff-720.png" srcset="/posts/figures/steering-along-the-token-axis/steering-tradeoff-720.png 720w, /posts/figures/steering-along-the-token-axis/steering-tradeoff.png 1440w" sizes="(min-width: 808px) 760px, calc(100vw - 48px)" alt="Two plots of effect, the change in logit difference, against side effect, the change in loss. Left, low-pass after block 5: the attention graph, the shuffled graph and the prefix mean fall along one curve, the attention graph reaching furthest, and the path graph stays above them with smaller effects. Right, high-pass after block 11: the attention graph rises steeply, to 0.61 for 0.06 nats, while the shuffled and path graphs need more loss for the same effect." width="720" height="380" loading="lazy" decoding="async">
+                    <figcaption>Effect against side effect as the strength grows, GPT-2 small, with 95% intervals. Left: low-pass after block 5, strengths 0.25, 0.5 and 1 (the prefix mean up to 0.5). Right: high-pass after block 11, strengths 0.25 and 0.5, a layer picked after the run. Side effect: next-token loss on WikiText-2.</figcaption>
+                </figure>
+                <p>The side effect is where the graph matters. At full strength, smoothing along the attention graph costs 1.4 to 2.5 times the loss of a smoothing of the same size along positions or along the shuffled graph, at every layer from 2 to 10. After block 5 it sits on the same curve of effect against cost as the shuffled graph and the prefix mean, only further along it. It helps in one place: after block 11, a half-strength high-pass raises the logit difference by 0.61 [0.52, 0.69] for 0.06 nats, where the shuffled graph gets 0.35 for 0.05 nats and the path graph 0.35 for 0.10. That layer was picked after the run, among 24 layer and filter pairs, so it is a lead to test, not a finding.</p>
+
+                <h2>Patching one band of frequencies</h2>
+                <p>Frequency-resolved patching asks which part of an activation, along the token axis, carries an effect. It copies the coefficients of one band of the clean attention graph’s eigenvectors from the clean run and keeps every other coefficient from the corrupted run. The full band is plain patching.</p>
+                <p>On 200 IOI prompt pairs, the lowest of eight bands of the attention basis at the input of block 10 of GPT-2 small, two or three modes, recovers 0.51 [0.46, 0.55] of the logit difference. A random subspace of the same size recovers at most 0.18 (the 95th percentile of 50 draws), the best positional band 0.22, and the same band of the corrupted run’s graph 0.07. The pass is narrow: it is the only one of 96 cells at 0.50 or above, and on the odd-indexed half of the prompts it falls below.</p>
+                <p>Position beats frequency here. Patching the final position alone recovers 1.34 at the same layer, more than the full patch: on IOI the answer is gathered at one token. Frequency methods should help most where information is spread over many tokens, which IOI is not. What this result shows is a method that separates bands that matter from bands that do not, with controls that can say no.</p>
+
+                <h2>What the edits cost</h2>
+                <p>A separate use case measures what a filter does to the rest of GPT-2 small and Phi-3-mini, against size-matched controls.</p>
+                <p>Low-pass edits up to 0.27 of the residual’s norm on GPT-2 and 0.29 on Phi-3 leave greedy generation as clean as without an edit. They do cost more next-token KL than the size-matched controls, about 1.4 times the shuffled and chain graphs in the median on GPT-2. High-pass and band-pass filters at full strength are edits of 0.72 to 1.16 of the norm, and they break the model, as the controls do: up to 90% of continuations degenerate on GPT-2 and 75% on Phi-3. At full strength they are ablations, not steering.</p>
+                <p>Two new warnings follow from this. <code>graph_filter</code> warns when an edit exceeds half the residual’s norm, and <code>remove_edges</code> warns when keeping the sink multiplies the kept edges of a row by more than 10.</p>
+
+                <h2>Which words split Phi-3’s attention graph</h2>
+                <p>In Phi-3-mini-4k-instruct, the Fiedler value of the attention graph at layer 3 averages 0.929 over 72 active sentences and 0.361 over their passive twins. It looks like the model setting the passive voice apart.</p>
+                <p>It is not the voice. Passives without an agent (“The cat was chased.”) do not drop, and actives with a non-agentive “by” (“The cat slept by the door.”) drop as much as passives. In that frame, eight frequent prepositions (to, of, for, with, at, by, from, under) give 0.370 to 0.379, and four others (near, behind, after, beside) give 0.928 to 0.931.</p>
+                <p>A plain baseline does as well. The share of attention on the first token separates every pair at layers 3 to 5, as the Fiedler value does, and the spectrum adds only where the split falls. Nor does the drop yield to repair. At layer 2, each against a matched random control, the graph low-pass moves the Fiedler value the wrong way, removing the edges into “was” and “by” closes 1% to 3% of the gap, and a steering vector beats a random one only at a strength that breaks the model.</p>
+                <p>A spectral number that moves is a hypothesis. The library ships its baselines next to its measurements so that such checks are cheap, and here they turned a story about grammar into one about a few prepositions.</p>
+
+                <h2>Try it</h2>
+<pre><code>pip install --upgrade spectral-trust</code></pre>
+                <p>Smoothing the residual stream of GPT-2 along its attention graph after block 5, then restoring the model:</p>
+<pre><code>import spectral_trust as st
+
+model = st.SpectralModel.from_pretrained("gpt2")
+tok = model.tokenizer
+ids = tok("When Mary and John went to the store, John gave a drink to",
+          return_tensors="pt").input_ids
+mary, john = tok(" Mary").input_ids[0], tok(" John").input_ids[0]
+
+def logit_diff(logits):
+    return (logits[0, -1, mary] - logits[0, -1, john]).item()
+
+print(logit_diff(model(ids).logits))           # clean
+with st.intervene(model) as iv:
+    iv.resid(5).graph_filter("lowpass", cutoff=1.0, strength=1.0,
+                             causal=True, token_span=(1, None))
+    print(logit_diff(model(ids).logits))       # smoothed after block 5
+print(logit_diff(model(ids).logits))           # the edit is gone</code></pre>
+                <p>The same context manager takes <code>remove_edges(mask, keep_sink=True)</code> on any head, and <code>st.Patcher</code> patches one band with <code>basis="clean_attention"</code>, <code>"path"</code> or <code>"random"</code>. 0.5.0 also brings activation patching, head ablation, activation steering and custom hooks to Hugging Face models, all undone on exit.</p>
+                <p>Four notebooks run in Colab:</p>
+                <ul>
+                    <li><a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/01_quickstart.ipynb" target="_blank" rel="noopener">Quickstart</a></li>
+                    <li><a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/02_animated_views.ipynb" target="_blank" rel="noopener">Animated views</a></li>
+                    <li><a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/03_interventions.ipynb" target="_blank" rel="noopener">Interventions</a>: sink-preserving ablation, graph-frequency steering and frequency-resolved patching on GPT-2</li>
+                    <li><a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/04_phi3_prepositions.ipynb" target="_blank" rel="noopener">Phi-3 prepositions</a>, the measurement story above, on a GPU runtime</li>
+                </ul>
+                <p>The <a href="https://vcnoel.github.io/spectral-trust/use-cases/">use cases</a> give the setup, controls and limits of each result: <a href="https://vcnoel.github.io/spectral-trust/use-cases/sink-ablation/">edge ablation and the sink</a>, <a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-steering/">graph-frequency steering</a>, <a href="https://vcnoel.github.io/spectral-trust/use-cases/frequency-patching/">frequency-resolved patching</a>, <a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-side-effects/">graph-filter side effects</a> and <a href="https://vcnoel.github.io/spectral-trust/use-cases/phi3-prepositions/">Phi-3 prepositions</a>. The <a href="https://vcnoel.github.io/spectral-trust/tutorials/interventions/">interventions tutorial</a> covers the API. The release is on <a href="https://pypi.org/project/spectral-trust/0.5.0/">PyPI</a> and <a href="https://github.com/vcnoel/spectral-trust">GitHub</a>, with every change in the <a href="https://github.com/vcnoel/spectral-trust/blob/main/CHANGELOG.md">changelog</a>.</p>
+                <p>spectral-trust is used in work by researchers at Cornell, Goodfire AI, Imperial College London and École polytechnique, and the work of Bao et al. (<a href="https://arxiv.org/abs/2608.03015" target="_blank" rel="noopener">arXiv:2608.03015</a>) has been accepted at EACL 2027.</p>
+            </div>
+
+            <div class="article-foot">
+                <a class="more-link" href="/posts/index.html">All posts</a>
+                <a class="more-link" href="/index.html">Home page</a>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <p>© 2026 Valentin Noël</p>
+            <ul class="footer-links" role="list">
+                <li><a href="mailto:val.noel@proton.me" aria-label="Email"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></a></li>
+                <li><a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener" aria-label="Google Scholar"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg></a></li>
+                <li><a href="https://github.com/vcnoel" target="_blank" rel="noopener" aria-label="GitHub"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg></a></li>
+                <li><a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg></a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>
