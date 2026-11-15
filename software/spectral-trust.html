@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
-    <link rel="stylesheet" href="../assets/css/site.css?v=c21533da">
+    <link rel="stylesheet" href="../assets/css/site.css?v=a033af1b">
     <script src="../assets/js/announcements.js?v=04dd0bf4" defer></script>
     <script src="../assets/js/site.js?v=6c014c2e" defer></script>
 </head>
@@ -165,33 +165,52 @@ mask[S - 1, [1, 3, 9]] = <span class="k">True</span>  <span class="c"># last tok
                 </div>
             </div>
             <div class="wrap reveal">
-                <ul class="paper-list" role="list">
-                    <li>
-                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/sink-ablation/">Edge ablation and the sink</a></p>
-                        <p class="paper-meta">GPT-2 small, 200 IOI prompts. Removing the name movers' edges to the names changes the logit difference by −0.79, −0.12 or +0.08, depending only on where the removed attention goes.</p>
+                <ul class="grid st-uc-grid" role="list">
+                    <li class="card st-uc">
+                        <p class="st-uc-kicker">GPT-2 small · 200 IOI prompts</p>
+                        <h3 class="st-uc-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/sink-ablation/">Edge ablation and the sink</a></h3>
+                        <p class="st-uc-stat"><span class="st-uc-num">−0.79 vs −0.12</span><span class="st-uc-unit">logit difference, sink kept vs plain renormalisation</span></p>
+                        <p class="st-uc-text">Removing the name movers' edges to the names. Where the removed attention goes decides the conclusion.</p>
+                        <span class="st-uc-more" aria-hidden="true">Read the use case</span>
                     </li>
-                    <li>
-                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-steering/">Graph-frequency steering</a></p>
-                        <p class="paper-meta">GPT-2 small, IOI and WikiText-2. Large, layer-specific effects that mostly follow the size of the edit. Along the attention graph, smoothing costs 1.4 to 2.5 times the next-token loss of an edit of the same size along positions.</p>
+                    <li class="card st-uc">
+                        <p class="st-uc-kicker">GPT-2 small · IOI and WikiText-2</p>
+                        <h3 class="st-uc-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-steering/">Graph-frequency steering</a></h3>
+                        <p class="st-uc-stat"><span class="st-uc-num">24 of 66</span><span class="st-uc-unit">live settings beyond both matched controls</span></p>
+                        <p class="st-uc-text">Low-pass and high-pass filters along the attention graph, each against shuffled-graph and positional edits of the same size.</p>
+                        <span class="st-uc-more" aria-hidden="true">Read the use case</span>
                     </li>
-                    <li>
-                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/frequency-patching/">Frequency-resolved patching</a></p>
-                        <p class="paper-meta">GPT-2 small, 200 IOI prompt pairs. One band of the attention graph recovers 0.51 of the logit difference at block 10, above positional and random bands. Patching the final position alone recovers more.</p>
+                    <li class="card st-uc">
+                        <p class="st-uc-kicker">GPT-2 small · 200 IOI prompt pairs</p>
+                        <h3 class="st-uc-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/frequency-patching/">Frequency-resolved patching</a></h3>
+                        <p class="st-uc-stat"><span class="st-uc-num">0.51</span><span class="st-uc-unit">of the logit difference from one band, against 0.18 for the 95th percentile of random bands</span></p>
+                        <p class="st-uc-text">One band of graph frequencies patched from a clean run at block 10. Patching the final position alone recovers more.</p>
+                        <span class="st-uc-more" aria-hidden="true">Read the use case</span>
                     </li>
-                    <li>
-                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-side-effects/">Graph-filter side effects</a></p>
-                        <p class="paper-meta">GPT-2 small and Phi-3-mini, WikiText-2. Low-pass edits up to about 0.3 of the residual's norm leave generation clean, and full-strength high-pass and band-pass edits break the model.</p>
+                    <li class="card st-uc">
+                        <p class="st-uc-kicker">GPT-2 small and Phi-3-mini · WikiText-2</p>
+                        <h3 class="st-uc-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-side-effects/">Graph-filter side effects</a></h3>
+                        <p class="st-uc-stat"><span class="st-uc-num">≤ 0.3</span><span class="st-uc-unit">relative edit size that leaves generation clean</span></p>
+                        <p class="st-uc-text">Full-strength high-pass and band-pass edits break the model, and the library now warns before they do.</p>
+                        <span class="st-uc-more" aria-hidden="true">Read the use case</span>
                     </li>
-                    <li>
-                        <p class="paper-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/phi3-prepositions/">Which words split Phi-3's attention graph</a></p>
-                        <p class="paper-meta">Phi-3-mini-4k-instruct and four other models. A Fiedler drop that looks like the passive voice comes from eight frequent prepositions, and attention-sink mass detects it as well.</p>
+                    <li class="card st-uc">
+                        <p class="st-uc-kicker">Phi-3-mini and four other models</p>
+                        <h3 class="st-uc-title"><a href="https://vcnoel.github.io/spectral-trust/use-cases/phi3-prepositions/">Which words split Phi-3's attention graph</a></h3>
+                        <p class="st-uc-stat"><span class="st-uc-num">0.93 → 0.37</span><span class="st-uc-unit">layer-3 Fiedler value after to, of, by, for and four more</span></p>
+                        <p class="st-uc-text">A drop that looks like the passive voice comes from eight frequent prepositions. Attention-sink mass detects it as well.</p>
+                        <span class="st-uc-more" aria-hidden="true">Read the use case</span>
+                    </li>
+                    <li class="card st-uc-cta">
+                        <h3>Every result ships with its script and its controls</h3>
+                        <p>The release post tells the story, and the tutorial covers the API.</p>
+                        <div class="btn-row">
+                            <a class="btn btn-primary" href="../posts/steering-along-the-token-axis.html">Read the release post</a>
+                            <a class="btn" href="https://vcnoel.github.io/spectral-trust/use-cases/">All use cases</a>
+                            <a class="btn" href="https://vcnoel.github.io/spectral-trust/tutorials/interventions/">Interventions tutorial</a>
+                        </div>
                     </li>
                 </ul>
-                <div class="btn-row">
-                    <a class="btn btn-primary" href="../posts/steering-along-the-token-axis.html">Read the release post</a>
-                    <a class="btn" href="https://vcnoel.github.io/spectral-trust/use-cases/">All use cases</a>
-                    <a class="btn" href="https://vcnoel.github.io/spectral-trust/tutorials/interventions/">Interventions tutorial</a>
-                </div>
             </div>
         </section>
 

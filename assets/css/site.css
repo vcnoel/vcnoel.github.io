@@ -1162,6 +1162,38 @@ html:not(.js) .filter-bar { display: none; }
 .st-animate .code-panel { flex: 0 1 auto; min-width: 0; }
 .st-animate .install { padding-right: 1.1rem; }
 
+/* Use-case cards on the library page: what was run, the headline number, one sentence. The whole
+   card is the link (the title's ::after covers it). Numbers stay in ink, never the accent. */
+.st-uc-grid { margin-top: var(--card-gap); }
+@media (min-width: 640px) { .st-uc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .st-uc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.st-uc {
+    position: relative;
+    gap: 0.75rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.st-uc:hover { border-color: var(--line-strong); box-shadow: var(--shadow); transform: translateY(-2px); }
+.st-uc:has(a:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.st-uc-kicker { font-size: var(--fs-xs); color: var(--muted); letter-spacing: 0.01em; }
+.st-uc-title { font-size: 1.0625rem; font-weight: 650; line-height: 1.35; }
+.st-uc-title a { color: var(--ink); text-decoration: none; }
+.st-uc-title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.st-uc-stat { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.85rem 0 0.8rem; border-block: 1px solid var(--line); }
+.st-uc-num { font-size: 1.85rem; font-weight: 650; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.st-uc-unit { font-size: var(--fs-xs); color: var(--muted); }
+.card.st-uc p.st-uc-text { color: var(--ink-2); }
+.st-uc-more { margin-top: auto; font-size: var(--fs-xs); font-weight: 600; color: var(--accent); }
+.st-uc-more::after { content: " \2192"; }
+@media (prefers-reduced-motion: reduce) { .st-uc, .st-uc:hover { transition: none; transform: none; } }
+.st-uc-cta {
+    justify-content: center;
+    background: linear-gradient(135deg, var(--blue-tint), var(--orange-tint));
+    border-color: color-mix(in srgb, var(--blue) 18%, transparent);
+}
+.st-uc-cta h3 { font-size: 1.125rem; font-weight: 650; line-height: 1.35; }
+.st-uc-cta .btn-row { margin-top: 0.4rem; flex-direction: column; align-items: stretch; }
+.st-uc-cta .btn { justify-content: center; text-align: center; }
+
 .speed { display: grid; gap: 1.1rem; align-content: center; }
 .speed-row { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 0.75rem; align-items: center; }
 .speed-name { font-size: var(--fs-sm); color: var(--ink-2); }
