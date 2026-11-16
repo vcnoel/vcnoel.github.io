@@ -129,6 +129,33 @@
             </div>
         </section>
 
+        <!-- New in 0.5.1. The code ran on the released 0.5.1 on a CPU (GPT-2 from the Hugging Face cache)
+             and printed the values in the comments. -->
+        <section class="section" id="graphs-051" aria-labelledby="graphs-051-title">
+            <div class="wrap reveal two-col st-split">
+                <div class="section-head">
+                    <h2 id="graphs-051-title">More graphs, and the measures others use</h2>
+                    <p class="lede">New in 0.5.1: value-weighted, directed and magnetic attention graphs, the measure-aware operator of Viganò, Melzi and Ovsjanikov (NeurIPS 2026) with its participation ratio, Forman curvature after Kim, Lutzeyer and Guo, pseudospectra of the triangular attention matrix, and sink and asymmetry features.</p>
+                    <p class="lede">Any metric now plugs into <a href="https://vcnoel.github.io/spectral-trust/tutorials/lm-polygraph/">LM-Polygraph</a> as an uncertainty estimator. A <a href="https://vcnoel.github.io/spectral-trust/use-cases/numerical-icl/">numerical in-context learning toolkit</a> adds serialisation, a confound audit and edits with matched controls (<a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/05_numerical_icl.ipynb">Colab</a>). Every 0.5.0 call returns bit-identical results, pinned by a regression test.</p>
+                </div>
+                <div class="code-panel">
+                    <div class="code-head">Python, spectral-trust 0.5.1</div>
+                    <pre tabindex="0" aria-label="Operator spectra and curvature example"><code><span class="k">from</span> transformers <span class="k">import</span> AutoModelForCausalLM, AutoTokenizer
+<span class="k">from</span> spectral_trust.operator_spectra <span class="k">import</span> operator_metrics
+<span class="k">from</span> spectral_trust.forman <span class="k">import</span> graph_curvature_summary
+
+tok = AutoTokenizer.from_pretrained(<span class="s">"gpt2"</span>)
+model = AutoModelForCausalLM.from_pretrained(<span class="s">"gpt2"</span>, attn_implementation=<span class="s">"eager"</span>)
+ids = tok(<span class="s">"The cat sat on the mat because it was warm."</span>, return_tensors=<span class="s">"pt"</span>)
+A = model(**ids, output_attentions=<span class="k">True</span>).attentions[<span class="n">9</span>][<span class="n">0</span>]  <span class="c"># layer 9, per head</span>
+
+m = operator_metrics(A, measure=<span class="s">"pullback"</span>)
+m[<span class="s">"participation_ratio"</span>].mean()          <span class="c"># 0.165</span>
+graph_curvature_summary(A.mean(<span class="n">0</span>), directed=<span class="k">True</span>)[<span class="n">0</span>]  <span class="c"># mean Forman curvature, -7.39</span></code></pre>
+                </div>
+            </div>
+        </section>
+
         <!-- Interventions: new in 0.5.0. The code ran on the released 0.5.0 on a CPU (GPT-2 from the
              Hugging Face cache), and remove_edges warned as the comment says. Results from the library's
              docs/use-cases pages and examples/use_cases/outputs. -->
@@ -406,7 +433,7 @@ cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)</code></pre>
             <div class="wrap contact-band">
                 <div>
                     <h2 id="start-title">Start with the documentation</h2>
-                    <p>Install, four tutorials, the use cases, the concepts and the full API reference. Version 0.5.0 is on PyPI, under the Apache 2.0 licence, and adds interventions in the graph-spectral domain to the animated views of 0.4.2.</p>
+                    <p>Install, four tutorials, the use cases, the concepts and the full API reference. Version 0.5.1 is on PyPI, under the Apache 2.0 licence. It adds directed and value-weighted graphs, operator spectra, curvature and an LM-Polygraph bridge to the graph-spectral interventions of 0.5.0.</p>
                 </div>
                 <div class="btn-row">
                     <a class="btn btn-primary" href="https://vcnoel.github.io/spectral-trust/">
