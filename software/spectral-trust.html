@@ -139,7 +139,7 @@
                     <p class="lede">The figure shows why multi-step rollout matters. Qwen2.5-0.5B predicts each next value of a slow sine almost exactly, yet its own predictions drift away within a few dozen steps, while a faster sine with more periods in context stays on track. <a href="https://vcnoel.github.io/spectral-trust/use-cases/numerical-icl/">Use case</a> · <a href="https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/05_numerical_icl.ipynb">Colab</a></p>
                 </div>
                 <figure class="st-figure">
-                    <img src="../assets/img/spectral-trust-sine-rollout.gif" width="800" height="450" loading="lazy" alt="Two sines continued by Qwen2.5-0.5B value by value: the one with six periods in context stays on track, the one with one and a half periods drifts away from the true curve.">
+                    <img src="../media/spectral-trust/0.5.3/rollout.gif" width="800" height="450" loading="lazy" alt="Two sines continued by Qwen2.5-0.5B value by value: the one with six periods in context stays on track, the one with one and a half periods drifts away from the true curve.">
                     <figcaption>Qwen2.5-0.5B continuing two sines from 150 values, feeding back its own predictions (<code>numeric.rollout</code>). Lower panels: error per step.</figcaption>
                 </figure>
             </div>
