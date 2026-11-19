@@ -1290,6 +1290,36 @@ html:not(.js) .filter-bar { display: none; }
 }
 .post-figure figcaption { margin-top: 0.6rem; font-size: var(--fs-sm); line-height: 1.55; color: var(--muted); }
 .post-figure.is-dark video, .post-figure.is-dark img { background: #0f1115; }
+.post-figure.is-transparent video, .post-figure.is-transparent img { background: transparent; }
+.post-figure.is-hero { margin-block: 1.5rem 2.25rem; }
+.post-figure.is-hero img { border: 0; }
+
+/* headline numbers of a post: a row of tiles with a gradient edge */
+.stat-band { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-block: 1.75rem; list-style: none; padding: 0; }
+@media (min-width: 640px) { .stat-band { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stat-band li {
+    position: relative; padding: 1rem 0.9rem 0.9rem; border-radius: 14px; background: var(--surface);
+    border: 1px solid transparent;
+    background-image: linear-gradient(var(--surface), var(--surface)), linear-gradient(135deg, var(--orange), var(--blue));
+    background-origin: border-box; background-clip: padding-box, border-box;
+    box-shadow: var(--shadow);
+    animation: stat-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.stat-band li:nth-child(2) { animation-delay: 0.08s; }
+.stat-band li:nth-child(3) { animation-delay: 0.16s; }
+.stat-band li:nth-child(4) { animation-delay: 0.24s; }
+.stat-band .stat-value {
+    display: block; font-size: 1.85rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--blue), var(--orange)); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.stat-band .stat-label { display: block; margin-top: 0.35rem; font-size: var(--fs-xs); line-height: 1.4; color: var(--muted); }
+@keyframes stat-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .stat-band li { animation: none; } }
+
+.tldr { margin-block: 1.5rem; padding: 1rem 1.15rem; border-radius: 12px; background: var(--blue-tint); border-left: 4px solid var(--blue); }
+.tldr p { margin: 0; font-size: var(--fs-sm); line-height: 1.6; color: var(--ink); }
+.tldr p + p { margin-top: 0.5rem; }
+.tldr .tldr-head { font-size: var(--fs-xs); font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue-ink); }
 
 .article-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 1rem; padding-top: 1.25rem; margin-top: 3rem; border-top: 1px solid var(--line); }
 

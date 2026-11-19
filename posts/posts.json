@@ -1,5 +1,17 @@
 [
   {
+    "id": "loop-edits",
+    "title": "Escape and commit: an Astra-level loop fix for 1% of the tokens",
+    "date": "2026-11-19",
+    "type": "original",
+    "excerpt": "A weight edit that stops a small reasoning model from looping has two parts, an escape term and a commit term, and building both gives Astra-level accuracy for about 1% of the generated tokens.",
+    "url": "posts/loop-edits.html",
+    "tags": [
+      "interpretability",
+      "reasoning"
+    ]
+  },
+  {
     "id": "steering-along-the-token-axis",
     "title": "Steering along the token axis",
     "date": "2026-11-15",

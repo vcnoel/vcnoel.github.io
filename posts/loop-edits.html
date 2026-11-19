@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Escape and commit: an Astra-level loop fix for 1% of the tokens · Valentin Noël</title>
+    <meta name="description" content="A weight edit that stops a small reasoning model from looping has two parts, an escape term and a commit term, and building both gives Astra-level accuracy for about 1% of the generated tokens.">
+    <meta name="author" content="Valentin Noël">
+    <link rel="canonical" href="https://vcnoel.github.io/posts/loop-edits.html">
+    <meta name="theme-color" content="#fbfaf7">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Valentin Noël">
+    <meta property="og:url" content="https://vcnoel.github.io/posts/loop-edits.html">
+    <meta property="og:title" content="Escape and commit: an Astra-level loop fix for 1% of the tokens">
+    <meta property="og:description" content="A weight edit that stops a small reasoning model from looping has two parts, an escape term and a commit term, and building both gives Astra-level accuracy for about 1% of the generated tokens.">
+    <meta property="og:image" content="https://vcnoel.github.io/posts/figures/loop-edits/summary-og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script>
+        (function () {
+            var d = document.documentElement, t = null;
+            d.className += ' js';
+            try { t = localStorage.getItem('theme'); } catch (e) { t = null; }
+            if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            var dark = (t === 'light' || t === 'dark') ? t === 'dark'
+                : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            d.setAttribute('data-theme-effective', dark ? 'dark' : 'light');
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
+    <link rel="stylesheet" href="/assets/css/site.css?v=061db40e">
+    <script src="/assets/js/announcements.js?v=8ecb6bcd" defer></script>
+    <script src="/assets/js/site.js?v=6c014c2e" defer></script>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+        <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 19l-7-7 7-7"/></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+        <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5M22 10v6"/></symbol>
+        <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+        <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="announce" data-announce role="region" aria-label="Latest news"></div>
+
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a class="brand" href="/index.html">
+                <img src="/favicon.svg" alt="" width="26" height="26">
+                <span>Valentin Noël</span>
+            </a>
+            <nav class="site-nav" id="site-nav" aria-label="Main">
+                <ul>
+                    <li><a href="/index.html#research">Research</a></li>
+                    <li><a href="/software/spectral-trust.html"><img class="nav-mark on-light" src="/assets/img/spectral-trust-mark.svg" alt="" width="18" height="18"><img class="nav-mark on-dark" src="/assets/img/spectral-trust-mark-dark.svg" alt="" width="18" height="18">spectral-trust</a></li>
+                    <li><a href="/index.html#publications">Publications</a></li>
+                    <li><a href="/index.html#about">About</a></li>
+                    <li><a href="/posts/index.html">Blog</a></li>
+                    <li><a href="/assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">CV</a></li>
+                </ul>
+            </nav>
+            <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+                <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                <svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu">
+                <svg class="icon i-menu" aria-hidden="true"><use href="#i-menu"/></svg>
+                <svg class="icon i-close" aria-hidden="true"><use href="#i-close"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main id="main" class="wrap narrow">
+        <article class="article">
+            <h1>Escape and commit: an Astra-level loop fix for 1% of the tokens</h1>
+            <div class="article-meta">
+                <time datetime="2026-11-19">19 Nov 2026</time>
+                <span>9 min read</span>
+                <ul class="tag-list" role="list">
+                    <li class="tag">interpretability</li>
+                    <li class="tag">reasoning</li>
+                </ul>
+            </div>
+
+
+            <figure class="post-figure is-transparent is-hero">
+                <img src="/posts/figures/loop-edits/summary.gif" alt="Animated summary in three parts. First, accuracy bars on 64 practice problems at an 8,192-token budget: base model 18.8%, Astra 45.3%, escape plus commit 64.1%. Second, tokens generated to build the edit: 92.2 million for Astra against 0.83 million, 111 times fewer, in 84 GPU-minutes. Third, three tiles: 64% against Astra's 45% at 8k tokens, 72% against 66% at 32k tokens, and 111 times fewer tokens." width="720" height="405">
+            </figure>
+
+            <ul class="stat-band" role="list">
+                <li><span class="stat-value">64.1%</span><span class="stat-label">accuracy at 8k tokens, Astra 45.3%</span></li>
+                <li><span class="stat-value">71.9%</span><span class="stat-label">accuracy at 32k tokens, Astra 65.6%</span></li>
+                <li><span class="stat-value">111×</span><span class="stat-label">fewer generated tokens to build the edit</span></li>
+                <li><span class="stat-value">84 min</span><span class="stat-label">on one RTX 4080, no frontier model</span></li>
+            </ul>
+
+            <div class="tldr">
+                <p class="tldr-head">In brief</p>
+                <p>A reasoning loop is a trap the model has a tiny chance of leaving in each pass. Astra's edit raises that chance only while the model loops, and it also pushes the model to close its reasoning.</p>
+                <p>Building those two terms directly from the model's own traces beats Astra at 8,192 tokens (paired p = 0.004) and matches it at 32,768, with about 1% of the generated tokens.</p>
+            </div>
+
+            <div class="prose">
+                <p>
+                    Small reasoning models often fail by looping. They repeat a block of their own reasoning until the
+                    token budget runs out, and the answer never arrives. Two weeks ago,
+                    <a href="https://rikiyat.github.io/blog/weight-space-programming/">Takehi, Teoh, Zhang and Khattab</a>
+                    showed that a frontier model, GPT-6 Astra, could fix this in Qwen3.5-0.8B by editing its weights
+                    directly, with no training. Astra changed 131,072 weights in two MLP matrices and took MATH-500 from
+                    7.9% to 48.1%. It needed 50 forward passes and about 20 hours to get there.
+                </p>
+                <p>
+                    Several groups have since shown that the frontier model is not needed
+                    (<a href="https://haithamb.github.io/aha/">AHA!</a>,
+                    <a href="https://github.com/zichuanxu/closing-the-loop">CLC-sel</a>,
+                    <a href="https://nathan.rs/posts/weight-space-lp">a linear program</a>). I asked a different
+                    question. Why does the edit work? The answer turned out to have two parts, and building an edit
+                    from both parts gives Astra-level accuracy for about 1% of the tokens Astra generated.
+                </p>
+
+                <figure class="post-figure is-transparent">
+                    <img src="/posts/figures/loop-edits/landscape.gif" alt="Schematic of a ball on a curved landscape. In the base model the ball sits in a deep well labelled loop. With the escape term the well is lifted and the ball wanders on a bumpy plateau labelled dithering. With the commit term the landscape tilts and the ball rolls into an exit labelled concluded." width="720" height="405" loading="lazy">
+                    <figcaption>The two terms, as a schematic. The escape term lifts the loop well only where the model loops. The commit term tilts the landscape toward closing the reasoning.</figcaption>
+                </figure>
+
+                <h2>What the edit does</h2>
+                <p>
+                    Astra's edit touches 64 columns of <code>mlp.down_proj</code> in layers 15 and 19. Each column is a
+                    neuron's write into the residual stream, and each one is replaced by itself minus six times its
+                    component along a single direction u. Fitted on the released weights, the factor is 6.000 on every
+                    column, between 5.991 and 6.007. A neuron that used to push along u with gain +1 now pushes with
+                    gain -5. The edit does not delete the push. It reverses it.
+                </p>
+                <p>
+                    The 64 columns are not arbitrary. They are the neurons that write most along u while the model
+                    loops. They carry 78% of the MLP's write along u in loops at layer 15 and 90% at layer 19, and they
+                    write about five to seven times more during loops than during productive reasoning. So the reversed
+                    push is large exactly when the model loops and small otherwise. On the vocabulary, the loop side of u
+                    ranks list restarts and hesitation tokens ("...*", "but rather", "still"), and the other side ranks
+                    tokens that commit to content (" thus", " result", " yields").
+                </p>
+
+                <figure class="post-figure is-transparent">
+                    <img src="/posts/figures/loop-edits/anatomy.gif" alt="Two bar charts, one per layer, of the MLP write along u in loop windows and productive windows. As beta grows from 0 to 6 the loop bars go from +0.51 to -1.86 at layer 15 and from +0.75 to -3.32 at layer 19, while the productive bars only go from +0.16 to -0.34 and from +0.19 to -0.41." width="720" height="405" loading="lazy">
+                    <figcaption>Write of the MLP along u, in windows where the base model loops and windows where it reasons productively. Dashed outlines are the values before the edit.</figcaption>
+                </figure>
+
+                <h2>A loop is a trap with an escape rate</h2>
+                <p>
+                    In an established loop of the base model, every token is nearly certain: the mean log-probability
+                    is -0.0001 nats per token over periods of about 55 tokens. Leaving the loop requires one improbable
+                    token somewhere in a period, so the chance of escaping per period is a sum of very small terms.
+                    Measured over 24 real loops, the median is 0.4%. That means about 260 periods, roughly 14,000 tokens,
+                    before the model leaves, which is more than the budget.
+                </p>
+                <p>
+                    Repetition also deepens the trap. Feeding the model two lines of its own reasoning repeated k times,
+                    the mean log-probability of the k-th copy goes from -0.76 for the first copy to -0.03 by the eighth.
+                    This is the self-reinforcement effect <a href="https://arxiv.org/abs/2206.02369">Xu et al.</a>
+                    described in 2022. A loop becomes permanent with positive probability when the chances of escaping
+                    shrink fast enough to add up to a finite total. Astra's edit puts a floor under them. With the edit,
+                    the copy curve stops at about -0.17 nats per token instead of going to zero, and escape from the same
+                    established loops goes from 0.4% to 99% per period.
+                </p>
+                <p>
+                    The same reading explains a sharp threshold in the dose. The edit lowers the margin of the loop
+                    token by an amount that grows with the dose, and the escape rate of a period is a sum of terms
+                    exponential in that margin. Escape should therefore switch on as a double exponential, the way a
+                    particle escapes over a barrier. Applying the same kind of edit at layers chosen from that criterion,
+                    the escape per period is 1.0% at a dose of 2, 23% at 3 and 97% at 4. The law fitted through the
+                    doses of 3 and 4 puts the threshold at 3.5. It gives 1.9% at a dose of 2, where 1.0% is measured,
+                    and full escape from 5 on, as measured.
+                </p>
+
+                <figure class="post-figure is-transparent">
+                    <img src="/posts/figures/loop-edits/threshold.gif" alt="Line chart of escape per loop period against the dose alpha. Escape stays near 1% up to alpha 2, rises to 23% at 3 and 97% at 4, and is 100% from 5 on. A fitted double exponential curve passes through the points with a threshold at alpha 3.5. The base model sits at 0.6%." width="720" height="405" loading="lazy">
+                    <figcaption>Escape per loop period on established loops of the base model, teacher forced, against the dose of the escape term. The curve is the double exponential fitted through the doses of 3 and 4.</figcaption>
+                </figure>
+
+                <h2>Escaping is not concluding</h2>
+                <p>
+                    An edit built only for escape removes as many loops as Astra's, down to 12.5% of 64 practice
+                    problems at an 8,192-token budget. Its accuracy is 35.9%, against 45.3% for Astra. The missing part
+                    shows up in what the traces do after they leave the loop. They dither, writing "Wait... So 23.00. But
+                    wait..." until the budget runs out.
+                </p>
+                <p>
+                    Astra's edit does something the escape-only edit does not. It raises the probability of closing the
+                    reasoning, the <code>&lt;/think&gt;</code> token at the start of a line, by about 3 nats late in a
+                    trace. The escape-only edit lowers it slightly. So I fitted a second term of the same form, pushing
+                    from the dithering state toward the state just before <code>&lt;/think&gt;</code>. A scan over
+                    layers 12 to 23 picked layers 19 and 15. Those are Astra's layers, found without using its edit. In
+                    this reading, Astra's single edit carries a commit drift at those layers, and its escape effect comes
+                    through the same neurons.
+                </p>
+
+                <figure class="post-figure is-transparent">
+                    <img src="/posts/figures/loop-edits/outcomes.gif" alt="Stacked horizontal bars of loop, cut and finished shares for four models on 64 problems. Base model: 64% loop, accuracy 18.8%. Astra: 12.5% loop, accuracy 45.3%. Escape term only: 12.5% loop but 55% cut, accuracy 35.9%. Escape plus commit: 1.6% loop, 67% finished, accuracy 64.1%." width="720" height="405" loading="lazy">
+                    <figcaption>Outcomes at an 8,192-token budget on 64 practice problems: share of traces that loop, are cut at the budget or finish, and accuracy.</figcaption>
+                </figure>
+                <p>
+                    With both terms, accuracy at the 8,192-token budget is 64.1% against Astra's 45.3%. On the same
+                    problems, 14 are solved only by the two-term edit and 2 only by Astra (exact McNemar p = 0.004). The
+                    commit term was fitted on traces from half of these problems. On the other half the result is the
+                    same: 62.5% against 43.8%.
+                </p>
+
+                <h2>At Astra's budget</h2>
+                <p>
+                    Astra was evaluated with 32,768 tokens, where a slow model also has time to finish. I ran both edits
+                    on 32 practice problems never used anywhere in this work, 16 from GSM8K and 16 from MATH, graded with
+                    math-verify. The two-term edit reaches 71.9% and Astra 65.6%. On GSM8K both reach 75.0%. On MATH it is
+                    68.8% against 56.3%.
+                </p>
+
+                <figure class="post-figure is-transparent">
+                    <img src="/posts/figures/loop-edits/match.gif" alt="Grouped bar chart of accuracy at a 32,768-token budget. GSM8K: Astra 75, escape plus commit 75. MATH: Astra 56, escape plus commit 69. All 32: Astra 66, escape plus commit 72. Paired, 6 problems are solved only by the two-term edit and 4 only by Astra, p = 0.75. Loops 6% against 22%, mean tokens 13.9k against 17.2k." width="720" height="405" loading="lazy">
+                    <figcaption>Accuracy at a 32,768-token budget on 32 fresh practice problems, with the paired counts, the loop share and the mean length of a trace.</figcaption>
+                </figure>
+                <p>
+                    Paired by problem, 6 are solved only by the two-term edit and 4 only by Astra. With 32 problems that
+                    difference is not significant (p = 0.75), so the honest reading is a match. The two-term edit loops
+                    less, 6% of traces against 22%, and uses 19% fewer tokens.
+                </p>
+
+                <h2>What it cost</h2>
+                <p>
+                    Astra generated 92 million tokens before it froze its edit. The two-term edit needs 0.83 million:
+                    the base model's traces on 48 problems, and the escape-edited model's traces on 64. Everything else
+                    is teacher-forced reading. On one RTX 4080, the whole construction took about an hour and a half,
+                    with no frontier model and no gradients.
+                </p>
+
+                <h2>Limits</h2>
+                <p>
+                    This is one model and one failure mode. The comparisons use practice problems, not the public
+                    benchmarks, and 32 problems at the long budget. That is enough to call the two edits level and not
+                    enough to rank them. The other recent edits, AHA! and CLC-sel, also report results above Astra's at
+                    32,768 tokens, and I have not yet run them on the same problems.
+                </p>
+                <p>
+                    The model behind the threshold treats the tokens of a period as independent, and teacher forcing
+                    measures escape from a fixed context, not the trajectory that follows. I also see a precursor before
+                    loops: at layer 11, the variance and the autocorrelation of the projection on the loop direction rise
+                    over the 2,000 tokens before a loop starts, as they do before a tipping point. Near repetition that
+                    my detector misses could produce the same rise, so I report it as an observation for now.
+                </p>
+            </div>
+
+            <div class="article-foot">
+                <a class="more-link" href="/posts/index.html">All posts</a>
+                <a class="more-link" href="/index.html">Home page</a>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <p>© 2026 Valentin Noël</p>
+            <ul class="footer-links" role="list">
+                <li><a href="mailto:val.noel@proton.me" aria-label="Email"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></a></li>
+                <li><a href="https://scholar.google.com/citations?user=aKSfszkAAAAJ&amp;hl=fr" target="_blank" rel="noopener" aria-label="Google Scholar"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg></a></li>
+                <li><a href="https://github.com/vcnoel" target="_blank" rel="noopener" aria-label="GitHub"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg></a></li>
+                <li><a href="https://www.linkedin.com/in/valnoelphd/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg></a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>
