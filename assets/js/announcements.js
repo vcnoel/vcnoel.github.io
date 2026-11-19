@@ -4,6 +4,7 @@
    and tools/browser_check.mjs reports any item that does not fit.
    href: a page of this site, written from the site root (no leading slash), or a full https:// address. */
 window.SITE_ANNOUNCEMENTS = [
+    { label: 'New post', text: 'An Astra-level loop fix for 1% of the tokens', href: 'posts/loop-edits.html' },
     { label: 'Release', text: 'spectral-trust 0.5.3: numerical ICL tools', href: 'software/spectral-trust.html#numeric-053' },
     { label: 'New post', text: 'A probe direction is a property of its prompt', href: 'posts/probe-direction.html' },
     { label: 'New post', text: "What a peer's note does to an agent", href: 'posts/peer-notes.html' },
