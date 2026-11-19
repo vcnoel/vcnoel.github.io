@@ -44,7 +44,8 @@ OUT = SITE / "posts" / "figures" / "loop-edits"
 
 FPS, DPI, W_IN, H_IN = 12, 200, 7.2, 4.05
 HOLD = 2 * FPS
-GIF_WIDTH = 720
+GIF_WIDTH = 1440                     # full frame width: sharp on high-density screens
+WEBP_LOSSLESS, WEBP_QUALITY = True, 100
 # mid-tone colours, legible on the light (#fbfaf7) and the dark (#0f1115) page
 INK, MUTED, GRID = "#8C857B", "#8C857B", "#8C857B"
 BASE, ASTRA, OURS, ESC = "#A59D92", "#E69F00", "#3D9BE0", "#2BA884"
@@ -110,7 +111,12 @@ def encode(d: Path, name: str, bg: str | None = None):
            for f in frames]
     gif[0].save(OUT / f"{name}.gif", save_all=True, append_images=gif[1:], duration=round(1000 / FPS), loop=0,
                 transparency=255, disposal=2, optimize=False)
-    print(f"{name}: {len(frames)} frames, gif {(OUT / f'{name}.gif').stat().st_size / 1e6:.2f} MB")
+    # the page serves an animated WebP: full 8-bit alpha, so anti-aliased edges stay smooth on both themes
+    webp = [on_solid(Image.open(f).convert("RGBA"), bg) if bg else Image.open(f).convert("RGBA") for f in frames]
+    webp[0].save(OUT / f"{name}.webp", save_all=True, append_images=webp[1:], duration=round(1000 / FPS), loop=0,
+                 lossless=WEBP_LOSSLESS, quality=WEBP_QUALITY, method=6, alpha_quality=100)
+    print(f"{name}: {len(frames)} frames, gif {(OUT / f'{name}.gif').stat().st_size / 1e6:.2f} MB, "
+          f"webp {(OUT / f'{name}.webp').stat().st_size / 1e6:.2f} MB")
 
 
 # ------------------------------------------------------------------ figures

@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Serif+4:opsz,wght@8..60,600&amp;display=swap">
-    <link rel="stylesheet" href="/assets/css/site.css?v=061db40e">
+    <link rel="stylesheet" href="/assets/css/site.css?v=9708e03f">
     <script src="/assets/js/announcements.js?v=8ecb6bcd" defer></script>
     <script src="/assets/js/site.js?v=6c014c2e" defer></script>
 </head>
@@ -95,7 +95,7 @@
 
 
             <figure class="post-figure is-transparent is-hero">
-                <img src="/posts/figures/loop-edits/summary.gif" alt="Animated summary in three parts. First, accuracy bars on 64 practice problems at an 8,192-token budget: base model 18.8%, Astra 45.3%, escape plus commit 64.1%. Second, tokens generated to build the edit: 92.2 million for Astra against 0.83 million, 111 times fewer, in 84 GPU-minutes. Third, three tiles: 64% against Astra's 45% at 8k tokens, 72% against 66% at 32k tokens, and 111 times fewer tokens." width="720" height="405">
+                <picture><source srcset="/posts/figures/loop-edits/summary.webp" type="image/webp"><img src="/posts/figures/loop-edits/summary.gif" alt="Animated summary in three parts. First, accuracy bars on 64 practice problems at an 8,192-token budget: base model 18.8%, Astra 45.3%, escape plus commit 64.1%. Second, tokens generated to build the edit: 92.2 million for Astra against 0.83 million, 111 times fewer, in 84 GPU-minutes. Third, three tiles: 64% against Astra's 45% at 8k tokens, 72% against 66% at 32k tokens, and 111 times fewer tokens." width="720" height="405"></picture>
             </figure>
 
             <ul class="stat-band" role="list">
@@ -130,7 +130,7 @@
                 </p>
 
                 <figure class="post-figure is-transparent">
-                    <img src="/posts/figures/loop-edits/landscape.gif" alt="Schematic of a ball on a curved landscape. In the base model the ball sits in a deep well labelled loop. With the escape term the well is lifted and the ball wanders on a bumpy plateau labelled dithering. With the commit term the landscape tilts and the ball rolls into an exit labelled concluded." width="720" height="405" loading="lazy">
+                    <picture><source srcset="/posts/figures/loop-edits/landscape.webp" type="image/webp"><img src="/posts/figures/loop-edits/landscape.gif" alt="Schematic of a ball on a curved landscape. In the base model the ball sits in a deep well labelled loop. With the escape term the well is lifted and the ball wanders on a bumpy plateau labelled dithering. With the commit term the landscape tilts and the ball rolls into an exit labelled concluded." width="720" height="405" loading="lazy"></picture>
                     <figcaption>The two terms, as a schematic. The escape term lifts the loop well only where the model loops. The commit term tilts the landscape toward closing the reasoning.</figcaption>
                 </figure>
 
@@ -152,7 +152,7 @@
                 </p>
 
                 <figure class="post-figure is-transparent">
-                    <img src="/posts/figures/loop-edits/anatomy.gif" alt="Two bar charts, one per layer, of the MLP write along u in loop windows and productive windows. As beta grows from 0 to 6 the loop bars go from +0.51 to -1.86 at layer 15 and from +0.75 to -3.32 at layer 19, while the productive bars only go from +0.16 to -0.34 and from +0.19 to -0.41." width="720" height="405" loading="lazy">
+                    <picture><source srcset="/posts/figures/loop-edits/anatomy.webp" type="image/webp"><img src="/posts/figures/loop-edits/anatomy.gif" alt="Two bar charts, one per layer, of the MLP write along u in loop windows and productive windows. As beta grows from 0 to 6 the loop bars go from +0.51 to -1.86 at layer 15 and from +0.75 to -3.32 at layer 19, while the productive bars only go from +0.16 to -0.34 and from +0.19 to -0.41." width="720" height="405" loading="lazy"></picture>
                     <figcaption>Write of the MLP along u, in windows where the base model loops and windows where it reasons productively. Dashed outlines are the values before the edit.</figcaption>
                 </figure>
 
@@ -184,7 +184,7 @@
                 </p>
 
                 <figure class="post-figure is-transparent">
-                    <img src="/posts/figures/loop-edits/threshold.gif" alt="Line chart of escape per loop period against the dose alpha. Escape stays near 1% up to alpha 2, rises to 23% at 3 and 97% at 4, and is 100% from 5 on. A fitted double exponential curve passes through the points with a threshold at alpha 3.5. The base model sits at 0.6%." width="720" height="405" loading="lazy">
+                    <picture><source srcset="/posts/figures/loop-edits/threshold.webp" type="image/webp"><img src="/posts/figures/loop-edits/threshold.gif" alt="Line chart of escape per loop period against the dose alpha. Escape stays near 1% up to alpha 2, rises to 23% at 3 and 97% at 4, and is 100% from 5 on. A fitted double exponential curve passes through the points with a threshold at alpha 3.5. The base model sits at 0.6%." width="720" height="405" loading="lazy"></picture>
                     <figcaption>Escape per loop period on established loops of the base model, teacher forced, against the dose of the escape term. The curve is the double exponential fitted through the doses of 3 and 4.</figcaption>
                 </figure>
 
@@ -206,7 +206,7 @@
                 </p>
 
                 <figure class="post-figure is-transparent">
-                    <img src="/posts/figures/loop-edits/outcomes.gif" alt="Stacked horizontal bars of loop, cut and finished shares for four models on 64 problems. Base model: 64% loop, accuracy 18.8%. Astra: 12.5% loop, accuracy 45.3%. Escape term only: 12.5% loop but 55% cut, accuracy 35.9%. Escape plus commit: 1.6% loop, 67% finished, accuracy 64.1%." width="720" height="405" loading="lazy">
+                    <picture><source srcset="/posts/figures/loop-edits/outcomes.webp" type="image/webp"><img src="/posts/figures/loop-edits/outcomes.gif" alt="Stacked horizontal bars of loop, cut and finished shares for four models on 64 problems. Base model: 64% loop, accuracy 18.8%. Astra: 12.5% loop, accuracy 45.3%. Escape term only: 12.5% loop but 55% cut, accuracy 35.9%. Escape plus commit: 1.6% loop, 67% finished, accuracy 64.1%." width="720" height="405" loading="lazy"></picture>
                     <figcaption>Outcomes at an 8,192-token budget on 64 practice problems: share of traces that loop, are cut at the budget or finish, and accuracy.</figcaption>
                 </figure>
                 <p>
@@ -225,7 +225,7 @@
                 </p>
 
                 <figure class="post-figure is-transparent">
-                    <img src="/posts/figures/loop-edits/match.gif" alt="Grouped bar chart of accuracy at a 32,768-token budget. GSM8K: Astra 75, escape plus commit 75. MATH: Astra 56, escape plus commit 69. All 32: Astra 66, escape plus commit 72. Paired, 6 problems are solved only by the two-term edit and 4 only by Astra, p = 0.75. Loops 6% against 22%, mean tokens 13.9k against 17.2k." width="720" height="405" loading="lazy">
+                    <picture><source srcset="/posts/figures/loop-edits/match.webp" type="image/webp"><img src="/posts/figures/loop-edits/match.gif" alt="Grouped bar chart of accuracy at a 32,768-token budget. GSM8K: Astra 75, escape plus commit 75. MATH: Astra 56, escape plus commit 69. All 32: Astra 66, escape plus commit 72. Paired, 6 problems are solved only by the two-term edit and 4 only by Astra, p = 0.75. Loops 6% against 22%, mean tokens 13.9k against 17.2k." width="720" height="405" loading="lazy"></picture>
                     <figcaption>Accuracy at a 32,768-token budget on 32 fresh practice problems, with the paired counts, the loop share and the mean length of a trace.</figcaption>
                 </figure>
                 <p>
