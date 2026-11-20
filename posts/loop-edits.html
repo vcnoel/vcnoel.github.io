@@ -86,7 +86,7 @@
             <h1>Escape and commit: an Astra-level loop fix for 1% of the tokens</h1>
             <div class="article-meta">
                 <time datetime="2026-11-19">19 Nov 2026</time>
-                <span>9 min read</span>
+                <span>11 min read</span>
                 <ul class="tag-list" role="list">
                     <li class="tag">interpretability</li>
                     <li class="tag">reasoning</li>
@@ -233,6 +233,37 @@
                     difference is not significant (p = 0.75), so the honest reading is a match. The two-term edit loops
                     less, 6% of traces against 22%, and uses 19% fewer tokens.
                 </p>
+                <p>
+                    The public benchmark gives the same reading. On 64 problems drawn at random from MATH-500, the
+                    two-term edit solves 48.4% with one sample per problem. Astra's own released evaluation gives 51.2% on
+                    the same problems, averaged over four samples. The difference, −2.7 points with a 95% interval from
+                    −12.9 to +7.4, is within the noise of a single sample, whose standard deviation here is 3.4 points.
+                </p>
+                <p>
+                    When the two-term edit finishes a MATH-500 trace, its answer is right 84% of the time, against 81% for
+                    Astra. The points it gives back come from the hardest problems, at level 5 and in intermediate
+                    algebra, where it reasons for the whole budget without concluding. Astra fails most of those problems
+                    too. The commit term was fitted on GSM8K traces, which conclude much earlier, so a commit term fitted on
+                    MATH traces is the natural next step.
+                </p>
+
+                <h2>What sampling shows</h2>
+                <p>
+                    The escape model above is measured with teacher forcing, on a fixed context. To check it on real
+                    generations, I sampled 8 continuations from inside each of 24 established loops with the release's
+                    sampler, at every dose. The probability of staying on the loop path, computed as the product of the
+                    sampler's probabilities along it, matches the sampled share to within 0.012 at every dose and for
+                    every edit. Along a fixed path that product is exact, so the model needs no assumption of
+                    independence between tokens.
+                </p>
+                <p>
+                    Sampling also shows something teacher forcing cannot. Leaving the loop path is not the same as
+                    escaping the loop. At dose 5 every sample leaves the path, and 79% of them fall back into the same
+                    loop within 1,024 tokens. With the escape term alone, 55% of the samples that leave come back, and 49%
+                    under Astra's edit. With the commit term added, 26% come back, and 74% of all samples escape for good.
+                    CLC-sel, which is essentially a single commit direction, escapes most often, at 82%. The commit term is
+                    what makes an escape stick.
+                </p>
 
                 <h2>What it cost</h2>
                 <p>
@@ -244,17 +275,18 @@
 
                 <h2>Limits</h2>
                 <p>
-                    This is one model and one failure mode. The comparisons use practice problems, not the public
-                    benchmarks, and 32 problems at the long budget. That is enough to call the two edits level and not
-                    enough to rank them. The other recent edits, AHA! and CLC-sel, also report results above Astra's at
-                    32,768 tokens, and I have not yet run them on the same problems.
+                    This is one model and one failure mode. At the long budget the comparisons rest on 32 fresh practice
+                    problems and 64 MATH-500 problems. That is enough to call the two edits level and not enough to rank
+                    them. AHA! and CLC-sel also report results above Astra's at 32,768 tokens on full benchmarks. CLC-sel
+                    releases its edit, and its accuracy on the same problems will follow. AHA! releases no edit.
                 </p>
                 <p>
-                    The model behind the threshold treats the tokens of a period as independent, and teacher forcing
-                    measures escape from a fixed context, not the trajectory that follows. I also see a precursor before
-                    loops: at layer 11, the variance and the autocorrelation of the projection on the loop direction rise
-                    over the 2,000 tokens before a loop starts, as they do before a tipping point. Near repetition that
-                    my detector misses could produce the same rise, so I report it as an observation for now.
+                    An earlier version of this post reported a precursor before loops: at layer 11, the variance and the
+                    autocorrelation of the projection on the loop direction rise over the 2,000 tokens before a loop
+                    starts. Near repetition explains that rise. Positions that repeat a 16-token span from the previous
+                    1,024 tokens already make up 5.7% of a trace 2,000 tokens before an exact loop, against 0.8% in traces
+                    that finish, and once that is accounted for the residual effect is not significant. The practical
+                    reading is simpler: counting repeated spans anticipates a loop about 2,000 tokens ahead.
                 </p>
             </div>
 
